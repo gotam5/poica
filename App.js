@@ -264,6 +264,11 @@ function Home() {
         </Pressable>
 
         <Text style={s.foot}>カードのデータはこのスマホの中だけに保存されます。通知は送りません。</Text>
+        <View style={s.links}>
+          <Pressable onPress={() => Linking.openURL(PRIVACY_URL).catch(() => {})} hitSlop={8} accessibilityRole="link"><Text style={s.link}>プライバシーポリシー</Text></Pressable>
+          <Pressable onPress={() => Linking.openURL(SUPPORT_URL).catch(() => {})} hitSlop={8} accessibilityRole="link"><Text style={s.link}>お問い合わせ</Text></Pressable>
+        </View>
+        <Text style={s.foot}>お店の地図データ © OpenStreetMap contributors</Text>
       </ScrollView>
 
       <Pressable onPress={startNew} style={s.fab} accessibilityRole="button">
@@ -306,6 +311,10 @@ function Home() {
   );
 }
 
+// Placeholders until the policy page is published.
+const PRIVACY_URL = 'https://gotam5.github.io/poica-site/#privacy';
+const SUPPORT_URL = 'https://gotam5.github.io/poica-site/#support';
+
 function Tile({ card, allCards, big, wide, chip, onPress, onLongPress, s }) {
   return (
     <Pressable onPress={onPress} onLongPress={onLongPress} delayLongPress={400} style={({ pressed }) => [pressed && { opacity: 0.85 }]} accessibilityRole="button" accessibilityLabel={`${KIND_LABEL[card.kind]} ${card.name}を表示`} accessibilityHint="長押しで編集">
@@ -326,6 +335,8 @@ const styles = (t) => StyleSheet.create({
   noticeText: { fontSize: 13, color: t.muted, lineHeight: 20 },
   smallBtn: { alignSelf: 'flex-start', borderWidth: 1, borderColor: t.line, borderRadius: 10, paddingVertical: 6, paddingHorizontal: 12 },
   smallBtnText: { fontSize: 13, fontWeight: '700', color: t.ink },
+  links: { flexDirection: 'row', justifyContent: 'center', gap: 24 },
+  link: { color: t.accent, fontSize: 13, fontWeight: '700', textDecorationLine: 'underline' },
   sec: { fontSize: 13, fontWeight: '700', letterSpacing: 1.5, color: t.muted, marginBottom: 10 },
   secHot: { fontSize: 15, fontWeight: '800', color: t.accent },
   count: { fontVariant: ['tabular-nums'], letterSpacing: 0 },
