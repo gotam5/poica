@@ -217,8 +217,8 @@ export default function AddFlow({ initial, allCards = [], onCancel, onSave, onCu
 
 const styles = (t) => StyleSheet.create({
   root: { flex: 1, backgroundColor: t.bg },
-  head: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingTop: 12, paddingBottom: 8 },
-  headText: { color: t.ink, fontSize: 15, minWidth: 70 },
+  head: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingTop: 26, paddingBottom: 10 },
+  headText: { color: t.ink, fontSize: 16, minWidth: 70, paddingVertical: 8 },
   title: { color: t.ink, fontSize: 17, fontWeight: '800' },
   stepText: { color: t.muted, fontSize: 13, fontWeight: '700', minWidth: 70, textAlign: 'right', fontVariant: ['tabular-nums'] },
   progress: { flexDirection: 'row', gap: 6, paddingHorizontal: 16, paddingBottom: 10 },
