@@ -3,7 +3,7 @@ import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text
 import { SafeAreaView } from 'react-native-safe-area-context';
 import CardFace from './CardFace';
 import { CATALOG, TYPE_LABEL, cardPalette, installedCatalogIds, openCardApp } from './appLink';
-import { PALETTES, useTheme } from './theme';
+import { PALETTES, TYPE_COLORS, useTheme } from './theme';
 
 // Guided add: 1. pick the card (and try opening it) → 2. pick a design → 3. done.
 // 「自分でカードを作る」 hands over to the full editor (barcode, photo, set, other apps).
@@ -96,8 +96,8 @@ export default function AddFlow({ initial, allCards = [], onCancel, onSave, onCu
                         <Text style={s.itemName} numberOfLines={1}>{a.name}</Text>
                         <View style={s.tags}>
                           {(a.types || ['point']).map((ty) => (
-                            <View key={ty} style={[s.tag, ty === 'pay' ? s.tagPay : s.tagPoint]}>
-                              <Text style={[s.tagText, ty === 'pay' ? s.tagPayText : s.tagPointText]}>{TYPE_LABEL[ty]}</Text>
+                            <View key={ty} style={[s.tag, { backgroundColor: TYPE_COLORS[ty].bg }]}>
+                              <Text style={[s.tagText, { color: TYPE_COLORS[ty].fg }]}>{TYPE_LABEL[ty]}</Text>
                             </View>
                           ))}
                           {installed.includes(a.id) && <Text style={s.installed}>このiPhoneに入っています</Text>}
@@ -223,11 +223,7 @@ const styles = (t) => StyleSheet.create({
   itemName: { color: t.ink, fontSize: 16, fontWeight: '700' },
   tags: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 6 },
   tag: { borderRadius: 6, paddingHorizontal: 7, paddingVertical: 2 },
-  tagPoint: { backgroundColor: '#E3F1EA' },
-  tagPay: { backgroundColor: '#E4EBFB' },
   tagText: { fontSize: 11, fontWeight: '800' },
-  tagPointText: { color: '#0A7552' },
-  tagPayText: { color: '#2F5BD3' },
   installed: { color: t.muted, fontSize: 11 },
   chev: { color: t.muted, fontSize: 24, fontWeight: '300' },
   pressed: { opacity: 0.6 },

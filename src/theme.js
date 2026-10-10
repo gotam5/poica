@@ -29,3 +29,9 @@ export const PALETTES = [
   ['#3D4A55', '#E9C46A', '#E76F51', '#FFFFFF'],
 ];
 
+
+// Tag colors for 「ポイントカード」 and 「支払い」, readable on any card color.
+export const TYPE_COLORS = {
+  point: { bg: '#FFB020', fg: '#3B2600' },
+  pay: { bg: '#2F6FED', fg: '#FFFFFF' },
+};

@@ -214,6 +214,7 @@ function Home() {
                   card={x.card}
                   allCards={cards}
                   big={i === 0}
+                  wide
                   chip={x.reason === 'store' ? `近くに${x.store}(${formatDistance(x.dist)})` : `ここで使ったことがあります(${formatDistance(x.dist)})`}
                   onPress={() => open(x.card)} onLongPress={() => setEditing({ ...x.card })}
                   s={s}
@@ -314,13 +315,13 @@ function Home() {
   );
 }
 
-function Tile({ card, allCards, big, chip, onPress, onLongPress, s }) {
+function Tile({ card, allCards, big, wide, chip, onPress, onLongPress, s }) {
   const meta = card.kind === 'set'
     ? (card.steps || []).map((id) => allCards.find((c) => c.id === id)?.name).filter(Boolean).join(' → ') || 'カードが入っていません'
     : null;
   return (
     <Pressable onPress={onPress} onLongPress={onLongPress} delayLongPress={400} style={({ pressed }) => [pressed && { opacity: 0.85 }]} accessibilityRole="button" accessibilityLabel={`${KIND_LABEL[card.kind]} ${card.name}を表示`} accessibilityHint="長押しで編集">
-      <CardFace card={card} palette={cardPalette(card, allCards)} big={big} chip={chip} meta={meta} />
+      <CardFace card={card} palette={cardPalette(card, allCards)} big={big} wide={wide} chip={chip} meta={meta} />
     </Pressable>
   );
 }
