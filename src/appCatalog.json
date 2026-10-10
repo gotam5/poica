@@ -71,9 +71,52 @@
         "point"
       ],
       "colors": [
-        "#1A3A8C",
         "#F39800",
-        "#FFFFFF"
+        "#FFFFFF",
+        "#6B3A1E"
+      ]
+    },
+    {
+      "id": "lawson",
+      "name": "ローソン",
+      "keys": [
+        "ローソン",
+        "lawson",
+        "ナチュラルローソン"
+      ],
+      "schemes": [
+        "lawson"
+      ],
+      "stores": "ローソン|LAWSON",
+      "types": [
+        "point"
+      ],
+      "colors": [
+        "#0068B7",
+        "#FFFFFF",
+        "#9FD3F0"
+      ]
+    },
+    {
+      "id": "ponta-pass",
+      "name": "Pontaパス",
+      "keys": [
+        "pontaパス",
+        "ポンタパス",
+        "auスマートパス",
+        "スマートパス"
+      ],
+      "schemes": [
+        "smps-app"
+      ],
+      "stores": "ローソン|LAWSON",
+      "types": [
+        "point"
+      ],
+      "colors": [
+        "#EB6100",
+        "#FFFFFF",
+        "#FFC20E"
       ]
     },
     {
@@ -532,6 +575,123 @@
       ],
       "colors": [
         "#E4007F",
+        "#FFFFFF"
+      ]
+    },
+    {
+      "id": "yoshinoya",
+      "name": "吉野家",
+      "keys": [
+        "吉野家",
+        "yoshinoya"
+      ],
+      "schemes": [
+        "com.yoshinoya.ios.yoshinoya-official"
+      ],
+      "stores": "吉野家",
+      "types": [
+        "point"
+      ],
+      "colors": [
+        "#E8820C",
+        "#5A2A12",
+        "#FFFFFF"
+      ]
+    },
+    {
+      "id": "marugame",
+      "name": "丸亀製麺",
+      "keys": [
+        "丸亀",
+        "marugame"
+      ],
+      "schemes": [
+        "cellor-marugame"
+      ],
+      "stores": "丸亀製麺",
+      "types": [
+        "point"
+      ],
+      "colors": [
+        "#C8102E",
+        "#FFFFFF"
+      ]
+    },
+    {
+      "id": "yakiniku-king",
+      "name": "焼肉きんぐ",
+      "keys": [
+        "焼肉きんぐ",
+        "きんぐ"
+      ],
+      "schemes": [
+        "king-monogatari-app",
+        "jp.yakiniku.king"
+      ],
+      "stores": "焼肉きんぐ",
+      "types": [
+        "point"
+      ],
+      "colors": [
+        "#231815",
+        "#C8102E",
+        "#D4AF37"
+      ]
+    },
+    {
+      "id": "yayoiken",
+      "name": "やよい軒",
+      "keys": [
+        "やよい軒"
+      ],
+      "schemes": [
+        "yayoiken-app"
+      ],
+      "stores": "やよい軒",
+      "types": [
+        "point"
+      ],
+      "colors": [
+        "#8C1D18",
+        "#F2E3C6"
+      ]
+    },
+    {
+      "id": "mrmax",
+      "name": "ミスターマックス",
+      "keys": [
+        "ミスターマックス",
+        "mrmax"
+      ],
+      "schemes": [
+        "mrmaxapp"
+      ],
+      "stores": "ミスターマックス|MrMax|Mr Max",
+      "types": [
+        "point"
+      ],
+      "colors": [
+        "#E60012",
+        "#FFE100",
+        "#FFFFFF"
+      ]
+    },
+    {
+      "id": "aoyama",
+      "name": "洋服の青山",
+      "keys": [
+        "青山",
+        "洋服の青山"
+      ],
+      "schemes": [
+        "jp.co.aoyama-syouji.ao.saturn"
+      ],
+      "stores": "洋服の青山",
+      "types": [
+        "point"
+      ],
+      "colors": [
+        "#003C7D",
         "#FFFFFF"
       ]
     }

@@ -95,12 +95,17 @@ export function cardTypes(card) {
   return ['point'];
 }
 
-// The card face colors: the user's choice, else the official app's image colors, else the card color with white.
+// The card face colors: the user's choice, else the official app's (or a same-named shop's) image colors, else the card color with white.
 export function cardPalette(card, allCards = []) {
   if (card.palette && card.palette.length) return card.palette;
   if (card.kind === 'app' && appMode(card) === 'catalog') {
     const app = catalogApp(card.catalogId);
     if (app && app.colors) return app.colors;
+  }
+  if (card.kind !== 'set') {
+    // Cards made by hand (barcode, photo, other apps) take the shop's colors when the name matches a known shop.
+    const guess = guessCatalogApp(card.name);
+    if (guess && guess.colors) return guess.colors;
   }
   if (card.kind === 'set') {
     // A set shows the first colors of its members.
