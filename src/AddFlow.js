@@ -88,25 +88,40 @@ export default function AddFlow({ initial, allCards = [], onCancel, onSave, onCu
                 .filter((a) => !q || a.name.toLowerCase().includes(q) || a.keys.some((k) => k.toLowerCase().includes(q)))
                 .sort((a, b) => installed.includes(b.id) - installed.includes(a.id));
               if (!list.length) return <Text style={s.hint}>見つかりません。上の「自分でカードを作る」から登録できます。</Text>;
-              return (
+              // Apps already registered go to the bottom, so the ones still to add are easy to pick.
+              const added = new Set(allCards.filter((c) => c.kind === 'app' && c.catalogId).map((c) => c.catalogId));
+              const fresh = list.filter((a) => !added.has(a.id));
+              const done = list.filter((a) => added.has(a.id));
+              const rows = (items, isAdded) => (
                 <View style={s.list}>
-                  {list.map((a, i) => (
-                    <Pressable key={a.id} onPress={() => pick(a)} style={({ pressed }) => [s.item, i > 0 && s.itemLine, pressed && s.pressed]} accessibilityRole="button" accessibilityLabel={`${a.name} ${(a.types || ['point']).map((x) => TYPE_LABEL[x]).join('と')}`}>
+                  {items.map((a, i) => (
+                    <Pressable key={a.id} onPress={() => pick(a)} style={({ pressed }) => [s.item, i > 0 && s.itemLine, isAdded && s.itemAdded, pressed && s.pressed]} accessibilityRole="button" accessibilityLabel={`${a.name} ${(a.types || ['point']).map((x) => TYPE_LABEL[x]).join('と')}${isAdded ? ' 追加済み' : ''}`}>
                       <View style={{ flex: 1, gap: 4 }}>
-                        <Text style={s.itemName} numberOfLines={1}>{a.name}</Text>
+                        <Text style={[s.itemName, isAdded && s.itemNameAdded]} numberOfLines={1}>{a.name}</Text>
                         <View style={s.tags}>
                           {(a.types || ['point']).map((ty) => (
                             <View key={ty} style={[s.tag, { backgroundColor: TYPE_COLORS[ty].bg }]}>
                               <Text style={[s.tagText, { color: TYPE_COLORS[ty].fg }]}>{TYPE_LABEL[ty]}</Text>
                             </View>
                           ))}
-                          {installed.includes(a.id) && <Text style={s.installed}>このiPhoneに入っています</Text>}
+                          {!isAdded && installed.includes(a.id) && <Text style={s.installed}>このiPhoneに入っています</Text>}
                         </View>
                       </View>
-                      <Text style={s.chev}>›</Text>
+                      {isAdded ? <Text style={s.addedMark}>✓ 追加済み</Text> : <Text style={s.chev}>›</Text>}
                     </Pressable>
                   ))}
                 </View>
+              );
+              return (
+                <>
+                  {fresh.length > 0 ? rows(fresh, false) : <Text style={s.hint}>一覧のアプリはすべて追加済みです。</Text>}
+                  {done.length > 0 && (
+                    <>
+                      <Text style={s.groupLabel}>追加済み</Text>
+                      {rows(done, true)}
+                    </>
+                  )}
+                </>
               );
             })()}
           </ScrollView>
@@ -224,6 +239,10 @@ const styles = (t) => StyleSheet.create({
   tags: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 6 },
   tag: { borderRadius: 6, paddingHorizontal: 7, paddingVertical: 2 },
   tagText: { fontSize: 11, fontWeight: '800' },
+  itemAdded: { backgroundColor: t.bg },
+  itemNameAdded: { color: t.muted },
+  addedMark: { color: t.muted, fontSize: 12, fontWeight: '700' },
+  groupLabel: { color: t.muted, fontSize: 13, fontWeight: '700', marginTop: 8 },
   installed: { color: t.muted, fontSize: 11 },
   chev: { color: t.muted, fontSize: 24, fontWeight: '300' },
   pressed: { opacity: 0.6 },
