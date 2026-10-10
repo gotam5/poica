@@ -92,7 +92,6 @@ export default function AddFlow({ initial, allCards = [], onCancel, onSave, onCu
                 <View style={s.list}>
                   {list.map((a, i) => (
                     <Pressable key={a.id} onPress={() => pick(a)} style={({ pressed }) => [s.item, i > 0 && s.itemLine, pressed && s.pressed]} accessibilityRole="button" accessibilityLabel={`${a.name} ${(a.types || ['point']).map((x) => TYPE_LABEL[x]).join('と')}`}>
-                      <View style={s.swatch}>{a.colors.slice(0, 3).map((c, k) => <View key={k} style={{ flex: k === 0 ? 2 : 1, backgroundColor: c }} />)}</View>
                       <View style={{ flex: 1, gap: 4 }}>
                         <Text style={s.itemName} numberOfLines={1}>{a.name}</Text>
                         <View style={s.tags}>
@@ -221,7 +220,6 @@ const styles = (t) => StyleSheet.create({
   list: { backgroundColor: t.surface, borderRadius: 14, borderWidth: 1, borderColor: t.line, overflow: 'hidden' },
   item: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 12, paddingHorizontal: 12 },
   itemLine: { borderTopWidth: 1, borderTopColor: t.line },
-  swatch: { width: 44, height: 30, borderRadius: 6, overflow: 'hidden', flexDirection: 'row' },
   itemName: { color: t.ink, fontSize: 16, fontWeight: '700' },
   tags: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 6 },
   tag: { borderRadius: 6, paddingHorizontal: 7, paddingVertical: 2 },
