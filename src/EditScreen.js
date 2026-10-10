@@ -9,6 +9,7 @@ import ScannerScreen from './ScannerScreen';
 import { FORMATS } from './barcode';
 import { KIND_LABEL, PALETTES, useTheme } from './theme';
 import CardFace from './CardFace';
+import ShortcutGuide from './ShortcutGuide';
 import { photoUri } from './storage';
 import { CATALOG, TYPE_LABEL, appMode, cardPalette, catalogApp, launchCandidates, schemeUrl, guessCatalogApp, installedCatalogIds, isStoreUrl, normalizeAppUrl, openCardApp } from './appLink';
 import { base64ToBytes, decodeBarcodeImage } from './decodeImage';
@@ -284,7 +285,7 @@ export default function EditScreen({ initial, allCards = [], onCancel, onSave, o
                   <Text style={s.label}>ショートカットの名前</Text>
                   <TextInput style={s.input} value={d.shortcutName} onChangeText={(v) => set({ shortcutName: v })} placeholder="例: 楽天を開く" placeholderTextColor={t.muted} autoCorrect={false} />
                   <Text style={s.hint}>{catalogApp(d.catalogId) ? `${catalogApp(d.catalogId).name}を直接開けないときの方法です。` : '一覧にないアプリ向けの方法です。'}iPhoneの「ショートカット」アプリで、次のように1回だけ作ってください。</Text>
-                  <Text style={s.hint}>1. 右上の「＋」で新規ショートカットを作る{'\n'}2. 「Appを開く」を追加し、{catalogApp(d.catalogId)?.name || '開きたいアプリ'}を選ぶ{'\n'}3. 上の名前と同じ名前を付けて保存する</Text>
+                  <ShortcutGuide appName={catalogApp(d.catalogId)?.name} shortcutName={(d.shortcutName || '').trim()} t={t} />
                   <Pressable onPress={() => Linking.openURL('shortcuts://').catch(() => {})} style={[s.secondary, { alignSelf: 'flex-start' }]} accessibilityRole="button">
                     <Text style={s.secondaryText}>ショートカットアプリを開く</Text>
                   </Pressable>

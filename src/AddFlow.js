@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { KeyboardAvoidingView, Linking, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import CardFace from './CardFace';
+import ShortcutGuide from './ShortcutGuide';
 import { CATALOG, TYPE_LABEL, cardPalette, installedCatalogIds, openCardApp } from './appLink';
 import { PALETTES, TYPE_COLORS, useTheme } from './theme';
 
@@ -134,10 +135,12 @@ export default function AddFlow({ initial, allCards = [], onCancel, onSave, onCu
               <View style={s.box}>
                 <Text style={s.boxTitle}>{app.openWith === 'shortcut' ? `${app.name}は、iPhoneの「ショートカット」から開きます` : 'ショートカットで開く'}</Text>
                 {app.openWith === 'shortcut' && <Text style={s.hint}>{app.name}のアプリは、起動中に直接開くとSafariに移ってしまうためです。最初に1回だけ準備が要ります。</Text>}
-                <Text style={s.stepLine}>1. 「ショートカット」アプリを開き、右上の「＋」を押す</Text>
-                <Text style={s.stepLine}>2. 「Appを開く」を追加して、{app.name}を選ぶ</Text>
-                <Text style={s.stepLine}>3. 下の名前を付けて保存する</Text>
+                <Text style={s.stepLine}>ショートカットの名前</Text>
                 <TextInput style={s.input} value={d.shortcutName} onChangeText={(v) => { setResult(null); set({ shortcutName: v }); }} autoCorrect={false} />
+                <ShortcutGuide appName={app.name} shortcutName={(d.shortcutName || '').trim()} t={t} />
+                <Pressable onPress={() => Linking.openURL('shortcuts://').catch(() => {})} style={({ pressed }) => [s.scBtn, pressed && s.pressed]} accessibilityRole="button">
+                  <Text style={s.scText}>「ショートカット」アプリを開く</Text>
+                </Pressable>
               </View>
             ) : (
               <Text style={s.hint}>下のボタンを押すと{app.name}のアプリが開きます。開いたらPoicaに戻ってきてください。</Text>
@@ -253,6 +256,8 @@ const styles = (t) => StyleSheet.create({
   tryText: { color: t.accent, fontWeight: '800', fontSize: 18 },
   err: { backgroundColor: t.nearBg, borderRadius: 10, padding: 12 },
   errText: { color: t.near, fontSize: 13, lineHeight: 19 },
+  scBtn: { borderWidth: 1, borderColor: t.line, backgroundColor: t.bg, borderRadius: 999, paddingVertical: 13, alignItems: 'center' },
+  scText: { color: t.ink, fontWeight: '700', fontSize: 15 },
   link: { color: t.accent, fontSize: 14, fontWeight: '700', textAlign: 'center', paddingVertical: 6 },
   palettes: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
   pal: { width: 64, height: 40, borderRadius: 10, borderWidth: 3, borderColor: 'transparent', flexDirection: 'row', overflow: 'hidden' },
