@@ -76,7 +76,8 @@
           "photosPermission": "カードの写真を選ぶために写真ライブラリを使います。",
           "microphonePermission": false
         }
-      ]
+      ],
+      "expo-iap"
     ]
   }
 }

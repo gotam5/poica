@@ -6,6 +6,8 @@ import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import AddFlow from './src/AddFlow';
 import EditScreen from './src/EditScreen';
 import ShowScreen from './src/ShowScreen';
+import Paywall from './src/Paywall';
+import { FREE_LIMIT, checkOwned, iapAvailable } from './src/purchase';
 import { arrange, learnPlace } from './src/geo';
 import { deleteCard, getSetting, keepPhoto, loadCards, removePhoto, saveCard, setSetting } from './src/storage';
 import { TYPE_LABEL, cardPalette, cardTypes, openCardApp } from './src/appLink';
@@ -37,6 +39,8 @@ function Home() {
   const [stores, setStores] = useState([]);
   const [openFailed, setOpenFailed] = useState(false);
   const [storeLookup, setStoreLookup] = useState(true);
+  const [unlimited, setUnlimited] = useState(false);
+  const [paywall, setPaywall] = useState(false);
 
   const say = useCallback((text) => {
     setToast(text);
@@ -48,6 +52,11 @@ function Home() {
     // セット was removed; old set cards stay hidden.
     loadCards().then((list) => setCards(list.filter((c) => c.kind !== 'set'))).catch(() => setCards([]));
     getSetting('storeLookup', true).then(setStoreLookup).catch(() => {});
+    // The purchase is remembered on the phone so the limit stays off offline; StoreKit is the source of truth when reachable.
+    getSetting('unlimited', false).then((v) => v && setUnlimited(true)).catch(() => {});
+    if (iapAvailable) {
+      checkOwned().then((owned) => { if (owned) { setUnlimited(true); setSetting('unlimited', true).catch(() => {}); } }).catch(() => {});
+    }
   }, []);
 
   // Look up chain shops near here for cards tied to a shop (e.g. スギ薬局), so they can be suggested.
@@ -139,7 +148,19 @@ function Home() {
     say('削除しました');
   }, [cards, say]);
 
-  const startNew = () => setEditing({
+  const unlock = () => {
+    setUnlimited(true);
+    setSetting('unlimited', true).catch(() => {});
+    setPaywall(false);
+    say('購入ありがとうございます。カードを何枚でも登録できます');
+    setTimeout(() => newDraft(), 450); // carry on to the card they were adding
+  };
+
+  const startNew = () => {
+    if (iapAvailable && !unlimited && (cards?.length || 0) >= FREE_LIMIT) { setPaywall(true); return; }
+    newDraft();
+  };
+  const newDraft = () => setEditing({
     id: newId(), isNew: true, name: '', kind: 'app', code: '', format: 'CODE128', photo: null, appMode: 'catalog', catalogId: null, appUrl: '', shortcutName: '',
     color: CARD_COLORS[(cards?.length || 0) % CARD_COLORS.length], places: [], uses: 0, created: Date.now(),
   });
@@ -297,6 +318,12 @@ function Home() {
             setTimeout(() => setEditing(draft), 450);
           }} />;
         })()}
+        </SafeAreaProvider>
+      </Modal>
+
+      <Modal visible={paywall} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setPaywall(false)}>
+        <SafeAreaProvider>
+          {paywall && <Paywall onClose={() => setPaywall(false)} onUnlocked={unlock} />}
         </SafeAreaProvider>
       </Modal>
 
