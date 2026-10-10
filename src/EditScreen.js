@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, Image, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View, useWindowDimensions } from 'react-native';
+import { ActivityIndicator, Image, KeyboardAvoidingView, Linking, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View, useWindowDimensions } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { ImageManipulator, SaveFormat } from 'expo-image-manipulator';
 import { scanFromURLAsync } from 'expo-camera';
@@ -10,7 +10,7 @@ import { FORMATS } from './barcode';
 import { KIND_LABEL, PALETTES, useTheme } from './theme';
 import CardFace from './CardFace';
 import { photoUri } from './storage';
-import { CATALOG, TYPE_LABEL, appMode, cardPalette, catalogApp, guessCatalogApp, installedCatalogIds, isStoreUrl, normalizeAppUrl, openCardApp } from './appLink';
+import { CATALOG, TYPE_LABEL, appMode, cardPalette, catalogApp, launchCandidates, guessCatalogApp, installedCatalogIds, isStoreUrl, normalizeAppUrl, openCardApp } from './appLink';
 import { base64ToBytes, decodeBarcodeImage } from './decodeImage';
 import { lookupKnownApp } from './knownApps';
 
@@ -43,7 +43,7 @@ export default function EditScreen({ initial, allCards = [], onCancel, onSave, o
 
   const pickCatalog = (app) => {
     setTestResult(null);
-    setD((prev) => ({ ...prev, appMode: 'catalog', catalogId: app.id, name: isNew || !(prev.name || '').trim() ? app.name : prev.name }));
+    setD((prev) => ({ ...prev, appMode: 'catalog', catalogId: app.id, launch: null, name: isNew || !(prev.name || '').trim() ? app.name : prev.name }));
   };
 
   const testOpen = async () => {
@@ -314,6 +314,23 @@ export default function EditScreen({ initial, allCards = [], onCancel, onSave, o
                 <Text style={s.tryText}>↗ 試しに開く</Text>
                 <Text style={s.tryHint}>ちゃんと開けるか、ここで確かめられます</Text>
               </Pressable>
+              {appMode(d) === 'catalog' && (catalogApp(d.catalogId)?.schemes.length || 0) > 1 && (() => {
+                const urls = catalogApp(d.catalogId).schemes.map((sc) => `${sc}://`);
+                const current = launchCandidates(d)[0];
+                return (
+                  <View style={s.field}>
+                    <Text style={s.subLabel}>開き方を選ぶ</Text>
+                    <View style={s.chips}>
+                      {urls.map((u, i) => (
+                        <Pressable key={u} onPress={async () => { set({ launch: u }); setTestResult(null); try { await Linking.openURL(u); } catch { setTestResult('fail'); } }} style={[s.chip, current === u && s.chipOn]} accessibilityRole="button" accessibilityState={{ selected: current === u }}>
+                          <Text style={[s.chipText, current === u && s.chipTextOn]}>開き方{i + 1}{current === u ? '(使用中)' : ''}</Text>
+                        </Pressable>
+                      ))}
+                    </View>
+                    <Text style={s.hint}>開いたあとSafariなどに移ってしまうときは、別の開き方を押して試してください。押した開き方が保存されます。</Text>
+                  </View>
+                );
+              })()}
               {testResult === 'fail' && (
                 <Text style={[s.status, s.statusErr]}>
                   {appMode(d) === 'catalog'

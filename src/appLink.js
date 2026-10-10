@@ -37,7 +37,10 @@ export function launchCandidates(card) {
   const mode = appMode(card);
   if (mode === 'catalog') {
     const app = catalogApp(card.catalogId);
-    return app ? app.schemes.map((sc) => `${sc}://`) : [];
+    if (!app) return [];
+    const urls = app.schemes.map((sc) => `${sc}://`);
+    // The user can pin the variant that works best on their phone (some apps bounce one variant to Safari).
+    return card.launch && urls.includes(card.launch) ? [card.launch, ...urls.filter((u) => u !== card.launch)] : urls;
   }
   if (mode === 'shortcut') {
     const name = (card.shortcutName || '').trim();

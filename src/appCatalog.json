@@ -185,8 +185,8 @@
         "tpoint"
       ],
       "schemes": [
-        "tpointapp",
-        "tpointapps"
+        "tpointapps",
+        "tpointapp"
       ],
       "types": [
         "point"
