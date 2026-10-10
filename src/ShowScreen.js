@@ -13,10 +13,10 @@ export function mapsUrl(name) {
 }
 
 // Full-screen, always white, brightness up: what you hold out at the register.
-export default function ShowScreen({ card, hasPosition, onClose, onRememberHere, onForget }) {
+export default function ShowScreen({ card, openFailed, hasPosition, onClose, onRememberHere, onForget }) {
   useRegisterMode();
   const { width } = useWindowDimensions();
-  const [appError, setAppError] = useState(false);
+  const [appError, setAppError] = useState(!!openFailed);
 
   const places = (card.places || []).length;
   const codeWidth = Math.min(width - 32, 460);

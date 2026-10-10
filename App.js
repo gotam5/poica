@@ -8,7 +8,7 @@ import SetShowScreen from './src/SetShowScreen';
 import ShowScreen from './src/ShowScreen';
 import { arrange, formatDistance, learnPlace } from './src/geo';
 import { deleteCard, getSetting, keepPhoto, loadCards, removePhoto, saveCard, setSetting } from './src/storage';
-import { TYPE_LABEL, cardPalette, cardTypes } from './src/appLink';
+import { TYPE_LABEL, cardPalette, cardTypes, openCardApp } from './src/appLink';
 import CardFace from './src/CardFace';
 import { fetchNearbyStores, storePatternOf, storeRegex } from './src/nearbyStores';
 import { CARD_COLORS, KIND_LABEL, useTheme } from './src/theme';
@@ -35,6 +35,7 @@ function Home() {
   const [toast, setToast] = useState(null);
   const toastTimer = useRef(null);
   const [stores, setStores] = useState([]);
+  const [openFailed, setOpenFailed] = useState(false);
   const [storeLookup, setStoreLookup] = useState(true);
 
   const say = useCallback((text) => {
@@ -102,8 +103,14 @@ function Home() {
     const { places, added } = learnPlace(card, pos);
     const next = { ...card, places, uses: (card.uses || 0) + 1, lastUsed: Date.now() };
     updateCard(next);
-    setShowing(card.id);
     if (added) say('この場所を覚えました。次からここで一番上に出します');
+    if (card.kind === 'app') {
+      // Official apps open straight away; the card screen only shows up when the app could not be opened.
+      openCardApp(card).then((ok) => { if (!ok) { setOpenFailed(true); setShowing(card.id); } });
+      return;
+    }
+    setOpenFailed(false);
+    setShowing(card.id);
   }, [pos, updateCard, say]);
 
   const saveDraft = useCallback(async (draft) => {
@@ -289,7 +296,7 @@ function Home() {
               />
             );
           }
-          return <ShowScreen {...common} card={shownCard} />;
+          return <ShowScreen {...common} card={shownCard} openFailed={openFailed} />;
         })()}
         </SafeAreaProvider>
       </Modal>

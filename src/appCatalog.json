@@ -180,8 +180,30 @@
       "name": "Vポイント",
       "keys": [
         "vポイント",
-        "ｖポイント",
-        "vpoint"
+        "tポイント",
+        "vpoint",
+        "tpoint"
+      ],
+      "schemes": [
+        "tpointapp",
+        "tpointapps"
+      ],
+      "types": [
+        "point"
+      ],
+      "colors": [
+        "#00205B",
+        "#FFD100",
+        "#FFFFFF"
+      ]
+    },
+    {
+      "id": "vpoint-pay",
+      "name": "VポイントPay",
+      "keys": [
+        "vポイントpay",
+        "vpointpay",
+        "vアプリ"
       ],
       "schemes": [
         "vpoint"
@@ -193,6 +215,7 @@
       "colors": [
         "#00205B",
         "#FFD100",
+        "#2EA7E0",
         "#FFFFFF"
       ]
     },

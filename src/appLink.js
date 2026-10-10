@@ -14,7 +14,16 @@ export function catalogApp(id) {
 export function guessCatalogApp(name) {
   const n = String(name || '').toLowerCase().replace(/[\s・‐-]/g, '');
   if (!n) return null;
-  return CATALOG.find((a) => a.keys.some((k) => n.includes(k.toLowerCase().replace(/[\s・‐-]/g, '')))) || null;
+  // Prefer the longest matching key, so 「VポイントPay」 finds VポイントPay rather than Vポイント.
+  let best = null;
+  let bestLen = 0;
+  for (const a of CATALOG) {
+    for (const k of a.keys) {
+      const key = k.toLowerCase().replace(/[\s・‐-]/g, '');
+      if (key.length > bestLen && n.includes(key)) { best = a; bestLen = key.length; }
+    }
+  }
+  return best;
 }
 
 export function appMode(card) {
