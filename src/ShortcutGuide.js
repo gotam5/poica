@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Image, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 const IMAGES = [
@@ -12,6 +13,8 @@ const IMAGES = [
 
 // Swipeable step-by-step screenshots of making an "open app" shortcut in the Shortcuts app (Vポイント as the example).
 export default function ShortcutGuide({ appName, shortcutName, t }) {
+  const [boxW, setBoxW] = useState(0);
+  const side = boxW > W ? (boxW - W) / 2 : 0; // pad so the current step sits in the middle
   const app = appName || '開きたいアプリ';
   const name = shortcutName || `${app}を開く`;
   const captions = [
@@ -26,7 +29,7 @@ export default function ShortcutGuide({ appName, shortcutName, t }) {
   return (
     <View style={{ gap: 6 }}>
       <Text style={[s.swipe, t && { color: t.muted }]}>横にスワイプして手順を見られます(画面はVポイントの例です)</Text>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} snapToInterval={W + GAP} decelerationRate="fast" contentContainerStyle={{ gap: GAP, paddingRight: 8 }}>
+      <ScrollView horizontal onLayout={(e) => setBoxW(e.nativeEvent.layout.width)} showsHorizontalScrollIndicator={false} snapToInterval={W + GAP} decelerationRate="fast" contentContainerStyle={{ gap: GAP, paddingHorizontal: side }}>
         {IMAGES.map((src, i) => (
           <View key={i} style={s.step}>
             <View style={s.head}>
@@ -44,7 +47,7 @@ export default function ShortcutGuide({ appName, shortcutName, t }) {
 const W = 210;
 const GAP = 12;
 const s = StyleSheet.create({
-  swipe: { fontSize: 12, color: '#666' },
+  swipe: { fontSize: 12, color: '#666', textAlign: 'center' },
   step: { width: W, gap: 8 },
   head: { flexDirection: 'row', gap: 8, alignItems: 'flex-start', minHeight: 54 },
   num: { width: 24, height: 24, borderRadius: 12, backgroundColor: '#FF9500', alignItems: 'center', justifyContent: 'center', marginTop: 1 },

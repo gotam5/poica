@@ -202,7 +202,7 @@ function Home() {
         )}
 
         <View>
-          <Text style={s.sec}>近くのおすすめ</Text>
+          <Text style={[s.sec, s.secHot]}>近くのおすすめ</Text>
           {suggest.length ? (
             <View style={{ gap: 10 }}>
               {suggest.map((x, i) => (
@@ -327,6 +327,7 @@ const styles = (t) => StyleSheet.create({
   smallBtn: { alignSelf: 'flex-start', borderWidth: 1, borderColor: t.line, borderRadius: 10, paddingVertical: 6, paddingHorizontal: 12 },
   smallBtnText: { fontSize: 13, fontWeight: '700', color: t.ink },
   sec: { fontSize: 13, fontWeight: '700', letterSpacing: 1.5, color: t.muted, marginBottom: 10 },
+  secHot: { fontSize: 15, fontWeight: '800', color: t.accent },
   count: { fontVariant: ['tabular-nums'], letterSpacing: 0 },
   empty: { borderWidth: 1.5, borderStyle: 'dashed', borderColor: t.line, borderRadius: 14, padding: 14 },
   emptyText: { fontSize: 13, color: t.muted, lineHeight: 20 },

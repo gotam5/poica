@@ -316,7 +316,7 @@ export default function EditScreen({ initial, allCards = [], onCancel, onSave, o
                 <Text style={s.tryText}>↗ 試しに開く</Text>
                 <Text style={s.tryHint}>ちゃんと開けるか、ここで確かめられます</Text>
               </Pressable>
-              {appMode(d) === 'catalog' && (catalogApp(d.catalogId)?.schemes.length || 0) > 1 && (() => {
+              {appMode(d) === 'catalog' && catalogApp(d.catalogId)?.openWith !== 'shortcut' && (catalogApp(d.catalogId)?.schemes.length || 0) > 1 && (() => {
                 const urls = catalogApp(d.catalogId).schemes.map(schemeUrl);
                 const current = launchCandidates(d)[0];
                 return (
