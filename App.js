@@ -317,9 +317,7 @@ function Home() {
 function Tile({ card, allCards, big, chip, onPress, onLongPress, s }) {
   const meta = card.kind === 'set'
     ? (card.steps || []).map((id) => allCards.find((c) => c.id === id)?.name).filter(Boolean).join(' → ') || 'カードが入っていません'
-    : card.lastUsed
-    ? `最後に使った日 ${new Date(card.lastUsed).getMonth() + 1}/${new Date(card.lastUsed).getDate()}`
-    : 'まだ使っていません';
+    : null;
   return (
     <Pressable onPress={onPress} onLongPress={onLongPress} delayLongPress={400} style={({ pressed }) => [pressed && { opacity: 0.85 }]} accessibilityRole="button" accessibilityLabel={`${KIND_LABEL[card.kind]} ${card.name}を表示`} accessibilityHint="長押しで編集">
       <CardFace card={card} palette={cardPalette(card, allCards)} big={big} chip={chip} meta={meta} />
