@@ -1,0 +1,54 @@
+{
+  "expo": {
+    "name": "Poica",
+    "slug": "poica",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.gotam5.poica",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    },
+    "android": {
+      "package": "com.gotam5.poica",
+      "adaptiveIcon": {
+        "backgroundColor": "#0A7552",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      }
+    },
+    "plugins": [
+      "expo-sqlite",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "カードのバーコードを読み取るためにカメラを使います。",
+          "recordAudioAndroid": false
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "アプリを開いている間だけ現在地を使い、近くの店のカードを上に並べます。位置はスマホの外に送りません。",
+          "isIosBackgroundLocationEnabled": false,
+          "locationAlwaysAndWhenInUsePermission": false,
+          "locationAlwaysPermission": false,
+          "motionUsagePermission": false
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "cameraPermission": "バーコードが読めないカードを写真で保存するためにカメラを使います。",
+          "photosPermission": "カードの写真を選ぶために写真ライブラリを使います。",
+          "microphonePermission": false
+        }
+      ]
+    ]
+  }
+}

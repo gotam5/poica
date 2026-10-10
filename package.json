@@ -1,0 +1,33 @@
+{
+  "name": "poica",
+  "version": "1.0.0",
+  "main": "index.js",
+  "dependencies": {
+    "@zxing/library": "^0.21.3",
+    "expo": "~57.0.27",
+    "expo-brightness": "~57.0.2",
+    "expo-camera": "~57.0.6",
+    "expo-file-system": "~57.0.7",
+    "expo-image-manipulator": "~57.0.21",
+    "expo-image-picker": "~57.0.20",
+    "expo-keep-awake": "~57.0.2",
+    "expo-location": "~57.0.20",
+    "expo-sqlite": "~57.0.4",
+    "expo-status-bar": "~57.0.1",
+    "jpeg-js": "^0.4.4",
+    "jsbarcode": "^3.11.6",
+    "qrcode-generator": "^1.4.4",
+    "react": "19.2.3",
+    "react-native": "0.86.3",
+    "react-native-safe-area-context": "~5.7.0",
+    "react-native-svg": "^15.15.4",
+    "upng-js": "^2.1.0"
+  },
+  "scripts": {
+    "start": "expo start",
+    "android": "expo start --android",
+    "ios": "expo start --ios",
+    "web": "expo start --web"
+  },
+  "private": true
+}
