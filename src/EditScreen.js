@@ -10,7 +10,7 @@ import { FORMATS } from './barcode';
 import { KIND_LABEL, PALETTES, useTheme } from './theme';
 import CardFace from './CardFace';
 import { photoUri } from './storage';
-import { CATALOG, TYPE_LABEL, appMode, cardPalette, catalogApp, launchCandidates, guessCatalogApp, installedCatalogIds, isStoreUrl, normalizeAppUrl, openCardApp } from './appLink';
+import { CATALOG, TYPE_LABEL, appMode, cardPalette, catalogApp, launchCandidates, schemeUrl, guessCatalogApp, installedCatalogIds, isStoreUrl, normalizeAppUrl, openCardApp } from './appLink';
 import { base64ToBytes, decodeBarcodeImage } from './decodeImage';
 import { lookupKnownApp } from './knownApps';
 
@@ -315,7 +315,7 @@ export default function EditScreen({ initial, allCards = [], onCancel, onSave, o
                 <Text style={s.tryHint}>ちゃんと開けるか、ここで確かめられます</Text>
               </Pressable>
               {appMode(d) === 'catalog' && (catalogApp(d.catalogId)?.schemes.length || 0) > 1 && (() => {
-                const urls = catalogApp(d.catalogId).schemes.map((sc) => `${sc}://`);
+                const urls = catalogApp(d.catalogId).schemes.map(schemeUrl);
                 const current = launchCandidates(d)[0];
                 return (
                   <View style={s.field}>
@@ -327,7 +327,7 @@ export default function EditScreen({ initial, allCards = [], onCancel, onSave, o
                         </Pressable>
                       ))}
                     </View>
-                    <Text style={s.hint}>開いたあとSafariなどに移ってしまうときは、別の開き方を押して試してください。押した開き方が保存されます。</Text>
+                    <Text style={s.hint}>開いたあとSafariなどに移ってしまうときは、そのアプリを起動したままの状態で、別の開き方を押して試してください。押した開き方が保存されます。</Text>
                   </View>
                 );
               })()}

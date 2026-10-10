@@ -7,6 +7,9 @@ import catalog from './appCatalog.json';
 
 export const CATALOG = catalog.apps;
 
+// A catalog entry is either a bare scheme ("paypay") or a full URL with a path ("tpointapp://top").
+export const schemeUrl = (sc) => (sc.includes('://') ? sc : `${sc}://`);
+
 export function catalogApp(id) {
   return CATALOG.find((a) => a.id === id) || null;
 }
@@ -38,7 +41,7 @@ export function launchCandidates(card) {
   if (mode === 'catalog') {
     const app = catalogApp(card.catalogId);
     if (!app) return [];
-    const urls = app.schemes.map((sc) => `${sc}://`);
+    const urls = app.schemes.map(schemeUrl);
     // The user can pin the variant that works best on their phone (some apps bounce one variant to Safari).
     return card.launch && urls.includes(card.launch) ? [card.launch, ...urls.filter((u) => u !== card.launch)] : urls;
   }
@@ -71,7 +74,7 @@ export async function openCardApp(card) {
 export async function installedCatalogIds() {
   const found = [];
   for (const app of CATALOG) {
-    for (const sc of app.schemes) {
+    for (const sc of new Set(app.schemes.map((x) => x.split('://')[0]))) {
       try {
         if (await Linking.canOpenURL(`${sc}://`)) { found.push(app.id); break; }
       } catch {}

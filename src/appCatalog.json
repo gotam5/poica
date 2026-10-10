@@ -185,6 +185,9 @@
         "tpoint"
       ],
       "schemes": [
+        "tpointapp://top",
+        "tpointapps://top",
+        "tpointapp://home",
         "tpointapps",
         "tpointapp"
       ],
