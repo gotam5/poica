@@ -16,3 +16,16 @@ export function useTheme() {
 }
 
 export const KIND_LABEL = { barcode: 'バーコード', photo: '写真', app: '公式アプリ', set: 'セット' };
+
+// Preset 2-4 color palettes for cards the user makes. The first color is the background (white text sits on it).
+export const PALETTES = [
+  ['#0A7552', '#F2C14E', '#FFFFFF'],
+  ['#2F5BD3', '#FFFFFF', '#F25C54'],
+  ['#C2412D', '#FFD166', '#FFFFFF'],
+  ['#B8740A', '#3D2B1F', '#FFFFFF'],
+  ['#7A3FC4', '#FF9FD2', '#FFFFFF'],
+  ['#0F7F93', '#A8E6CF', '#FFFFFF'],
+  ['#C23C7A', '#FFFFFF'],
+  ['#3D4A55', '#E9C46A', '#E76F51', '#FFFFFF'],
+];
+

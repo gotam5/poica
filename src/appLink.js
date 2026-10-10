@@ -94,3 +94,18 @@ export function cardTypes(card) {
   }
   return ['point'];
 }
+
+// The card face colors: the user's choice, else the official app's image colors, else the card color with white.
+export function cardPalette(card, allCards = []) {
+  if (card.palette && card.palette.length) return card.palette;
+  if (card.kind === 'app' && appMode(card) === 'catalog') {
+    const app = catalogApp(card.catalogId);
+    if (app && app.colors) return app.colors;
+  }
+  if (card.kind === 'set') {
+    // A set shows the first colors of its members.
+    const cols = (card.steps || []).map((id) => allCards.find((c) => c.id === id)).filter(Boolean).map((c) => cardPalette(c)[0]);
+    if (cols.length) return [card.color || cols[0], ...cols.slice(0, 3)];
+  }
+  return [card.color || '#3D4A55', '#FFFFFF'];
+}

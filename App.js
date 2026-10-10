@@ -8,7 +8,8 @@ import SetShowScreen from './src/SetShowScreen';
 import ShowScreen from './src/ShowScreen';
 import { arrange, formatDistance, learnPlace } from './src/geo';
 import { deleteCard, getSetting, keepPhoto, loadCards, removePhoto, saveCard, setSetting } from './src/storage';
-import { TYPE_LABEL, cardTypes } from './src/appLink';
+import { TYPE_LABEL, cardPalette, cardTypes } from './src/appLink';
+import CardFace from './src/CardFace';
 import { fetchNearbyStores, storePatternOf, storeRegex } from './src/nearbyStores';
 import { CARD_COLORS, KIND_LABEL, useTheme } from './src/theme';
 
@@ -309,15 +310,8 @@ function Tile({ card, allCards, big, chip, onPress, onLongPress, s }) {
     ? `最後に使った日 ${new Date(card.lastUsed).getMonth() + 1}/${new Date(card.lastUsed).getDate()}`
     : 'まだ使っていません';
   return (
-    <Pressable onPress={onPress} onLongPress={onLongPress} delayLongPress={400} style={({ pressed }) => [s.tile, { backgroundColor: card.color }, chip != null && s.tileNear, big && s.tileBig, pressed && { opacity: 0.85 }]} accessibilityRole="button" accessibilityLabel={`${card.name}を表示`} accessibilityHint="長押しで編集">
-      <View style={s.tileDeco} />
-      <Text style={s.kind}>{KIND_LABEL[card.kind]}</Text>
-      <Text style={[s.tileName, big && s.tileNameBig]} numberOfLines={2}>{card.name}</Text>
-      {chip != null ? (
-        <View style={s.dist}><Text style={s.distText} numberOfLines={1}>{chip}</Text></View>
-      ) : (
-        <Text style={s.meta} numberOfLines={1}>{meta}</Text>
-      )}
+    <Pressable onPress={onPress} onLongPress={onLongPress} delayLongPress={400} style={({ pressed }) => [pressed && { opacity: 0.85 }]} accessibilityRole="button" accessibilityLabel={`${KIND_LABEL[card.kind]} ${card.name}を表示`} accessibilityHint="長押しで編集">
+      <CardFace card={card} palette={cardPalette(card, allCards)} big={big} chip={chip} meta={meta} />
     </Pressable>
   );
 }
@@ -340,16 +334,6 @@ const styles = (t) => StyleSheet.create({
   emptyText: { fontSize: 13, color: t.muted, lineHeight: 20 },
   grid: { flexDirection: 'row', flexWrap: 'wrap', marginHorizontal: -5 },
   cell: { width: '50%', padding: 5 },
-  tile: { borderRadius: 14, paddingVertical: 12, paddingHorizontal: 14, minHeight: 92, justifyContent: 'space-between', gap: 6, overflow: 'hidden' },
-  tileNear: { minHeight: 96, paddingVertical: 14, paddingHorizontal: 16 },
-  tileBig: { minHeight: 128 },
-  tileDeco: { position: 'absolute', right: -30, bottom: -40, width: 120, height: 120, borderRadius: 60, backgroundColor: 'rgba(255,255,255,0.12)' },
-  kind: { position: 'absolute', right: 10, top: 10, fontSize: 10, color: '#FFF', backgroundColor: 'rgba(255,255,255,0.22)', paddingHorizontal: 7, paddingVertical: 1, borderRadius: 999, overflow: 'hidden' },
-  tileName: { color: '#FFF', fontSize: 15, fontWeight: '800', paddingRight: 52, lineHeight: 20 },
-  tileNameBig: { fontSize: 22, lineHeight: 28 },
-  meta: { color: 'rgba(255,255,255,0.9)', fontSize: 11, fontVariant: ['tabular-nums'] },
-  dist: { alignSelf: 'flex-start', backgroundColor: '#FFF', borderRadius: 999, paddingHorizontal: 9, paddingVertical: 2 },
-  distText: { color: t.near === '#FF8A73' ? '#D9452B' : t.near, fontSize: 12, fontWeight: '700' },
   search: { borderWidth: 1, borderColor: t.line, backgroundColor: t.surface, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 9, marginBottom: 10, color: t.ink, fontSize: 15 },
   group: { fontSize: 13, fontWeight: '700', color: t.muted },
   setting: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: t.surface, borderWidth: 1, borderColor: t.line, borderRadius: 14, padding: 12 },

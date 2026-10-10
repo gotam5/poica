@@ -7,9 +7,10 @@ import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import BarcodeView from './BarcodeView';
 import ScannerScreen from './ScannerScreen';
 import { FORMATS } from './barcode';
-import { CARD_COLORS, KIND_LABEL, useTheme } from './theme';
+import { KIND_LABEL, PALETTES, useTheme } from './theme';
+import CardFace from './CardFace';
 import { photoUri } from './storage';
-import { CATALOG, TYPE_LABEL, appMode, catalogApp, guessCatalogApp, installedCatalogIds, isStoreUrl, normalizeAppUrl, openCardApp } from './appLink';
+import { CATALOG, TYPE_LABEL, appMode, cardPalette, catalogApp, guessCatalogApp, installedCatalogIds, isStoreUrl, normalizeAppUrl, openCardApp } from './appLink';
 import { base64ToBytes, decodeBarcodeImage } from './decodeImage';
 import { lookupKnownApp } from './knownApps';
 
@@ -371,12 +372,24 @@ export default function EditScreen({ initial, allCards = [], onCancel, onSave, o
           )}
 
           <View style={s.field}>
-            <Text style={s.label}>色</Text>
-            <View style={s.row}>
-              {CARD_COLORS.map((c) => (
-                <Pressable key={c} onPress={() => set({ color: c })} style={[s.swatch, { backgroundColor: c }, d.color === c && { borderColor: t.ink }]} accessibilityRole="button" accessibilityLabel={`色 ${c}`} accessibilityState={{ selected: d.color === c }} />
-              ))}
+            <Text style={s.label}>カードの配色</Text>
+            <CardFace card={{ ...d, name: d.name || catalogApp(d.catalogId)?.name || '' }} palette={cardPalette(d, allCards)} meta="ホームでの見え方" />
+            <View style={[s.row, { flexWrap: 'wrap' }]}>
+              {(() => {
+                const app = d.kind === 'app' && appMode(d) === 'catalog' ? catalogApp(d.catalogId) : null;
+                const options = [...(app && app.colors ? [{ key: 'app', colors: app.colors, label: 'アプリの色' }] : []), ...PALETTES.map((p, i) => ({ key: String(i), colors: p }))];
+                const current = cardPalette(d, allCards).join();
+                return options.map((o) => {
+                  const on = o.colors.join() === current;
+                  return (
+                    <Pressable key={o.key} onPress={() => set(o.key === 'app' ? { palette: null, color: o.colors[0] } : { palette: o.colors, color: o.colors[0] })} style={[s.pal, on && { borderColor: t.ink }]} accessibilityRole="button" accessibilityLabel={o.label || `配色 ${Number(o.key) + 1}`} accessibilityState={{ selected: on }}>
+                      {o.colors.map((c, i) => <View key={i} style={{ flex: i === 0 ? 2 : 1, backgroundColor: c }} />)}
+                    </Pressable>
+                  );
+                });
+              })()}
             </View>
+            <Text style={s.hint}>公式アプリは、そのお店のイメージ色を最初から使います。ロゴは各社の許可が必要なため使っていません。</Text>
           </View>
 
           {!isNew && (confirmDelete ? (
@@ -445,6 +458,7 @@ const styles = (t) => StyleSheet.create({
   chipTextOn: { color: t.accentInk, fontWeight: '700' },
   preview: { backgroundColor: '#FFFFFF', borderRadius: 10, padding: 12, borderWidth: 1, borderColor: t.line, alignItems: 'center' },
   row: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  pal: { width: 54, height: 34, borderRadius: 9, borderWidth: 3, borderColor: 'transparent', flexDirection: 'row', overflow: 'hidden' },
   swatch: { width: 36, height: 36, borderRadius: 18, borderWidth: 3, borderColor: 'transparent' },
   confirm: { backgroundColor: t.nearBg, borderRadius: 10, padding: 12, gap: 10 },
   warn: { backgroundColor: t.nearBg, borderRadius: 10, padding: 12, gap: 8 },
