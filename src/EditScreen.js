@@ -283,8 +283,11 @@ export default function EditScreen({ initial, allCards = [], onCancel, onSave, o
                 <View style={s.field}>
                   <Text style={s.label}>ショートカットの名前</Text>
                   <TextInput style={s.input} value={d.shortcutName} onChangeText={(v) => set({ shortcutName: v })} placeholder="例: 楽天を開く" placeholderTextColor={t.muted} autoCorrect={false} />
-                  <Text style={s.hint}>一覧にないアプリ向けの方法です。iPhoneの「ショートカット」アプリで、次のように1回だけ作ってください。</Text>
-                  <Text style={s.hint}>1. 右上の「＋」で新規ショートカットを作る{'\n'}2. 「Appを開く」を追加し、開きたいアプリを選ぶ{'\n'}3. 名前を付けて保存し、同じ名前をここに入れる</Text>
+                  <Text style={s.hint}>{catalogApp(d.catalogId) ? `${catalogApp(d.catalogId).name}を直接開けないときの方法です。` : '一覧にないアプリ向けの方法です。'}iPhoneの「ショートカット」アプリで、次のように1回だけ作ってください。</Text>
+                  <Text style={s.hint}>1. 右上の「＋」で新規ショートカットを作る{'\n'}2. 「Appを開く」を追加し、{catalogApp(d.catalogId)?.name || '開きたいアプリ'}を選ぶ{'\n'}3. 上の名前と同じ名前を付けて保存する</Text>
+                  <Pressable onPress={() => Linking.openURL('shortcuts://').catch(() => {})} style={[s.secondary, { alignSelf: 'flex-start' }]} accessibilityRole="button">
+                    <Text style={s.secondaryText}>ショートカットアプリを開く</Text>
+                  </Pressable>
                   <Text style={s.subLabel}>このアプリでできること(両方選べます)</Text>
                   <View style={s.chips}>
                     {['point', 'pay'].map((ty) => {

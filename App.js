@@ -285,7 +285,12 @@ function Home() {
             },
             onForget: () => { updateCard({ ...shownCard, places: [] }); say('覚えた場所を消しました'); },
           };
-          return <ShowScreen {...common} card={shownCard} openFailed={openFailed} onUseShortcut={(name) => { updateCard({ ...shownCard, appMode: 'shortcut', shortcutName: name }); say('ショートカットで開くようにしました'); }} />;
+          return <ShowScreen {...common} card={shownCard} openFailed={openFailed} onSetupShortcut={(name) => {
+            // Close the card, then open its editor on the shortcut settings (iOS can't swap two modals at once).
+            const draft = { ...shownCard, appMode: 'shortcut', shortcutName: shownCard.shortcutName || name };
+            setShowing(null);
+            setTimeout(() => setEditing(draft), 450);
+          }} />;
         })()}
         </SafeAreaProvider>
       </Modal>
