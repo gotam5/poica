@@ -4,7 +4,7 @@ import { TYPE_LABEL, cardTypes } from './appLink';
 
 // Card face drawn from 2-4 colors: background, a wide band, a thin band and a bottom stripe.
 // No logos: brands' marks can't be used without each company's permission.
-export default function CardFace({ card, palette, big, wide, chip, meta, style }) {
+export default function CardFace({ card, palette, big, wide, chip, style }) {
   const [bg, c1, c2, c3] = palette;
   return (
     <View style={[s.face, { backgroundColor: bg }, big && s.big, style]}>
@@ -18,15 +18,11 @@ export default function CardFace({ card, palette, big, wide, chip, meta, style }
         <Text style={[s.name, big && s.nameBig, { paddingRight: 44 }]} numberOfLines={2}>{card.name || 'カード名'}</Text>
       </View>
       <View>
-        {card.kind === 'set' ? (
-          meta ? <Text style={s.meta} numberOfLines={1}>{meta}</Text> : null
-        ) : (
-          <View style={s.types}>
-            {cardTypes(card).map((ty) => (
-              <View key={ty} style={[s.type, { backgroundColor: TYPE_COLORS[ty].bg }]}><Text style={[s.typeText, { color: TYPE_COLORS[ty].fg }]}>{TYPE_LABEL[ty]}</Text></View>
-            ))}
-          </View>
-        )}
+        <View style={s.types}>
+          {cardTypes(card).map((ty) => (
+            <View key={ty} style={[s.type, { backgroundColor: TYPE_COLORS[ty].bg }]}><Text style={[s.typeText, { color: TYPE_COLORS[ty].fg }]}>{TYPE_LABEL[ty]}</Text></View>
+          ))}
+        </View>
       </View>
     </View>
   );
@@ -42,7 +38,6 @@ const s = StyleSheet.create({
   nameRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
   name: { flex: 1, paddingRight: 8, color: '#FFF', fontSize: 18, fontWeight: '900', lineHeight: 23, ...shadow },
   nameBig: { fontSize: 24, lineHeight: 30 },
-  meta: { color: '#FFF', fontSize: 11, opacity: 0.92, paddingRight: 46, ...shadow },
   types: { flexDirection: 'row', flexWrap: 'wrap', gap: 4, paddingRight: 40 },
   type: { borderRadius: 999, paddingHorizontal: 8, paddingVertical: 2 },
   typeText: { fontSize: 11, fontWeight: '800' },

@@ -19,7 +19,7 @@ export default function EditScreen({ initial, allCards = [], onCancel, onSave, o
   const t = useTheme();
   const s = styles(t);
   const { width } = useWindowDimensions();
-  const [d, setD] = useState(initial);
+  const [d, setD] = useState(initial.kind === 'photo' ? { ...initial, kind: 'barcode' } : initial);
   const [scanning, setScanning] = useState(false);
   const [status, setStatus] = useState(null); // { text, error }
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -121,9 +121,7 @@ export default function EditScreen({ initial, allCards = [], onCancel, onSave, o
   const save = () => {
     const name = (d.name || '').trim() || (d.kind === 'app' && appMode(d) === 'catalog' ? catalogApp(d.catalogId)?.name || '' : '');
     if (!name && !(d.kind === 'app' && appMode(d) === 'catalog')) return setStatus({ text: '名前を入れてください。', error: true });
-    if (d.kind === 'barcode' && !(d.code || '').trim()) return setStatus({ text: 'バーコードを読み取るか、番号を入れてください。', error: true });
-    if (d.kind === 'photo' && !d.photo) return setStatus({ text: 'カードの写真を撮ってください。', error: true });
-    if (d.kind === 'set' && !(d.steps || []).length) return setStatus({ text: 'セットに入れるカードを選んでください。', error: true });
+    if (d.kind === 'barcode' && !(d.code || '').trim() && !d.photo) return setStatus({ text: 'バーコードを読み取るか、番号を入れるか、写真を撮ってください。', error: true });
     const mode = appMode(d);
     const appUrl = normalizeAppUrl(d.appUrl);
     const shortcutName = (d.shortcutName || '').trim();
@@ -147,7 +145,7 @@ export default function EditScreen({ initial, allCards = [], onCancel, onSave, o
       </View>
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <ScrollView contentContainerStyle={s.body} keyboardShouldPersistTaps="handled">
-          {known && (d.kind === 'barcode' || d.kind === 'photo') && (
+          {known && d.kind === 'barcode' && (
             <View style={s.warn}>
               <Text style={s.warnTitle}>{known.label}は{known.kind === 'dynamic' ? 'バーコードが時間で変わります' : 'スクショでの利用が禁止されています'}</Text>
               <Text style={s.warnText}>{known.note}</Text>
@@ -160,7 +158,7 @@ export default function EditScreen({ initial, allCards = [], onCancel, onSave, o
           <View style={s.field}>
             <Text style={s.label}>登録のしかた</Text>
             <View style={s.seg}>
-              {(custom ? ['barcode', 'photo', 'app', 'set'] : ['app', 'barcode', 'photo', 'set']).map((k) => (
+              {(custom ? ['barcode', 'app'] : ['app', 'barcode']).map((k) => (
                 <Pressable key={k} onPress={() => (k === 'app' ? (custom ? set({ kind: 'app', appMode: 'shortcut' }) : toApp()) : set({ kind: k }))} style={[s.segBtn, d.kind === k && s.segOn]} accessibilityRole="button" accessibilityState={{ selected: d.kind === k }}>
                   <Text style={[s.segText, d.kind === k && s.segTextOn]}>{custom && k === 'app' ? '他のアプリ' : KIND_LABEL[k]}</Text>
                 </Pressable>
@@ -170,9 +168,9 @@ export default function EditScreen({ initial, allCards = [], onCancel, onSave, o
 
           {showName && (
             <View style={s.field}>
-              <Text style={s.label}>{d.kind === 'set' ? 'セットの名前' : '店・カードの名前'}</Text>
-              <TextInput style={s.input} value={d.name} onChangeText={(v) => set({ name: v })} placeholder={d.kind === 'set' ? '例: スギ薬局で使う' : '例: 駅前のドラッグストア'} placeholderTextColor={t.muted} />
-              {d.kind !== 'set' && <Text style={s.hint}>地図で近くの店を探すときにもこの名前を使います。</Text>}
+              <Text style={s.label}>店・カードの名前</Text>
+              <TextInput style={s.input} value={d.name} onChangeText={(v) => set({ name: v })} placeholder="例: 駅前のドラッグストア" placeholderTextColor={t.muted} />
+              <Text style={s.hint}>地図で近くの店を探すときにもこの名前を使います。</Text>
             </View>
           )}
 
@@ -206,7 +204,7 @@ export default function EditScreen({ initial, allCards = [], onCancel, onSave, o
                 </View>
               )}
               <View style={s.field}>
-                <Text style={s.label}>番号</Text>
+                <Text style={s.label}>番号(任意)</Text>
                 <TextInput style={[s.input, s.mono]} value={d.code} onChangeText={(v) => set({ code: v })} placeholder="読めないときは手で入力" placeholderTextColor={t.muted} autoCapitalize="characters" autoCorrect={false} />
               </View>
               <View style={s.field}>
@@ -223,20 +221,19 @@ export default function EditScreen({ initial, allCards = [], onCancel, onSave, o
               {(d.code || '').trim() ? (
                 <View style={s.preview}><BarcodeView code={d.code.trim()} format={d.format} width={width - 56} height={90} /></View>
               ) : null}
-            </>
-          )}
-
-          {d.kind === 'photo' && (
-            <>
-              <View style={s.row}>
-                <Pressable onPress={() => pickPhoto(true)} style={[s.primary, { flex: 1 }]} accessibilityRole="button"><Text style={s.primaryText}>カメラで撮る</Text></Pressable>
-                <Pressable onPress={() => pickPhoto(false)} style={[s.secondary, { flex: 1 }]} accessibilityRole="button"><Text style={s.secondaryText}>写真を選ぶ</Text></Pressable>
-              </View>
-              <Text style={s.hint}>バーコードが読めないカードや、スタンプカードはそのまま写真で残せます。</Text>
-              {photoSource && <View style={s.preview}><Image source={photoSource} style={{ width: '100%', height: 220 }} resizeMode="contain" /></View>}
               <View style={s.field}>
-                <Text style={s.label}>会員番号(任意)</Text>
-                <TextInput style={[s.input, s.mono]} value={d.code} onChangeText={(v) => set({ code: v })} autoCorrect={false} />
+                <Text style={s.label}>カードの写真(任意)</Text>
+                <View style={s.row}>
+                  <Pressable onPress={() => pickPhoto(true)} style={[s.secondary, { flex: 1 }]} accessibilityRole="button"><Text style={s.secondaryText}>カメラで撮る</Text></Pressable>
+                  <Pressable onPress={() => pickPhoto(false)} style={[s.secondary, { flex: 1 }]} accessibilityRole="button"><Text style={s.secondaryText}>写真を選ぶ</Text></Pressable>
+                </View>
+                <Text style={s.hint}>バーコードが読めないカードやスタンプカードは、写真だけでも登録できます。</Text>
+                {photoSource && (
+                  <>
+                    <View style={s.preview}><Image source={photoSource} style={{ width: '100%', height: 220 }} resizeMode="contain" /></View>
+                    <Pressable onPress={() => set({ photo: null })} style={[s.secondary, { alignSelf: 'flex-start' }]} accessibilityRole="button"><Text style={s.secondaryText}>写真を外す</Text></Pressable>
+                  </>
+                )}
               </View>
             </>
           )}
@@ -342,56 +339,9 @@ export default function EditScreen({ initial, allCards = [], onCancel, onSave, o
             </>
           )}
 
-          {d.kind === 'set' && (
-            <>
-              <Text style={s.hint}>1つの店で続けて使うカードやアプリを、使う順にまとめます。例えば「店のアプリ → dポイント → 支払いアプリ」。店ではセットが一番上に出て、1つ使って戻るたびに次のものを出します。</Text>
-              <View style={s.field}>
-                <Text style={s.label}>使う順番</Text>
-                {(d.steps || []).length === 0 && <Text style={s.hint}>下からカードを選んでください。</Text>}
-                {(d.steps || []).map((id, i) => {
-                  const c = allCards.find((x) => x.id === id);
-                  if (!c) return null;
-                  const move = (delta) => {
-                    const next = [...d.steps];
-                    const j = i + delta;
-                    if (j < 0 || j >= next.length) return;
-                    [next[i], next[j]] = [next[j], next[i]];
-                    set({ steps: next });
-                  };
-                  return (
-                    <View key={id} style={s.stepRow}>
-                      <Text style={s.stepNum}>{i + 1}</Text>
-                      <View style={[s.stepDot, { backgroundColor: c.color }]} />
-                      <Text style={s.stepName} numberOfLines={1}>{c.name}</Text>
-                      <Pressable onPress={() => move(-1)} hitSlop={6} style={s.iconBtn} accessibilityRole="button" accessibilityLabel={`${c.name}を上へ`}><Text style={s.iconText}>↑</Text></Pressable>
-                      <Pressable onPress={() => move(1)} hitSlop={6} style={s.iconBtn} accessibilityRole="button" accessibilityLabel={`${c.name}を下へ`}><Text style={s.iconText}>↓</Text></Pressable>
-                      <Pressable onPress={() => set({ steps: d.steps.filter((x) => x !== id) })} hitSlop={6} style={s.iconBtn} accessibilityRole="button" accessibilityLabel={`${c.name}を外す`}><Text style={s.iconText}>×</Text></Pressable>
-                    </View>
-                  );
-                })}
-              </View>
-              <View style={s.field}>
-                <Text style={s.label}>追加する</Text>
-                {(() => {
-                  const choices = allCards.filter((c) => c.kind !== 'set' && c.id !== d.id && !(d.steps || []).includes(c.id));
-                  if (!choices.length) return <Text style={s.hint}>{allCards.some((c) => c.kind !== 'set') ? '登録したカードはすべて入っています。' : '先に、セットに入れるカードやアプリを登録してください。'}</Text>;
-                  return (
-                    <View style={s.chips}>
-                      {choices.map((c) => (
-                        <Pressable key={c.id} onPress={() => set({ steps: [...(d.steps || []), c.id] })} style={s.chip} accessibilityRole="button">
-                          <Text style={s.chipText}>＋ {c.name}</Text>
-                        </Pressable>
-                      ))}
-                    </View>
-                  );
-                })()}
-              </View>
-            </>
-          )}
-
           <View style={s.field}>
             <Text style={s.label}>カードの配色</Text>
-            <CardFace card={{ ...d, name: d.name || catalogApp(d.catalogId)?.name || '' }} palette={cardPalette(d, allCards)} meta="ホームでの見え方" />
+            <CardFace card={{ ...d, name: d.name || catalogApp(d.catalogId)?.name || '' }} palette={cardPalette(d, allCards)} />
             <View style={[s.row, { flexWrap: 'wrap' }]}>
               {(() => {
                 const app = d.kind === 'app' && appMode(d) === 'catalog' ? catalogApp(d.catalogId) : null;

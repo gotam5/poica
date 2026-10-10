@@ -99,9 +99,8 @@ export function normalizeAppUrl(raw) {
 
 export const TYPE_LABEL = { point: 'ポイントカード', pay: '支払い' };
 
-// Which home sections a card belongs to: 'point', 'pay' (both when the app does both), or 'set'.
+// Which home sections a card belongs to: 'point', or 'pay' (both when the app does both).
 export function cardTypes(card) {
-  if (card.kind === 'set') return ['set'];
   if (card.kind === 'app') {
     const app = catalogApp(card.catalogId);
     if (app && app.types) return app.types;
@@ -118,15 +117,8 @@ export function cardPalette(card, allCards = []) {
     const app = catalogApp(card.catalogId);
     if (app && app.colors) return app.colors;
   }
-  if (card.kind !== 'set') {
-    // Cards made by hand (barcode, photo, other apps) take the shop's colors when the name matches a known shop.
-    const guess = guessCatalogApp(card.name);
-    if (guess && guess.colors) return guess.colors;
-  }
-  if (card.kind === 'set') {
-    // A set shows the first colors of its members.
-    const cols = (card.steps || []).map((id) => allCards.find((c) => c.id === id)).filter(Boolean).map((c) => cardPalette(c)[0]);
-    if (cols.length) return [card.color || cols[0], ...cols.slice(0, 3)];
-  }
+  // Cards made by hand (barcode/photo, other apps) take the shop's colors when the name matches a known shop.
+  const guess = guessCatalogApp(card.name);
+  if (guess && guess.colors) return guess.colors;
   return [card.color || '#3D4A55', '#FFFFFF'];
 }

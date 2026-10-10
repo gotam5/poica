@@ -56,16 +56,8 @@ export function namePattern(name) {
   return core.length >= 2 ? escapeRegex(core) : null;
 }
 
-// The shop-name pattern for a card: its catalog chain, else its own name. Sets combine their members.
+// The shop-name pattern for a card: its catalog chain, else its own name.
 export function storePatternOf(card, allCards) {
-  if (card.kind === 'set') {
-    const parts = (card.steps || [])
-      .map((id) => allCards.find((c) => c.id === id))
-      .filter((c) => c && c.kind !== 'set')
-      .map((c) => storePatternOf(c, allCards));
-    const own = namePattern(card.name);
-    return [own, ...parts].filter(Boolean).join('|') || null;
-  }
   if (card.kind === 'app' && card.catalogId) {
     const app = catalogApp(card.catalogId);
     return app ? app.stores || null : null; // common points / payments are not tied to a shop

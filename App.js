@@ -5,7 +5,6 @@ import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import AddFlow from './src/AddFlow';
 import EditScreen from './src/EditScreen';
-import SetShowScreen from './src/SetShowScreen';
 import ShowScreen from './src/ShowScreen';
 import { arrange, learnPlace } from './src/geo';
 import { deleteCard, getSetting, keepPhoto, loadCards, removePhoto, saveCard, setSetting } from './src/storage';
@@ -46,7 +45,8 @@ function Home() {
   }, []);
 
   useEffect(() => {
-    loadCards().then(setCards).catch(() => setCards([]));
+    // セット was removed; old set cards stay hidden.
+    loadCards().then((list) => setCards(list.filter((c) => c.kind !== 'set'))).catch(() => setCards([]));
     getSetting('storeLookup', true).then(setStoreLookup).catch(() => {});
   }, []);
 
@@ -134,16 +134,13 @@ function Home() {
 
   const removeCard = useCallback(async (card) => {
     try { await deleteCard(card); } catch {}
-    // drop it from any shop set that used it
-    const touched = cards.filter((c) => c.kind === 'set' && (c.steps || []).includes(card.id)).map((c) => ({ ...c, steps: c.steps.filter((id) => id !== card.id) }));
-    for (const c of touched) saveCard(c).catch(() => {});
-    setCards((prev) => prev.filter((c) => c.id !== card.id).map((c) => touched.find((x) => x.id === c.id) || c));
+    setCards((prev) => prev.filter((c) => c.id !== card.id));
     setEditing(null);
     say('削除しました');
   }, [cards, say]);
 
   const startNew = () => setEditing({
-    id: newId(), isNew: true, name: '', kind: 'app', code: '', format: 'CODE128', photo: null, appMode: 'catalog', catalogId: null, appUrl: '', shortcutName: '', steps: [],
+    id: newId(), isNew: true, name: '', kind: 'app', code: '', format: 'CODE128', photo: null, appMode: 'catalog', catalogId: null, appUrl: '', shortcutName: '',
     color: CARD_COLORS[(cards?.length || 0) % CARD_COLORS.length], places: [], uses: 0, created: Date.now(),
   });
 
@@ -233,12 +230,12 @@ function Home() {
           )}
           {all.length ? (
             <View style={{ gap: 14 }}>
-              {['point', 'pay', 'set'].map((ty) => {
+              {['point', 'pay'].map((ty) => {
                 const group = all.filter((c) => cardTypes(c).includes(ty));
                 if (!group.length) return null;
                 return (
                   <View key={ty} style={{ gap: 8 }}>
-                    <Text style={s.group}>{ty === 'set' ? 'セット' : TYPE_LABEL[ty]}</Text>
+                    <Text style={s.group}>{TYPE_LABEL[ty]}</Text>
                     <View style={s.grid}>
                       {group.map((c) => (
                         <View key={c.id} style={s.cell}><Tile card={c} allCards={cards} onPress={() => open(c)} onLongPress={() => setEditing({ ...c })} s={s} /></View>
@@ -288,17 +285,6 @@ function Home() {
             },
             onForget: () => { updateCard({ ...shownCard, places: [] }); say('覚えた場所を消しました'); },
           };
-          if (shownCard.kind === 'set') {
-            const members = (shownCard.steps || []).map((id) => cards.find((c) => c.id === id)).filter(Boolean);
-            return (
-              <SetShowScreen
-                {...common}
-                set={shownCard}
-                members={members}
-                onUse={(c) => updateCard({ ...c, uses: (c.uses || 0) + 1, lastUsed: Date.now() })}
-              />
-            );
-          }
           return <ShowScreen {...common} card={shownCard} openFailed={openFailed} />;
         })()}
         </SafeAreaProvider>
@@ -316,12 +302,9 @@ function Home() {
 }
 
 function Tile({ card, allCards, big, wide, chip, onPress, onLongPress, s }) {
-  const meta = card.kind === 'set'
-    ? (card.steps || []).map((id) => allCards.find((c) => c.id === id)?.name).filter(Boolean).join(' → ') || 'カードが入っていません'
-    : null;
   return (
     <Pressable onPress={onPress} onLongPress={onLongPress} delayLongPress={400} style={({ pressed }) => [pressed && { opacity: 0.85 }]} accessibilityRole="button" accessibilityLabel={`${KIND_LABEL[card.kind]} ${card.name}を表示`} accessibilityHint="長押しで編集">
-      <CardFace card={card} palette={cardPalette(card, allCards)} big={big} wide={wide} chip={chip} meta={meta} />
+      <CardFace card={card} palette={cardPalette(card, allCards)} big={big} wide={wide} chip={chip} />
     </Pressable>
   );
 }

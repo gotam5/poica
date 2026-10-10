@@ -33,19 +33,13 @@ export default function ShowScreen({ card, openFailed, hasPosition, onClose, onR
       <ScrollView contentContainerStyle={[s.body, { paddingTop: 20 }]}>
         <Text style={s.name}>{card.name}</Text>
 
-        {card.kind === 'barcode' && (
-          <View style={s.codeBox}>
-            <BarcodeView code={card.code} format={card.format} width={codeWidth} />
-            <Text style={s.num} selectable>{card.code}</Text>
-          </View>
-        )}
-
-        {card.kind === 'photo' && (
-          <View style={s.codeBox}>
+        {(card.kind === 'barcode' || card.kind === 'photo') && (
+          <View style={[s.codeBox, { gap: 14 }]}>
+            {card.kind === 'barcode' && card.code ? <BarcodeView code={card.code} format={card.format} width={codeWidth} /> : null}
+            {card.code ? <Text style={s.num} selectable>{card.code}</Text> : null}
             {card.photo ? (
               <Image source={{ uri: photoUri(card.photo) }} style={{ width: codeWidth, height: codeWidth * 0.75 }} resizeMode="contain" accessibilityLabel={`${card.name}のカードの写真`} />
             ) : null}
-            {card.code ? <Text style={s.num} selectable>{card.code}</Text> : null}
           </View>
         )}
 

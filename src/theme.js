@@ -15,7 +15,7 @@ export function useTheme() {
   return useColorScheme() === 'dark' ? dark : light;
 }
 
-export const KIND_LABEL = { barcode: 'バーコード', photo: '写真', app: '公式アプリ', set: 'セット' };
+export const KIND_LABEL = { barcode: 'バーコード・写真', photo: 'バーコード・写真', app: '公式アプリ' };
 
 // Preset 2-4 color palettes for cards the user makes. The first color is the background (white text sits on it).
 export const PALETTES = [

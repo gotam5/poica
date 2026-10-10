@@ -6,7 +6,7 @@ import { CATALOG, TYPE_LABEL, cardPalette, installedCatalogIds, openCardApp } fr
 import { PALETTES, TYPE_COLORS, useTheme } from './theme';
 
 // Guided add: 1. pick the card (and try opening it) → 2. pick a design → 3. done.
-// 「自分でカードを作る」 hands over to the full editor (barcode, photo, set, other apps).
+// 「自分でカードを作る」 hands over to the full editor (barcode/photo, other apps).
 export default function AddFlow({ initial, allCards = [], onCancel, onSave, onCustom }) {
   const t = useTheme();
   const s = styles(t);
@@ -77,7 +77,7 @@ export default function AddFlow({ initial, allCards = [], onCancel, onSave, onCu
               <Text style={s.customIcon}>＋</Text>
               <View style={{ flex: 1 }}>
                 <Text style={s.customTitle}>自分でカードを作る</Text>
-                <Text style={s.customText}>バーコード・写真で登録する、一覧にないアプリ、セット</Text>
+                <Text style={s.customText}>バーコード・写真で登録する、一覧にないアプリ</Text>
               </View>
               <Text style={s.chev}>›</Text>
             </Pressable>
@@ -167,7 +167,7 @@ export default function AddFlow({ initial, allCards = [], onCancel, onSave, onCu
         {step === 'design' && (
           <ScrollView contentContainerStyle={s.body}>
             <Text style={s.lead}>カードのデザインを選んでください</Text>
-            <CardFace card={d} palette={cardPalette(d, allCards)} big meta="ホームでの見え方" />
+            <CardFace card={d} palette={cardPalette(d, allCards)} big />
             <View style={s.palettes}>
               {[...(app ? [{ key: 'app', colors: app.colors, label: `${app.name}の色` }] : []), ...PALETTES.map((p, i) => ({ key: String(i), colors: p, label: `配色${i + 1}` }))].map((o) => {
                 const on = o.colors.join() === cardPalette(d, allCards).join();
