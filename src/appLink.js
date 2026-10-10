@@ -103,7 +103,7 @@ export const TYPE_LABEL = { point: 'ポイントカード', pay: '支払い' };
 export function cardTypes(card) {
   if (card.kind === 'set') return ['set'];
   if (card.kind === 'app') {
-    const app = appMode(card) === 'catalog' ? catalogApp(card.catalogId) : null;
+    const app = catalogApp(card.catalogId);
     if (app && app.types) return app.types;
     if (card.types && card.types.length) return card.types;
   }
@@ -113,7 +113,8 @@ export function cardTypes(card) {
 // The card face colors: the user's choice, else the official app's (or a same-named shop's) image colors, else the card color with white.
 export function cardPalette(card, allCards = []) {
   if (card.palette && card.palette.length) return card.palette;
-  if (card.kind === 'app' && appMode(card) === 'catalog') {
+  if (card.kind === 'app' && card.catalogId) {
+    // Also for listed apps opened through a shortcut (e.g. Vポイント).
     const app = catalogApp(card.catalogId);
     if (app && app.colors) return app.colors;
   }

@@ -1,5 +1,5 @@
 {
-  "_note": "URL schemes collected from the personal memo site urlschemesiphone.information.jp (2026-10). Not verified on a device yet; Poica tries each scheme in order and falls back if the app does not answer. 'stores' is the shop-name pattern used to suggest the card near that chain's shops; apps usable everywhere (common points, payments) have none. 'types' says whether the app works as a point card ('point'), a payment app ('pay'), or both. 'colors' is a 2-4 color image palette for the card face (first is the background, light enough contrast for white text); approximations, no logos.",
+  "_note": "URL schemes collected from the personal memo site urlschemesiphone.information.jp (2026-10). Not verified on a device yet; Poica tries each scheme in order and falls back if the app does not answer. 'stores' is the shop-name pattern used to suggest the card near that chain's shops; apps usable everywhere (common points, payments) have none. 'types' says whether the app works as a point card ('point'), a payment app ('pay'), or both. 'colors' is a 2-4 color image palette for the card face (first is the background, light enough contrast for white text); approximations, no logos. 'openWith: shortcut' marks apps that misbehave when opened by URL (Vポイント jumps to Safari when already running), so the add flow sets them up with a Shortcut.",
   "apps": [
     {
       "id": "rakuten-pointcard",
@@ -198,7 +198,8 @@
         "#00205B",
         "#FFD100",
         "#FFFFFF"
-      ]
+      ],
+      "openWith": "shortcut"
     },
     {
       "id": "vpoint-pay",

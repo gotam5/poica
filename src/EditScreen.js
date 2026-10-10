@@ -26,6 +26,7 @@ export default function EditScreen({ initial, allCards = [], onCancel, onSave, o
   const [reading, setReading] = useState(false);
   const [shotCode, setShotCode] = useState(null); // code read from the first screenshot, for the "changes over time?" check
   const isNew = !!initial.isNew;
+  const custom = !!initial.custom; // came from 「自分でカードを作る」: listed apps are picked in the guided flow instead
   const set = (patch) => setD((prev) => ({ ...prev, ...patch }));
   const [installed, setInstalled] = useState([]);
   const [appQuery, setAppQuery] = useState('');
@@ -140,8 +141,8 @@ export default function EditScreen({ initial, allCards = [], onCancel, onSave, o
   return (
     <SafeAreaView style={s.root} edges={['top', 'bottom']}>
       <View style={s.head}>
-        <Pressable onPress={onCancel} hitSlop={10} accessibilityRole="button"><Text style={s.headText}>キャンセル</Text></Pressable>
-        <Text style={s.title}>{isNew ? 'カードを追加' : 'カードを編集'}</Text>
+        <Pressable onPress={onCancel} hitSlop={10} accessibilityRole="button"><Text style={s.headText}>{custom ? '戻る' : 'キャンセル'}</Text></Pressable>
+        <Text style={s.title}>{custom ? '自分でカードを作る' : isNew ? 'カードを追加' : 'カードを編集'}</Text>
         <Pressable onPress={save} hitSlop={10} style={s.saveBtn} accessibilityRole="button"><Text style={s.saveText}>保存</Text></Pressable>
       </View>
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
@@ -159,9 +160,9 @@ export default function EditScreen({ initial, allCards = [], onCancel, onSave, o
           <View style={s.field}>
             <Text style={s.label}>登録のしかた</Text>
             <View style={s.seg}>
-              {['app', 'barcode', 'photo', 'set'].map((k) => (
-                <Pressable key={k} onPress={() => (k === 'app' ? toApp() : set({ kind: k }))} style={[s.segBtn, d.kind === k && s.segOn]} accessibilityRole="button" accessibilityState={{ selected: d.kind === k }}>
-                  <Text style={[s.segText, d.kind === k && s.segTextOn]}>{KIND_LABEL[k]}</Text>
+              {(custom ? ['barcode', 'photo', 'app', 'set'] : ['app', 'barcode', 'photo', 'set']).map((k) => (
+                <Pressable key={k} onPress={() => (k === 'app' ? (custom ? set({ kind: 'app', appMode: 'shortcut' }) : toApp()) : set({ kind: k }))} style={[s.segBtn, d.kind === k && s.segOn]} accessibilityRole="button" accessibilityState={{ selected: d.kind === k }}>
+                  <Text style={[s.segText, d.kind === k && s.segTextOn]}>{custom && k === 'app' ? '他のアプリ' : KIND_LABEL[k]}</Text>
                 </Pressable>
               ))}
             </View>
@@ -242,7 +243,7 @@ export default function EditScreen({ initial, allCards = [], onCancel, onSave, o
 
           {d.kind === 'app' && (
             <>
-              <View style={s.field}>
+              {!custom && <View style={s.field}>
                 <Text style={s.label}>アプリの開き方</Text>
                 <View style={s.seg}>
                   {[['catalog', '一覧から選ぶ'], ['shortcut', '一覧にないアプリ']].map(([k, l]) => (
@@ -251,7 +252,7 @@ export default function EditScreen({ initial, allCards = [], onCancel, onSave, o
                     </Pressable>
                   ))}
                 </View>
-              </View>
+              </View>}
               {appMode(d) === 'catalog' && (() => {
                 const chosen = catalogApp(d.catalogId);
                 const q = appQuery.trim().toLowerCase();

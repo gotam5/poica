@@ -3,6 +3,7 @@ import { ActivityIndicator, AppState, Linking, Modal, Pressable, ScrollView, Sty
 import * as Location from 'expo-location';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
+import AddFlow from './src/AddFlow';
 import EditScreen from './src/EditScreen';
 import SetShowScreen from './src/SetShowScreen';
 import ShowScreen from './src/ShowScreen';
@@ -113,7 +114,7 @@ function Home() {
     setShowing(card.id);
   }, [pos, updateCard, say]);
 
-  const saveDraft = useCallback(async (draft) => {
+  const saveDraft = useCallback(async (draft, keepOpen = false) => {
     const { isNew, ...card } = draft;
     try {
       if (card.photo && typeof card.photo === 'object') {
@@ -123,10 +124,11 @@ function Home() {
       }
       await saveCard(card);
       setCards((prev) => (prev.some((c) => c.id === card.id) ? prev.map((c) => (c.id === card.id ? card : c)) : [...prev, card]));
-      setEditing(null);
-      say('保存しました');
+      if (!keepOpen) { setEditing(null); say('保存しました'); }
+      return true;
     } catch {
       say('保存できませんでした。もう一度試してください');
+      return false;
     }
   }, [cards, say]);
 
@@ -303,7 +305,9 @@ function Home() {
 
       <Modal visible={!!editing} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setEditing(null)}>
         <SafeAreaProvider>
-        {editing && <EditScreen initial={editing} allCards={cards} onCancel={() => setEditing(null)} onSave={saveDraft} onDelete={removeCard} />}
+        {editing && (editing.isNew && !editing.custom
+          ? <AddFlow initial={editing} allCards={cards} onCancel={() => setEditing(null)} onSave={(d) => saveDraft(d, true)} onCustom={() => setEditing({ ...editing, custom: true, kind: 'barcode', appMode: 'shortcut', catalogId: null })} />
+          : <EditScreen initial={editing} allCards={cards} onCancel={() => (editing.custom ? setEditing({ ...editing, custom: false, kind: 'app', appMode: 'catalog' }) : setEditing(null))} onSave={({ custom, ...d }) => saveDraft(d)} onDelete={removeCard} />)}
         </SafeAreaProvider>
       </Modal>
     </SafeAreaView>
