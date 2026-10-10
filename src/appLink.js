@@ -81,3 +81,16 @@ export function normalizeAppUrl(raw) {
   if (/^[a-z][a-z0-9+-]*$/i.test(v)) return `${v}://`;
   return `https://${v}`;
 }
+
+export const TYPE_LABEL = { point: 'ポイントカード', pay: '支払い' };
+
+// Which home sections a card belongs to: 'point', 'pay' (both when the app does both), or 'set'.
+export function cardTypes(card) {
+  if (card.kind === 'set') return ['set'];
+  if (card.kind === 'app') {
+    const app = appMode(card) === 'catalog' ? catalogApp(card.catalogId) : null;
+    if (app && app.types) return app.types;
+    if (card.types && card.types.length) return card.types;
+  }
+  return ['point'];
+}

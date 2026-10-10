@@ -10,7 +10,7 @@ import { KIND_LABEL } from './theme';
 
 // A shop's set: the cards and apps used there, in order. The current step is expanded;
 // after jumping to an app and coming back, the next step lights up.
-export default function SetShowScreen({ set, members, hasPosition, onClose, onEdit, onUse, onRememberHere, onForget }) {
+export default function SetShowScreen({ set, members, hasPosition, onClose, onUse, onRememberHere, onForget }) {
   useRegisterMode();
   const { width } = useWindowDimensions();
   const [step, setStep] = useState(0);
@@ -32,7 +32,7 @@ export default function SetShowScreen({ set, members, hasPosition, onClose, onEd
   const openApp = async (card) => {
     setError(null);
     const url = launchUrl(card);
-    if (!url) return setError(`「${card.name}」の開き方が未登録です。カードの編集から登録してください。`);
+    if (!url) return setError(`「${card.name}」の開き方が未登録です。ホームでカードを長押しして登録してください。`);
     onUse(card);
     leftForApp.current = true;
     const ok = await openCardApp(card);
@@ -91,7 +91,7 @@ export default function SetShowScreen({ set, members, hasPosition, onClose, onEd
           );
         })}
 
-        {members.length === 0 && <Text style={s.muted}>このセットのカードがありません。「編集」から追加してください。</Text>}
+        {members.length === 0 && <Text style={s.muted}>このセットのカードがありません。ホームでセットを長押しして追加してください。</Text>}
         {error && <Text style={s.err}>{error}</Text>}
         {done && members.length > 0 && (
           <Pressable onPress={onClose} style={s.bigBtn} accessibilityRole="button"><Text style={s.bigBtnText}>閉じる</Text></Pressable>
@@ -109,7 +109,7 @@ export default function SetShowScreen({ set, members, hasPosition, onClose, onEd
           </View>
         </View>
       </ScrollView>
-      <BottomBar onClose={onClose} onEdit={onEdit} />
+      <BottomBar onClose={onClose} />
     </SafeAreaView>
   );
 }

@@ -8,6 +8,7 @@ import SetShowScreen from './src/SetShowScreen';
 import ShowScreen from './src/ShowScreen';
 import { arrange, formatDistance, learnPlace } from './src/geo';
 import { deleteCard, getSetting, keepPhoto, loadCards, removePhoto, saveCard, setSetting } from './src/storage';
+import { TYPE_LABEL, cardTypes } from './src/appLink';
 import { fetchNearbyStores, storePatternOf, storeRegex } from './src/nearbyStores';
 import { CARD_COLORS, KIND_LABEL, useTheme } from './src/theme';
 
@@ -187,7 +188,7 @@ function Home() {
             <Text style={s.sec}>前回使った</Text>
             <View style={s.grid}>
               {recent.map((c) => (
-                <View key={c.id} style={s.cell}><Tile card={c} allCards={cards} onPress={() => open(c)} s={s} /></View>
+                <View key={c.id} style={s.cell}><Tile card={c} allCards={cards} onPress={() => open(c)} onLongPress={() => setEditing({ ...c })} s={s} /></View>
               ))}
             </View>
           </View>
@@ -204,7 +205,7 @@ function Home() {
                   allCards={cards}
                   big={i === 0}
                   chip={x.reason === 'store' ? `近くに${x.store}(${formatDistance(x.dist)})` : `ここで使ったことがあります(${formatDistance(x.dist)})`}
-                  onPress={() => open(x.card)}
+                  onPress={() => open(x.card)} onLongPress={() => setEditing({ ...x.card })}
                   s={s}
                 />
               ))}
@@ -220,10 +221,22 @@ function Home() {
             <TextInput style={s.search} value={query} onChangeText={setQuery} placeholder="カード名で探す" placeholderTextColor={t.muted} clearButtonMode="while-editing" />
           )}
           {all.length ? (
-            <View style={s.grid}>
-              {all.map((c) => (
-                <View key={c.id} style={s.cell}><Tile card={c} allCards={cards} onPress={() => open(c)} s={s} /></View>
-              ))}
+            <View style={{ gap: 14 }}>
+              {['point', 'pay', 'set'].map((ty) => {
+                const group = all.filter((c) => cardTypes(c).includes(ty));
+                if (!group.length) return null;
+                return (
+                  <View key={ty} style={{ gap: 8 }}>
+                    <Text style={s.group}>{ty === 'set' ? 'セット' : TYPE_LABEL[ty]}</Text>
+                    <View style={s.grid}>
+                      {group.map((c) => (
+                        <View key={c.id} style={s.cell}><Tile card={c} allCards={cards} onPress={() => open(c)} onLongPress={() => setEditing({ ...c })} s={s} /></View>
+                      ))}
+                    </View>
+                  </View>
+                );
+              })}
+              <Text style={s.foot}>カードを長押しすると、名前の変更や削除ができます。</Text>
             </View>
           ) : (
             <View style={s.empty}>
@@ -257,7 +270,6 @@ function Home() {
           const common = {
             hasPosition: !!pos,
             onClose: () => setShowing(null),
-            onEdit: () => { setShowing(null); setEditing({ ...shownCard }); },
             onRememberHere: () => {
               const { places, added } = learnPlace(shownCard, pos, true);
               updateCard({ ...shownCard, places });
@@ -290,14 +302,14 @@ function Home() {
   );
 }
 
-function Tile({ card, allCards, big, chip, onPress, s }) {
+function Tile({ card, allCards, big, chip, onPress, onLongPress, s }) {
   const meta = card.kind === 'set'
     ? (card.steps || []).map((id) => allCards.find((c) => c.id === id)?.name).filter(Boolean).join(' → ') || 'カードが入っていません'
     : card.lastUsed
     ? `最後に使った日 ${new Date(card.lastUsed).getMonth() + 1}/${new Date(card.lastUsed).getDate()}`
     : 'まだ使っていません';
   return (
-    <Pressable onPress={onPress} style={({ pressed }) => [s.tile, { backgroundColor: card.color }, chip != null && s.tileNear, big && s.tileBig, pressed && { opacity: 0.85 }]} accessibilityRole="button" accessibilityLabel={`${card.name}を表示`}>
+    <Pressable onPress={onPress} onLongPress={onLongPress} delayLongPress={400} style={({ pressed }) => [s.tile, { backgroundColor: card.color }, chip != null && s.tileNear, big && s.tileBig, pressed && { opacity: 0.85 }]} accessibilityRole="button" accessibilityLabel={`${card.name}を表示`} accessibilityHint="長押しで編集">
       <View style={s.tileDeco} />
       <Text style={s.kind}>{KIND_LABEL[card.kind]}</Text>
       <Text style={[s.tileName, big && s.tileNameBig]} numberOfLines={2}>{card.name}</Text>
@@ -339,6 +351,7 @@ const styles = (t) => StyleSheet.create({
   dist: { alignSelf: 'flex-start', backgroundColor: '#FFF', borderRadius: 999, paddingHorizontal: 9, paddingVertical: 2 },
   distText: { color: t.near === '#FF8A73' ? '#D9452B' : t.near, fontSize: 12, fontWeight: '700' },
   search: { borderWidth: 1, borderColor: t.line, backgroundColor: t.surface, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 9, marginBottom: 10, color: t.ink, fontSize: 15 },
+  group: { fontSize: 13, fontWeight: '700', color: t.muted },
   setting: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: t.surface, borderWidth: 1, borderColor: t.line, borderRadius: 14, padding: 12 },
   settingTitle: { fontSize: 14, fontWeight: '700', color: t.ink },
   settingText: { fontSize: 12, color: t.muted, lineHeight: 17, marginTop: 2 },

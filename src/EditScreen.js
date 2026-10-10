@@ -9,7 +9,7 @@ import ScannerScreen from './ScannerScreen';
 import { FORMATS } from './barcode';
 import { CARD_COLORS, KIND_LABEL, useTheme } from './theme';
 import { photoUri } from './storage';
-import { CATALOG, appMode, catalogApp, guessCatalogApp, installedCatalogIds, isStoreUrl, normalizeAppUrl, openCardApp } from './appLink';
+import { CATALOG, TYPE_LABEL, appMode, catalogApp, guessCatalogApp, installedCatalogIds, isStoreUrl, normalizeAppUrl, openCardApp } from './appLink';
 import { base64ToBytes, decodeBarcodeImage } from './decodeImage';
 import { lookupKnownApp } from './knownApps';
 
@@ -42,7 +42,7 @@ export default function EditScreen({ initial, allCards = [], onCancel, onSave, o
 
   const pickCatalog = (app) => {
     setTestResult(null);
-    setD((prev) => ({ ...prev, appMode: 'catalog', catalogId: app.id, name: (prev.name || '').trim() ? prev.name : app.name }));
+    setD((prev) => ({ ...prev, appMode: 'catalog', catalogId: app.id, name: isNew || !(prev.name || '').trim() ? app.name : prev.name }));
   };
 
   const testOpen = async () => {
@@ -117,8 +117,8 @@ export default function EditScreen({ initial, allCards = [], onCancel, onSave, o
   };
 
   const save = () => {
-    const name = (d.name || '').trim();
-    if (!name) return setStatus({ text: '名前を入れてください。', error: true });
+    const name = (d.name || '').trim() || (d.kind === 'app' && appMode(d) === 'catalog' ? catalogApp(d.catalogId)?.name || '' : '');
+    if (!name && !(d.kind === 'app' && appMode(d) === 'catalog')) return setStatus({ text: '名前を入れてください。', error: true });
     if (d.kind === 'barcode' && !(d.code || '').trim()) return setStatus({ text: 'バーコードを読み取るか、番号を入れてください。', error: true });
     if (d.kind === 'photo' && !d.photo) return setStatus({ text: 'カードの写真を撮ってください。', error: true });
     if (d.kind === 'set' && !(d.steps || []).length) return setStatus({ text: 'セットに入れるカードを選んでください。', error: true });
@@ -132,6 +132,8 @@ export default function EditScreen({ initial, allCards = [], onCancel, onSave, o
   };
 
   const known = lookupKnownApp(d.name);
+  // Official apps from the list are named after the app; the name can be changed later by long-pressing the card on Home.
+  const showName = d.kind !== 'app' || !isNew || appMode(d) !== 'catalog';
   const photoSource = d.photo ? { uri: typeof d.photo === 'object' ? d.photo.temp : photoUri(d.photo) } : null;
 
   return (
@@ -143,12 +145,6 @@ export default function EditScreen({ initial, allCards = [], onCancel, onSave, o
       </View>
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <ScrollView contentContainerStyle={s.body} keyboardShouldPersistTaps="handled">
-          <View style={s.field}>
-            <Text style={s.label}>店・カードの名前</Text>
-            <TextInput style={s.input} value={d.name} onChangeText={(v) => set({ name: v })} placeholder="例: 駅前のドラッグストア" placeholderTextColor={t.muted} />
-            <Text style={s.hint}>地図で近くの店を探すときにもこの名前を使います。</Text>
-          </View>
-
           {known && (d.kind === 'barcode' || d.kind === 'photo') && (
             <View style={s.warn}>
               <Text style={s.warnTitle}>{known.label}は{known.kind === 'dynamic' ? 'バーコードが時間で変わります' : 'スクショでの利用が禁止されています'}</Text>
@@ -169,6 +165,14 @@ export default function EditScreen({ initial, allCards = [], onCancel, onSave, o
               ))}
             </View>
           </View>
+
+          {showName && (
+            <View style={s.field}>
+              <Text style={s.label}>{d.kind === 'set' ? 'セットの名前' : '店・カードの名前'}</Text>
+              <TextInput style={s.input} value={d.name} onChangeText={(v) => set({ name: v })} placeholder={d.kind === 'set' ? '例: スギ薬局で使う' : '例: 駅前のドラッグストア'} placeholderTextColor={t.muted} />
+              {d.kind !== 'set' && <Text style={s.hint}>地図で近くの店を探すときにもこの名前を使います。</Text>}
+            </View>
+          )}
 
           {status && <Text style={[s.status, status.error && s.statusErr]}>{status.text}</Text>}
           {status?.toApp && (
@@ -251,11 +255,10 @@ export default function EditScreen({ initial, allCards = [], onCancel, onSave, o
                 const chosen = catalogApp(d.catalogId);
                 const q = appQuery.trim().toLowerCase();
                 const list = CATALOG.filter((a) => !q || a.name.toLowerCase().includes(q) || a.keys.some((k) => k.toLowerCase().includes(q)));
-                const mine = list.filter((a) => installed.includes(a.id));
-                const others = list.filter((a) => !installed.includes(a.id));
+                const sorted = [...list].sort((a, b) => installed.includes(b.id) - installed.includes(a.id));
                 const chip = (a) => (
                   <Pressable key={a.id} onPress={() => pickCatalog(a)} style={[s.chip, d.catalogId === a.id && s.chipOn]} accessibilityRole="button" accessibilityState={{ selected: d.catalogId === a.id }}>
-                    <Text style={[s.chipText, d.catalogId === a.id && s.chipTextOn]}>{a.name}</Text>
+                    <Text style={[s.chipText, d.catalogId === a.id && s.chipTextOn]}>{installed.includes(a.id) ? '● ' : ''}{a.name}</Text>
                   </Pressable>
                 );
                 return (
@@ -263,14 +266,16 @@ export default function EditScreen({ initial, allCards = [], onCancel, onSave, o
                     <Text style={s.hint}>選ぶだけで、App Storeを通らずにアプリを直接開きます。準備は要りません。</Text>
                     {chosen && <Text style={s.label}>選択中: {chosen.name}</Text>}
                     <TextInput style={s.input} value={appQuery} onChangeText={setAppQuery} placeholder="アプリ名で探す" placeholderTextColor={t.muted} autoCorrect={false} clearButtonMode="while-editing" />
-                    {mine.length > 0 && (
-                      <>
-                        <Text style={s.subLabel}>このiPhoneに入っているアプリ</Text>
-                        <View style={s.chips}>{mine.map(chip)}</View>
-                        <Text style={s.subLabel}>そのほか</Text>
-                      </>
-                    )}
-                    <View style={s.chips}>{others.map(chip)}</View>
+                    {['point', 'pay'].map((ty) => {
+                      const group = sorted.filter((a) => (a.types || ['point']).includes(ty));
+                      return group.length ? (
+                        <View key={ty} style={{ gap: 6 }}>
+                          <Text style={s.subLabel}>{TYPE_LABEL[ty]}</Text>
+                          <View style={s.chips}>{group.map(chip)}</View>
+                        </View>
+                      ) : null;
+                    })}
+                    {installed.length > 0 && <Text style={s.hint}>● はこのiPhoneに入っているアプリです。</Text>}
                     {list.length === 0 && <Text style={s.hint}>一覧にありません。上の「一覧にないアプリ」から登録できます。</Text>}
                   </View>
                 );
@@ -281,6 +286,19 @@ export default function EditScreen({ initial, allCards = [], onCancel, onSave, o
                   <TextInput style={s.input} value={d.shortcutName} onChangeText={(v) => set({ shortcutName: v })} placeholder="例: 楽天を開く" placeholderTextColor={t.muted} autoCorrect={false} />
                   <Text style={s.hint}>一覧にないアプリ向けの方法です。iPhoneの「ショートカット」アプリで、次のように1回だけ作ってください。</Text>
                   <Text style={s.hint}>1. 右上の「＋」で新規ショートカットを作る{'\n'}2. 「Appを開く」を追加し、開きたいアプリを選ぶ{'\n'}3. 名前を付けて保存し、同じ名前をここに入れる</Text>
+                  <Text style={s.subLabel}>このアプリでできること(両方選べます)</Text>
+                  <View style={s.chips}>
+                    {['point', 'pay'].map((ty) => {
+                      const types = d.types && d.types.length ? d.types : ['point'];
+                      const on = types.includes(ty);
+                      const next = on ? types.filter((x) => x !== ty) : [...types, ty];
+                      return (
+                        <Pressable key={ty} onPress={() => next.length && set({ types: next })} style={[s.chip, on && s.chipOn]} accessibilityRole="checkbox" accessibilityState={{ checked: on }}>
+                          <Text style={[s.chipText, on && s.chipTextOn]}>{TYPE_LABEL[ty]}</Text>
+                        </Pressable>
+                      );
+                    })}
+                  </View>
                 </View>
               )}
               {appMode(d) === 'url' && (

@@ -1,5 +1,5 @@
 {
-  "_note": "URL schemes collected from the personal memo site urlschemesiphone.information.jp (2026-10). Not verified on a device yet; Poica tries each scheme in order and falls back if the app does not answer. 'stores' is the shop-name pattern used to suggest the card near that chain's shops; apps usable everywhere (common points, payments) have none.",
+  "_note": "URL schemes collected from the personal memo site urlschemesiphone.information.jp (2026-10). Not verified on a device yet; Poica tries each scheme in order and falls back if the app does not answer. 'stores' is the shop-name pattern used to suggest the card near that chain's shops; apps usable everywhere (common points, payments) have none. 'types' says whether the app works as a point card ('point'), a payment app ('pay'), or both.",
   "apps": [
     {
       "id": "rakuten-pointcard",
@@ -10,6 +10,9 @@
       ],
       "schemes": [
         "pointpartner"
+      ],
+      "types": [
+        "point"
       ]
     },
     {
@@ -21,6 +24,10 @@
       ],
       "schemes": [
         "rakutenpay"
+      ],
+      "types": [
+        "point",
+        "pay"
       ]
     },
     {
@@ -32,6 +39,9 @@
       ],
       "schemes": [
         "paypay"
+      ],
+      "types": [
+        "pay"
       ]
     },
     {
@@ -43,6 +53,9 @@
       ],
       "schemes": [
         "jp.ponta.myponta"
+      ],
+      "types": [
+        "point"
       ]
     },
     {
@@ -53,6 +66,9 @@
       ],
       "schemes": [
         "com.nttdocomo.dpoint.start"
+      ],
+      "types": [
+        "point"
       ]
     },
     {
@@ -63,6 +79,10 @@
       ],
       "schemes": [
         "dpayment"
+      ],
+      "types": [
+        "point",
+        "pay"
       ]
     },
     {
@@ -75,6 +95,10 @@
       "schemes": [
         "auwallet",
         "auwallet2"
+      ],
+      "types": [
+        "point",
+        "pay"
       ]
     },
     {
@@ -87,6 +111,10 @@
       ],
       "schemes": [
         "vpoint"
+      ],
+      "types": [
+        "point",
+        "pay"
       ]
     },
     {
@@ -98,6 +126,9 @@
       ],
       "schemes": [
         "waonservice"
+      ],
+      "types": [
+        "pay"
       ]
     },
     {
@@ -109,6 +140,10 @@
       ],
       "schemes": [
         "aeonwallet"
+      ],
+      "types": [
+        "point",
+        "pay"
       ]
     },
     {
@@ -121,7 +156,11 @@
       "schemes": [
         "aeon-app"
       ],
-      "stores": "イオン|AEON|マックスバリュ"
+      "stores": "イオン|AEON|マックスバリュ",
+      "types": [
+        "point",
+        "pay"
+      ]
     },
     {
       "id": "seven",
@@ -133,7 +172,10 @@
       "schemes": [
         "sejapp"
       ],
-      "stores": "セブン-イレブン|セブンイレブン|セブン‐イレブン|7-Eleven"
+      "stores": "セブン-イレブン|セブンイレブン|セブン‐イレブン|7-Eleven",
+      "types": [
+        "point"
+      ]
     },
     {
       "id": "famipay",
@@ -146,7 +188,11 @@
       "schemes": [
         "familymart-app"
       ],
-      "stores": "ファミリーマート|FamilyMart"
+      "stores": "ファミリーマート|FamilyMart",
+      "types": [
+        "point",
+        "pay"
+      ]
     },
     {
       "id": "ministop",
@@ -157,7 +203,10 @@
       "schemes": [
         "ministopapp"
       ],
-      "stores": "ミニストップ|MINISTOP"
+      "stores": "ミニストップ|MINISTOP",
+      "types": [
+        "point"
+      ]
     },
     {
       "id": "sugi",
@@ -168,7 +217,10 @@
       "schemes": [
         "passmartsugi"
       ],
-      "stores": "スギ薬局|スギドラッグ"
+      "stores": "スギ薬局|スギドラッグ",
+      "types": [
+        "point"
+      ]
     },
     {
       "id": "matsukiyo",
@@ -182,7 +234,10 @@
         "matsukiyococokara",
         "matsukiyo-private"
       ],
-      "stores": "マツモトキヨシ|ココカラファイン"
+      "stores": "マツモトキヨシ|ココカラファイン",
+      "types": [
+        "point"
+      ]
     },
     {
       "id": "welcia",
@@ -195,7 +250,10 @@
         "welciaapp",
         "welciaapps"
       ],
-      "stores": "ウエルシア|ハックドラッグ"
+      "stores": "ウエルシア|ハックドラッグ",
+      "types": [
+        "point"
+      ]
     },
     {
       "id": "tsuruha",
@@ -206,7 +264,10 @@
       "schemes": [
         "jp.co.tsuruhahd.tsuruhadrug"
       ],
-      "stores": "ツルハ"
+      "stores": "ツルハ",
+      "types": [
+        "point"
+      ]
     },
     {
       "id": "seiyu",
@@ -218,7 +279,10 @@
       "schemes": [
         "seiyu"
       ],
-      "stores": "西友|SEIYU"
+      "stores": "西友|SEIYU",
+      "types": [
+        "point"
+      ]
     },
     {
       "id": "starbucks",
@@ -231,7 +295,11 @@
       "schemes": [
         "starbucksjapan"
       ],
-      "stores": "スターバックス|Starbucks"
+      "stores": "スターバックス|Starbucks",
+      "types": [
+        "point",
+        "pay"
+      ]
     },
     {
       "id": "tullys",
@@ -243,7 +311,11 @@
       "schemes": [
         "jp.co.tullys.app"
       ],
-      "stores": "タリーズ|Tully"
+      "stores": "タリーズ|Tully",
+      "types": [
+        "point",
+        "pay"
+      ]
     },
     {
       "id": "mcdonalds",
@@ -256,7 +328,10 @@
       "schemes": [
         "mcdonaldsjp"
       ],
-      "stores": "マクドナルド|McDonald"
+      "stores": "マクドナルド|McDonald",
+      "types": [
+        "point"
+      ]
     },
     {
       "id": "yodobashi-gpc",
@@ -268,7 +343,10 @@
       "schemes": [
         "gpc"
       ],
-      "stores": "ヨドバシ"
+      "stores": "ヨドバシ",
+      "types": [
+        "point"
+      ]
     },
     {
       "id": "xebio",
@@ -280,7 +358,10 @@
       "schemes": [
         "xebioapp"
       ],
-      "stores": "ゼビオ|XEBIO"
+      "stores": "ゼビオ|XEBIO",
+      "types": [
+        "point"
+      ]
     },
     {
       "id": "mitsui-shopping",
@@ -292,7 +373,10 @@
       "schemes": [
         "mspapp-20141009"
       ],
-      "stores": "ららぽーと|三井アウトレットパーク"
+      "stores": "ららぽーと|三井アウトレットパーク",
+      "types": [
+        "point"
+      ]
     },
     {
       "id": "abc-mart",
@@ -304,7 +388,10 @@
       "schemes": [
         "abc-mart"
       ],
-      "stores": "ABC-MART|ABCマート"
+      "stores": "ABC-MART|ABCマート",
+      "types": [
+        "point"
+      ]
     },
     {
       "id": "daiso",
@@ -316,7 +403,10 @@
       "schemes": [
         "com.daisojapan"
       ],
-      "stores": "ダイソー|DAISO"
+      "stores": "ダイソー|DAISO",
+      "types": [
+        "point"
+      ]
     }
   ]
 }

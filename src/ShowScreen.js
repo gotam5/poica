@@ -13,7 +13,7 @@ export function mapsUrl(name) {
 }
 
 // Full-screen, always white, brightness up: what you hold out at the register.
-export default function ShowScreen({ card, hasPosition, onClose, onEdit, onRememberHere, onForget }) {
+export default function ShowScreen({ card, hasPosition, onClose, onRememberHere, onForget }) {
   useRegisterMode();
   const { width } = useWindowDimensions();
   const [appError, setAppError] = useState(false);
@@ -57,11 +57,11 @@ export default function ShowScreen({ card, hasPosition, onClose, onEdit, onRemem
                   <Text style={s.bigBtnText}>{card.name}のアプリを開く</Text>
                 </Pressable>
                 <Text style={s.muted}>{appMode(card) === 'catalog' ? `${catalogApp(card.catalogId)?.name || ''}のアプリを直接開きます` : appMode(card) === 'shortcut' ? `ショートカット「${card.shortcutName}」で開きます` : appLink}</Text>
-                {isStoreUrl(appLink) && <Text style={s.err}>App Storeのリンクなので、ストアが開きます。「編集」でショートカットに切り替えると直接開けます。</Text>}
-                {appError && <Text style={s.err}>{appMode(card) === 'shortcut' ? '開けませんでした。ショートカットアプリに同じ名前のショートカットがあるか確かめてください。' : '開けませんでした。そのアプリが入っているか確かめてください。だめなときは「編集」から別の開き方を選べます。'}</Text>}
+                {isStoreUrl(appLink) && <Text style={s.err}>App Storeのリンクなので、ストアが開きます。ホームでカードを長押しし、開き方を変えると直接開けます。</Text>}
+                {appError && <Text style={s.err}>{appMode(card) === 'shortcut' ? '開けませんでした。ショートカットアプリに同じ名前のショートカットがあるか確かめてください。' : '開けませんでした。そのアプリが入っているか確かめてください。だめなときはホームでカードを長押しして、別の開き方を選べます。'}</Text>}
               </>
             ) : (
-              <Text style={s.muted}>アプリの開き方が未登録です。「編集」から追加できます。</Text>
+              <Text style={s.muted}>アプリの開き方が未登録です。ホームでカードを長押しして追加できます。</Text>
             )}
             {card.code ? <Text style={s.num} selectable>{card.code}</Text> : null}
           </View>
@@ -88,7 +88,7 @@ export default function ShowScreen({ card, hasPosition, onClose, onEdit, onRemem
           </View>
         </View>
       </ScrollView>
-      <BottomBar onClose={onClose} onEdit={onEdit} />
+      <BottomBar onClose={onClose} />
     </SafeAreaView>
   );
 }
