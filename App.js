@@ -106,7 +106,7 @@ function Home() {
   }, [cards, say]);
 
   const startNew = () => setEditing({
-    id: newId(), isNew: true, name: '', kind: 'barcode', code: '', format: 'CODE128', photo: null, appMode: 'shortcut', appUrl: '', shortcutName: '', steps: [],
+    id: newId(), isNew: true, name: '', kind: 'barcode', code: '', format: 'CODE128', photo: null, appMode: 'catalog', catalogId: null, appUrl: '', shortcutName: '', steps: [],
     color: CARD_COLORS[(cards?.length || 0) % CARD_COLORS.length], places: [], uses: 0, created: Date.now(),
   });
 
@@ -197,6 +197,7 @@ function Home() {
       {toast && <View style={s.toast} pointerEvents="none"><Text style={s.toastText}>{toast}</Text></View>}
 
       <Modal visible={!!shownCard} animationType="slide" presentationStyle="fullScreen" onRequestClose={() => setShowing(null)}>
+        <SafeAreaProvider>
         {shownCard && (() => {
           const common = {
             hasPosition: !!pos,
@@ -222,10 +223,13 @@ function Home() {
           }
           return <ShowScreen {...common} card={shownCard} />;
         })()}
+        </SafeAreaProvider>
       </Modal>
 
       <Modal visible={!!editing} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setEditing(null)}>
+        <SafeAreaProvider>
         {editing && <EditScreen initial={editing} allCards={cards} onCancel={() => setEditing(null)} onSave={saveDraft} onDelete={removeCard} />}
+        </SafeAreaProvider>
       </Modal>
     </SafeAreaView>
   );

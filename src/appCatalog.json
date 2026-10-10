@@ -1,0 +1,32 @@
+{
+  "_note": "URL schemes collected from the personal memo site urlschemesiphone.information.jp (2026-10). Not verified on a device yet; Poica tries each scheme in order and falls back if the app does not answer.",
+  "apps": [
+    { "id": "rakuten-pointcard", "name": "楽天ポイントカード", "keys": ["楽天ポイント", "rakutenpoint"], "schemes": ["pointpartner"] },
+    { "id": "rakuten-pay", "name": "楽天ペイ", "keys": ["楽天ペイ", "rakutenpay"], "schemes": ["rakutenpay"] },
+    { "id": "paypay", "name": "PayPay", "keys": ["paypay", "ペイペイ"], "schemes": ["paypay"] },
+    { "id": "ponta", "name": "Ponta", "keys": ["ponta", "ポンタ"], "schemes": ["jp.ponta.myponta"] },
+    { "id": "dpoint", "name": "dポイントクラブ", "keys": ["dポイント"], "schemes": ["com.nttdocomo.dpoint.start"] },
+    { "id": "dpay", "name": "d払い", "keys": ["d払い"], "schemes": ["dpayment"] },
+    { "id": "aupay", "name": "au PAY", "keys": ["aupay", "auペイ"], "schemes": ["auwallet", "auwallet2"] },
+    { "id": "vpoint", "name": "Vポイント", "keys": ["vポイント", "ｖポイント", "vpoint"], "schemes": ["vpoint"] },
+    { "id": "waon", "name": "WAON", "keys": ["waon", "ワオン"], "schemes": ["waonservice"] },
+    { "id": "aeon-wallet", "name": "AEON WALLET", "keys": ["aeonwallet", "イオンウォレット"], "schemes": ["aeonwallet"] },
+    { "id": "aeon", "name": "イオンお買物", "keys": ["イオン", "aeon"], "schemes": ["aeon-app"] },
+    { "id": "seven", "name": "セブン‐イレブン", "keys": ["セブン", "seven"], "schemes": ["sejapp"] },
+    { "id": "famipay", "name": "ファミペイ", "keys": ["ファミペイ", "ファミリーマート", "ファミマ"], "schemes": ["familymart-app"] },
+    { "id": "ministop", "name": "ミニストップ", "keys": ["ミニストップ"], "schemes": ["ministopapp"] },
+    { "id": "sugi", "name": "スギ薬局", "keys": ["スギ"], "schemes": ["passmartsugi"] },
+    { "id": "matsukiyo", "name": "マツキヨココカラ", "keys": ["マツキヨ", "ココカラ", "マツモトキヨシ"], "schemes": ["matsukiyococokara", "matsukiyo-private"] },
+    { "id": "welcia", "name": "ウエルシア", "keys": ["ウエルシア", "welcia"], "schemes": ["welciaapp", "welciaapps"] },
+    { "id": "tsuruha", "name": "ツルハドラッグ", "keys": ["ツルハ"], "schemes": ["jp.co.tsuruhahd.tsuruhadrug"] },
+    { "id": "seiyu", "name": "西友", "keys": ["西友", "seiyu"], "schemes": ["seiyu"] },
+    { "id": "starbucks", "name": "スターバックス", "keys": ["スタバ", "スターバックス", "starbucks"], "schemes": ["starbucksjapan"] },
+    { "id": "tullys", "name": "タリーズ", "keys": ["タリーズ", "tully"], "schemes": ["jp.co.tullys.app"] },
+    { "id": "mcdonalds", "name": "マクドナルド", "keys": ["マクドナルド", "マック", "mcdonald"], "schemes": ["mcdonaldsjp"] },
+    { "id": "yodobashi-gpc", "name": "ヨドバシ ゴールドポイントカード", "keys": ["ヨドバシ", "ゴールドポイント"], "schemes": ["gpc"] },
+    { "id": "xebio", "name": "スーパースポーツゼビオ", "keys": ["ゼビオ", "xebio"], "schemes": ["xebioapp"] },
+    { "id": "mitsui-shopping", "name": "三井ショッピングパーク", "keys": ["三井ショッピング", "ららぽーと"], "schemes": ["mspapp-20141009"] },
+    { "id": "abc-mart", "name": "ABC-MART", "keys": ["abc-mart", "abcマート"], "schemes": ["abc-mart"] },
+    { "id": "daiso", "name": "DAISO", "keys": ["ダイソー", "daiso"], "schemes": ["com.daisojapan"] }
+  ]
+}

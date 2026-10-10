@@ -2,7 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 import { AppState, Image, Linking, Platform, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import BarcodeView from './BarcodeView';
-import { launchUrl } from './appLink';
+import BottomBar from './BottomBar';
+import { launchUrl, openCardApp } from './appLink';
 import { useRegisterMode } from './registerMode';
 import { photoUri } from './storage';
 import { KIND_LABEL } from './theme';
@@ -34,9 +35,8 @@ export default function SetShowScreen({ set, members, hasPosition, onClose, onEd
     if (!url) return setError(`「${card.name}」の開き方が未登録です。カードの編集から登録してください。`);
     onUse(card);
     leftForApp.current = true;
-    try {
-      await Linking.openURL(url);
-    } catch {
+    const ok = await openCardApp(card);
+    if (!ok) {
       leftForApp.current = false;
       setError(`「${card.name}」を開けませんでした。アプリが入っているか、開き方の設定を確かめてください。`);
     }
@@ -53,11 +53,7 @@ export default function SetShowScreen({ set, members, hasPosition, onClose, onEd
 
   return (
     <SafeAreaView style={s.root} edges={['top', 'bottom']}>
-      <View style={s.head}>
-        <Pressable onPress={onClose} hitSlop={10} style={s.headBtn} accessibilityRole="button"><Text style={s.headText}>← 戻る</Text></Pressable>
-        <Pressable onPress={onEdit} hitSlop={10} style={[s.headBtn, s.outline]} accessibilityRole="button"><Text style={s.headText}>編集</Text></Pressable>
-      </View>
-      <ScrollView contentContainerStyle={s.body}>
+      <ScrollView contentContainerStyle={[s.body, { paddingTop: 20 }]}>
         <Text style={s.name}>{set.name}</Text>
         <Text style={s.sub}>{done ? '全部使いました' : `${members.length}つのうち ${step + 1}つ目`}</Text>
 
@@ -113,6 +109,7 @@ export default function SetShowScreen({ set, members, hasPosition, onClose, onEd
           </View>
         </View>
       </ScrollView>
+      <BottomBar onClose={onClose} onEdit={onEdit} />
     </SafeAreaView>
   );
 }

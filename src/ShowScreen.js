@@ -3,8 +3,9 @@ import { Image, Linking, Platform, Pressable, ScrollView, StyleSheet, Text, View
 import { useRegisterMode } from './registerMode';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import BarcodeView from './BarcodeView';
+import BottomBar from './BottomBar';
 import { photoUri } from './storage';
-import { appMode, isStoreUrl, launchUrl } from './appLink';
+import { appMode, catalogApp, isStoreUrl, launchUrl, openCardApp } from './appLink';
 
 export function mapsUrl(name) {
   const q = encodeURIComponent(name);
@@ -23,24 +24,13 @@ export default function ShowScreen({ card, hasPosition, onClose, onEdit, onRemem
   const appLink = card.kind === 'app' ? launchUrl(card) : null;
   const openApp = async () => {
     setAppError(false);
-    try {
-      await Linking.openURL(appLink);
-    } catch {
-      setAppError(true);
-    }
+    const ok = await openCardApp(card);
+    if (!ok) setAppError(true);
   };
 
   return (
     <SafeAreaView style={s.root} edges={['top', 'bottom']}>
-      <View style={s.head}>
-        <Pressable onPress={onClose} hitSlop={10} style={s.headBtn} accessibilityRole="button">
-          <Text style={s.headBtnText}>← 戻る</Text>
-        </Pressable>
-        <Pressable onPress={onEdit} hitSlop={10} style={[s.headBtn, s.outline]} accessibilityRole="button">
-          <Text style={s.headBtnText}>編集</Text>
-        </Pressable>
-      </View>
-      <ScrollView contentContainerStyle={s.body}>
+      <ScrollView contentContainerStyle={[s.body, { paddingTop: 20 }]}>
         <Text style={s.name}>{card.name}</Text>
 
         {card.kind === 'barcode' && (
@@ -66,9 +56,9 @@ export default function ShowScreen({ card, hasPosition, onClose, onEdit, onRemem
                 <Pressable onPress={openApp} style={s.bigBtn} accessibilityRole="button">
                   <Text style={s.bigBtnText}>{card.name}のアプリを開く</Text>
                 </Pressable>
-                <Text style={s.muted}>{appMode(card) === 'shortcut' ? `ショートカット「${card.shortcutName}」で開きます` : appLink}</Text>
+                <Text style={s.muted}>{appMode(card) === 'catalog' ? `${catalogApp(card.catalogId)?.name || ''}のアプリを直接開きます` : appMode(card) === 'shortcut' ? `ショートカット「${card.shortcutName}」で開きます` : appLink}</Text>
                 {isStoreUrl(appLink) && <Text style={s.err}>App Storeのリンクなので、ストアが開きます。「編集」でショートカットに切り替えると直接開けます。</Text>}
-                {appError && <Text style={s.err}>{appMode(card) === 'shortcut' ? '開けませんでした。ショートカットアプリに同じ名前のショートカットがあるか確かめてください。' : '開けませんでした。そのアプリが入っているか、URLが正しいか確かめてください。'}</Text>}
+                {appError && <Text style={s.err}>{appMode(card) === 'shortcut' ? '開けませんでした。ショートカットアプリに同じ名前のショートカットがあるか確かめてください。' : '開けませんでした。そのアプリが入っているか確かめてください。だめなときは「編集」から別の開き方を選べます。'}</Text>}
               </>
             ) : (
               <Text style={s.muted}>アプリの開き方が未登録です。「編集」から追加できます。</Text>
@@ -98,6 +88,7 @@ export default function ShowScreen({ card, hasPosition, onClose, onEdit, onRemem
           </View>
         </View>
       </ScrollView>
+      <BottomBar onClose={onClose} onEdit={onEdit} />
     </SafeAreaView>
   );
 }
