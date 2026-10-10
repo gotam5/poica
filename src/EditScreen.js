@@ -397,7 +397,7 @@ const styles = (t) => StyleSheet.create({
   head: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingTop: 26, paddingBottom: 12 },
   headText: { color: t.ink, fontSize: 16, paddingVertical: 8 },
   title: { color: t.ink, fontSize: 17, fontWeight: '800' },
-  saveBtn: { backgroundColor: t.accent, paddingVertical: 10, paddingHorizontal: 20, borderRadius: 10 },
+  saveBtn: { backgroundColor: t.accent, paddingVertical: 10, paddingHorizontal: 22, borderRadius: 999 },
   saveText: { color: t.accentInk, fontWeight: '700', fontSize: 15 },
   body: { paddingHorizontal: 16, paddingBottom: 48, gap: 18 },
   field: { gap: 6 },

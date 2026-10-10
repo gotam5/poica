@@ -285,7 +285,7 @@ function Home() {
             },
             onForget: () => { updateCard({ ...shownCard, places: [] }); say('覚えた場所を消しました'); },
           };
-          return <ShowScreen {...common} card={shownCard} openFailed={openFailed} />;
+          return <ShowScreen {...common} card={shownCard} openFailed={openFailed} onUseShortcut={(name) => { updateCard({ ...shownCard, appMode: 'shortcut', shortcutName: name }); say('ショートカットで開くようにしました'); }} />;
         })()}
         </SafeAreaProvider>
       </Modal>

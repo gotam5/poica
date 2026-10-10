@@ -13,7 +13,7 @@ export function mapsUrl(name) {
 }
 
 // Full-screen, always white, brightness up: what you hold out at the register.
-export default function ShowScreen({ card, openFailed, hasPosition, onClose, onRememberHere, onForget }) {
+export default function ShowScreen({ card, openFailed, hasPosition, onClose, onRememberHere, onForget, onUseShortcut }) {
   useRegisterMode();
   const { width } = useWindowDimensions();
   const [appError, setAppError] = useState(!!openFailed);
@@ -22,6 +22,9 @@ export default function ShowScreen({ card, openFailed, hasPosition, onClose, onR
   const codeWidth = Math.min(width - 32, 460);
 
   const appLink = card.kind === 'app' ? launchUrl(card) : null;
+  const viaShortcut = card.kind === 'app' && appMode(card) === 'shortcut';
+  const appName = catalogApp(card.catalogId)?.name || card.name;
+  const shortcutName = viaShortcut && card.shortcutName ? card.shortcutName : `${appName}を開く`;
   const openApp = async () => {
     setAppError(false);
     const ok = await openCardApp(card);
@@ -43,16 +46,44 @@ export default function ShowScreen({ card, openFailed, hasPosition, onClose, onR
           </View>
         )}
 
-        {card.kind === 'app' && (
+        {card.kind === 'app' && appError && (
+          <View style={s.fail}>
+            <Text style={s.failTitle}>{card.name}を開けませんでした</Text>
+            {viaShortcut ? (
+              <Text style={s.failText}>ショートカット「{card.shortcutName}」が見つからないか、うまく動きませんでした。iPhoneの「ショートカット」アプリで、同じ名前のショートカットを作ってください。</Text>
+            ) : (
+              <Text style={s.failText}>アプリが入っていないか、Poicaから直接は開けないアプリのようです。iPhoneの「ショートカット」アプリを使うと、確実に開けるようになります。</Text>
+            )}
+            <View style={s.steps}>
+              <Text style={s.stepTitle}>ショートカットの作り方(1回だけ)</Text>
+              <Text style={s.stepText}>1. 下のボタンで「ショートカット」アプリを開き、右上の「＋」を押す</Text>
+              <Text style={s.stepText}>2. 「Appを開く」を追加し、{appName}を選ぶ</Text>
+              <Text style={s.stepText}>3. 名前を「{shortcutName}」にして保存する</Text>
+              {!viaShortcut && <Text style={s.stepText}>4. Poicaに戻り、「ショートカットで開くようにする」を押す</Text>}
+            </View>
+            <Pressable onPress={() => Linking.openURL('shortcuts://').catch(() => {})} style={[s.bigBtn, s.wide]} accessibilityRole="button">
+              <Text style={s.bigBtnText}>ショートカットアプリを開く</Text>
+            </Pressable>
+            {!viaShortcut && onUseShortcut && (
+              <Pressable onPress={() => { onUseShortcut(shortcutName); setAppError(false); }} style={[s.outlineBtn, s.wide]} accessibilityRole="button">
+                <Text style={s.outlineText}>ショートカットで開くようにする</Text>
+              </Pressable>
+            )}
+            <Pressable onPress={openApp} style={[s.outlineBtn, s.wide]} accessibilityRole="button">
+              <Text style={s.outlineText}>もう一度開いてみる</Text>
+            </Pressable>
+          </View>
+        )}
+
+        {card.kind === 'app' && !appError && (
           <View style={[s.codeBox, { gap: 14 }]}>
             {appLink ? (
               <>
                 <Pressable onPress={openApp} style={s.bigBtn} accessibilityRole="button">
                   <Text style={s.bigBtnText}>{card.name}のアプリを開く</Text>
                 </Pressable>
-                <Text style={s.muted}>{appMode(card) === 'catalog' ? `${catalogApp(card.catalogId)?.name || ''}のアプリを直接開きます` : appMode(card) === 'shortcut' ? `ショートカット「${card.shortcutName}」で開きます` : appLink}</Text>
+                <Text style={s.muted}>{appMode(card) === 'catalog' ? `${catalogApp(card.catalogId)?.name || ''}のアプリを直接開きます` : viaShortcut ? `ショートカット「${card.shortcutName}」で開きます` : appLink}</Text>
                 {isStoreUrl(appLink) && <Text style={s.err}>App Storeのリンクなので、ストアが開きます。ホームでカードを長押しし、開き方を変えると直接開けます。</Text>}
-                {appError && <Text style={s.err}>{appMode(card) === 'shortcut' ? '開けませんでした。ショートカットアプリに同じ名前のショートカットがあるか確かめてください。' : '開けませんでした。そのアプリが入っているか確かめてください。だめなときはホームでカードを長押しして、別の開き方を選べます。'}</Text>}
               </>
             ) : (
               <Text style={s.muted}>アプリの開き方が未登録です。ホームでカードを長押しして追加できます。</Text>
@@ -100,6 +131,15 @@ const s = StyleSheet.create({
   bigBtn: { backgroundColor: '#0A7552', paddingVertical: 16, paddingHorizontal: 28, borderRadius: 14 },
   bigBtnText: { color: '#FFF', fontSize: 18, fontWeight: '700' },
   url: { fontSize: 12, color: '#444', backgroundColor: '#F2F2F2', padding: 8, borderRadius: 6 },
+  fail: { gap: 14, paddingVertical: 8 },
+  failTitle: { fontSize: 20, fontWeight: '900', color: '#C2412D', textAlign: 'center' },
+  failText: { fontSize: 15, color: '#333', lineHeight: 22 },
+  steps: { backgroundColor: '#F4F6F5', borderRadius: 14, padding: 14, gap: 6 },
+  stepTitle: { fontSize: 14, fontWeight: '800', color: '#111' },
+  stepText: { fontSize: 14, color: '#333', lineHeight: 21 },
+  wide: { alignSelf: 'stretch', alignItems: 'center' },
+  outlineBtn: { borderWidth: 1, borderColor: '#D0D5D3', borderRadius: 14, paddingVertical: 15 },
+  outlineText: { fontSize: 16, fontWeight: '700', color: '#111' },
   err: { color: '#C2412D', fontSize: 13, textAlign: 'center' },
   meta: { borderTopWidth: 1, borderTopColor: '#E6E6E6', paddingTop: 14, gap: 10 },
   muted: { color: '#666', fontSize: 13 },
