@@ -7,7 +7,7 @@ import AddFlow from './src/AddFlow';
 import EditScreen from './src/EditScreen';
 import SetShowScreen from './src/SetShowScreen';
 import ShowScreen from './src/ShowScreen';
-import { arrange, formatDistance, learnPlace } from './src/geo';
+import { arrange, learnPlace } from './src/geo';
 import { deleteCard, getSetting, keepPhoto, loadCards, removePhoto, saveCard, setSetting } from './src/storage';
 import { TYPE_LABEL, cardPalette, cardTypes, openCardApp } from './src/appLink';
 import CardFace from './src/CardFace';
@@ -215,7 +215,7 @@ function Home() {
                   allCards={cards}
                   big={i === 0}
                   wide
-                  chip={x.reason === 'store' ? `近くに${x.store}(${formatDistance(x.dist)})` : `ここで使ったことがあります(${formatDistance(x.dist)})`}
+                  chip={x.reason === 'store' ? '近くにお店があります' : 'ここで使ったことがあります'}
                   onPress={() => open(x.card)} onLongPress={() => setEditing({ ...x.card })}
                   s={s}
                 />
