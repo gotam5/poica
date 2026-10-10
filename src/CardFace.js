@@ -18,9 +18,12 @@ export default function CardFace({ card, palette, big, chip, meta, style }) {
       ) : null}
       <View style={s.nameRow}>
         <Text style={[s.name, big && s.nameBig]} numberOfLines={2}>{card.name || 'カード名'}</Text>
-        <View style={s.badge}>
-          <Text style={[s.badgeText, { color: bg }]}>{KIND_ICON[card.kind]} {KIND_LABEL[card.kind]}</Text>
-        </View>
+        {big && (
+          // Only on large cards (the top suggestion); small cards in lists stay uncluttered.
+          <View style={s.badge}>
+            <Text style={[s.badgeText, { color: bg }]}>{KIND_ICON[card.kind]} {KIND_LABEL[card.kind]}</Text>
+          </View>
+        )}
       </View>
       <View>
         {card.kind === 'set' ? (
