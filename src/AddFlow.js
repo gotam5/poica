@@ -88,14 +88,14 @@ export default function AddFlow({ initial, allCards = [], onCancel, onSave, onCu
                 .filter((a) => !q || a.name.toLowerCase().includes(q) || a.keys.some((k) => k.toLowerCase().includes(q)))
                 .sort((a, b) => installed.includes(b.id) - installed.includes(a.id));
               if (!list.length) return <Text style={s.hint}>見つかりません。上の「自分でカードを作る」から登録できます。</Text>;
-              // Apps already registered go to the bottom, so the ones still to add are easy to pick.
+              // Apps already registered go to the bottom and can't be picked again (an app has only one account per phone).
               const added = new Set(allCards.filter((c) => c.kind === 'app' && c.catalogId).map((c) => c.catalogId));
               const fresh = list.filter((a) => !added.has(a.id));
               const done = list.filter((a) => added.has(a.id));
               const rows = (items, isAdded) => (
                 <View style={s.list}>
                   {items.map((a, i) => (
-                    <Pressable key={a.id} onPress={() => pick(a)} style={({ pressed }) => [s.item, i > 0 && s.itemLine, isAdded && s.itemAdded, pressed && s.pressed]} accessibilityRole="button" accessibilityLabel={`${a.name} ${(a.types || ['point']).map((x) => TYPE_LABEL[x]).join('と')}${isAdded ? ' 追加済み' : ''}`}>
+                    <Pressable key={a.id} onPress={() => pick(a)} disabled={isAdded} style={({ pressed }) => [s.item, i > 0 && s.itemLine, isAdded && s.itemAdded, pressed && !isAdded && s.pressed]} accessibilityRole="button" accessibilityState={{ disabled: isAdded }} accessibilityLabel={`${a.name} ${(a.types || ['point']).map((x) => TYPE_LABEL[x]).join('と')}${isAdded ? ' 追加済み' : ''}`}>
                       <View style={{ flex: 1, gap: 4 }}>
                         <Text style={[s.itemName, isAdded && s.itemNameAdded]} numberOfLines={1}>{a.name}</Text>
                         <View style={s.tags}>
@@ -239,7 +239,7 @@ const styles = (t) => StyleSheet.create({
   tags: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 6 },
   tag: { borderRadius: 6, paddingHorizontal: 7, paddingVertical: 2 },
   tagText: { fontSize: 11, fontWeight: '800' },
-  itemAdded: { backgroundColor: t.bg },
+  itemAdded: { backgroundColor: t.bg, opacity: 0.6 },
   itemNameAdded: { color: t.muted },
   addedMark: { color: t.muted, fontSize: 12, fontWeight: '700' },
   groupLabel: { color: t.muted, fontSize: 13, fontWeight: '700', marginTop: 8 },
