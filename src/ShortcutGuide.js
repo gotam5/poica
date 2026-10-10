@@ -29,7 +29,7 @@ export default function ShortcutGuide({ appName, shortcutName, t }) {
   return (
     <View style={{ gap: 6 }}>
       <Text style={[s.swipe, t && { color: t.muted }]}>横にスワイプして手順を見られます(画面はVポイントの例です)</Text>
-      <ScrollView horizontal onLayout={(e) => setBoxW(e.nativeEvent.layout.width)} showsHorizontalScrollIndicator={false} snapToInterval={W + GAP} decelerationRate="fast" contentContainerStyle={{ gap: GAP, paddingHorizontal: side }}>
+      <ScrollView horizontal onLayout={(e) => setBoxW(e.nativeEvent.layout.width)} showsHorizontalScrollIndicator={false} snapToInterval={W + GAP} decelerationRate="fast" disableIntervalMomentum contentContainerStyle={{ gap: GAP, paddingHorizontal: side }}>
         {IMAGES.map((src, i) => (
           <View key={i} style={s.step}>
             <View style={s.head}>

@@ -286,9 +286,25 @@ export default function EditScreen({ initial, allCards = [], onCancel, onSave, o
                   <TextInput style={s.input} value={d.shortcutName} onChangeText={(v) => set({ shortcutName: v })} placeholder="例: 楽天を開く" placeholderTextColor={t.muted} autoCorrect={false} />
                   <Text style={s.hint}>{catalogApp(d.catalogId) ? `${catalogApp(d.catalogId).name}を直接開けないときの方法です。` : '一覧にないアプリ向けの方法です。'}iPhoneの「ショートカット」アプリで、次のように1回だけ作ってください。</Text>
                   <ShortcutGuide appName={catalogApp(d.catalogId)?.name} shortcutName={(d.shortcutName || '').trim()} t={t} />
-                  <Pressable onPress={() => Linking.openURL('shortcuts://').catch(() => {})} style={[s.secondary, { alignSelf: 'flex-start' }]} accessibilityRole="button">
-                    <Text style={s.secondaryText}>ショートカットアプリを開く</Text>
+                  <Pressable onPress={() => Linking.openURL('shortcuts://').catch(() => {})} style={[s.secondary, { alignSelf: 'stretch', paddingVertical: 13 }]} accessibilityRole="button">
+                    <Text style={[s.secondaryText, { textAlign: 'center' }]}>ショートカットアプリを開く</Text>
                   </Pressable>
+                </View>
+              )}
+              {appMode(d) === 'url' && (
+                <View style={s.field}>
+                  <Text style={s.label}>アプリを開くURL</Text>
+                  <TextInput style={s.input} value={d.appUrl} onChangeText={(v) => set({ appUrl: v })} placeholder="例: アプリ名://" placeholderTextColor={t.muted} autoCapitalize="none" autoCorrect={false} keyboardType="url" />
+                  <Text style={s.hint}>アプリ専用のURL(「〇〇://」の形)が分かっている場合に使います。</Text>
+                  {isStoreUrl(d.appUrl) && <Text style={[s.status, s.statusErr]}>これはApp Storeのページのリンクなので、アプリではなくストアが開きます。</Text>}
+                </View>
+              )}
+              <Pressable onPress={testOpen} style={({ pressed }) => [s.tryBtn, pressed && { opacity: 0.7 }]} accessibilityRole="button">
+                <Text style={s.tryText}>↗ 試しに開く</Text>
+                <Text style={s.tryHint}>ちゃんと開けるか、ここで確かめられます</Text>
+              </Pressable>
+              {appMode(d) === 'shortcut' && (
+                <View style={s.field}>
                   <Text style={s.subLabel}>このアプリでできること(両方選べます)</Text>
                   <View style={s.chips}>
                     {['point', 'pay'].map((ty) => {
@@ -304,18 +320,6 @@ export default function EditScreen({ initial, allCards = [], onCancel, onSave, o
                   </View>
                 </View>
               )}
-              {appMode(d) === 'url' && (
-                <View style={s.field}>
-                  <Text style={s.label}>アプリを開くURL</Text>
-                  <TextInput style={s.input} value={d.appUrl} onChangeText={(v) => set({ appUrl: v })} placeholder="例: アプリ名://" placeholderTextColor={t.muted} autoCapitalize="none" autoCorrect={false} keyboardType="url" />
-                  <Text style={s.hint}>アプリ専用のURL(「〇〇://」の形)が分かっている場合に使います。</Text>
-                  {isStoreUrl(d.appUrl) && <Text style={[s.status, s.statusErr]}>これはApp Storeのページのリンクなので、アプリではなくストアが開きます。</Text>}
-                </View>
-              )}
-              <Pressable onPress={testOpen} style={({ pressed }) => [s.tryBtn, pressed && { opacity: 0.7 }]} accessibilityRole="button">
-                <Text style={s.tryText}>↗ 試しに開く</Text>
-                <Text style={s.tryHint}>ちゃんと開けるか、ここで確かめられます</Text>
-              </Pressable>
               {appMode(d) === 'catalog' && catalogApp(d.catalogId)?.openWith !== 'shortcut' && (catalogApp(d.catalogId)?.schemes.length || 0) > 1 && (() => {
                 const urls = catalogApp(d.catalogId).schemes.map(schemeUrl);
                 const current = launchCandidates(d)[0];
