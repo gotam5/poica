@@ -364,13 +364,13 @@ export default function EditScreen({ initial, allCards = [], onCancel, onSave, o
             <View style={s.confirm}>
               <Text style={{ color: t.ink }}>「{initial.name}」を削除します。覚えた場所も消えます。</Text>
               <View style={s.row}>
-                <Pressable onPress={() => onDelete(initial)} style={s.secondary} accessibilityRole="button"><Text style={[s.secondaryText, { color: t.near }]}>削除する</Text></Pressable>
-                <Pressable onPress={() => setConfirmDelete(false)} style={s.secondary} accessibilityRole="button"><Text style={s.secondaryText}>やめる</Text></Pressable>
+                <Pressable onPress={() => onDelete(initial)} style={[s.secondary, s.wideBtn, { flex: 1 }]} accessibilityRole="button"><Text style={[s.secondaryText, { color: t.near }]}>削除する</Text></Pressable>
+                <Pressable onPress={() => setConfirmDelete(false)} style={[s.secondary, s.wideBtn, { flex: 1 }]} accessibilityRole="button"><Text style={s.secondaryText}>やめる</Text></Pressable>
               </View>
             </View>
           ) : (
-            <Pressable onPress={() => setConfirmDelete(true)} style={[s.secondary, { alignSelf: 'flex-start' }]} accessibilityRole="button">
-              <Text style={[s.secondaryText, { color: t.near }]}>このカードを削除</Text>
+            <Pressable onPress={() => setConfirmDelete(true)} style={[s.secondary, s.wideBtn]} accessibilityRole="button">
+              <Text style={[s.secondaryText, { color: t.near, fontSize: 16 }]}>このカードを削除</Text>
             </Pressable>
           ))}
         </ScrollView>
@@ -419,6 +419,7 @@ const styles = (t) => StyleSheet.create({
   tryHint: { color: t.muted, fontSize: 12, marginTop: 2 },
   secondary: { borderWidth: 1, borderColor: t.line, backgroundColor: t.surface, borderRadius: 10, paddingVertical: 10, paddingHorizontal: 14, alignItems: 'center' },
   secondaryText: { color: t.ink, fontWeight: '700', fontSize: 14 },
+  wideBtn: { alignSelf: 'stretch', justifyContent: 'center', paddingVertical: 15, marginTop: 8 },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
   chip: { borderWidth: 1, borderColor: t.line, backgroundColor: t.surface, borderRadius: 999, paddingVertical: 6, paddingHorizontal: 12 },
   chipOn: { backgroundColor: t.accent, borderColor: t.accent },
