@@ -34,7 +34,7 @@
       [
         "expo-location",
         {
-          "locationWhenInUsePermission": "アプリを開いている間だけ現在地を使い、近くの店のカードを上に並べます。位置はスマホの外に送りません。",
+          "locationWhenInUsePermission": "アプリを開いている間だけ現在地を使い、いまいる店のカードを一番上に出します。設定でオンにしている場合だけ、近くの店を調べるためにおおまかな位置(約100m単位)を地図データ(OpenStreetMap)に送ります。",
           "isIosBackgroundLocationEnabled": false,
           "locationAlwaysAndWhenInUsePermission": false,
           "locationAlwaysPermission": false,

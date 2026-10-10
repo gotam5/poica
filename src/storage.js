@@ -61,3 +61,18 @@ export function removePhoto(name) {
     if (f.exists) f.delete();
   } catch {}
 }
+
+// Small key/value settings next to the cards.
+export async function getSetting(key, fallback) {
+  const d = await db();
+  await d.execAsync('CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY NOT NULL, value TEXT NOT NULL);');
+  const row = await d.getFirstAsync('SELECT value FROM settings WHERE key = ?', [key]);
+  if (!row) return fallback;
+  try { return JSON.parse(row.value); } catch { return fallback; }
+}
+
+export async function setSetting(key, value) {
+  const d = await db();
+  await d.execAsync('CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY NOT NULL, value TEXT NOT NULL);');
+  await d.runAsync('INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)', [key, JSON.stringify(value)]);
+}

@@ -50,18 +50,44 @@ export function learnPlace(card, pos, force = false) {
   return { places: places.slice(0, 30), added: true };
 }
 
-// Near cards first (closest, max 3), the rest by last use.
-export function arrange(cards, pos, query) {
+// Home screen sections:
+//  recent  - the last things used (up to 2)
+//  suggest - near you: places where a card was used before, or a shop of the card's chain (max 3)
+//  all     - every card, last used first
+// storeRegexOf(card) returns a RegExp for the card's chain shop names, or null.
+export function arrange(cards, pos, query, stores = [], storeRegexOf = () => null) {
   const r = nearRadius(pos);
-  const near = cards
-    .map((c) => ({ card: c, dist: nearestPlace(c, pos) }))
-    .filter((x) => x.dist != null && x.dist <= r)
+  const byId = new Map();
+  for (const c of cards) {
+    const d = nearestPlace(c, pos);
+    if (d != null && d <= r) byId.set(c.id, { card: c, dist: d, reason: 'used' });
+  }
+  if (pos && stores.length) {
+    for (const c of cards) {
+      const re = storeRegexOf(c);
+      if (!re) continue;
+      let best = null;
+      for (const st of stores) {
+        if (!re.test(st.name)) continue;
+        const d = distance(pos, st);
+        if (!best || d < best.dist) best = { dist: d, store: st.name };
+      }
+      if (!best || best.dist > 300) continue;
+      const prev = byId.get(c.id);
+      if (!prev) byId.set(c.id, { card: c, dist: best.dist, reason: 'store', store: best.store });
+    }
+  }
+  const suggest = [...byId.values()]
     .sort((a, b) => a.dist - b.dist || (b.card.uses || 0) - (a.card.uses || 0))
     .slice(0, 3);
-  const nearIds = new Set(near.map((x) => x.card.id));
+  const shown = new Set(suggest.map((x) => x.card.id));
+  const recent = cards
+    .filter((c) => c.lastUsed && !shown.has(c.id))
+    .sort((a, b) => b.lastUsed - a.lastUsed)
+    .slice(0, 2);
   const q = (query || '').trim().toLowerCase();
-  const rest = cards
-    .filter((c) => !nearIds.has(c.id) && (!q || c.name.toLowerCase().includes(q)))
+  const all = cards
+    .filter((c) => !q || c.name.toLowerCase().includes(q))
     .sort((a, b) => (b.lastUsed || 0) - (a.lastUsed || 0) || (b.created || 0) - (a.created || 0));
-  return { near, rest };
+  return { recent, suggest, all };
 }

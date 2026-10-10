@@ -7,7 +7,8 @@ import EditScreen from './src/EditScreen';
 import SetShowScreen from './src/SetShowScreen';
 import ShowScreen from './src/ShowScreen';
 import { arrange, formatDistance, learnPlace } from './src/geo';
-import { deleteCard, keepPhoto, loadCards, removePhoto, saveCard } from './src/storage';
+import { deleteCard, getSetting, keepPhoto, loadCards, removePhoto, saveCard, setSetting } from './src/storage';
+import { fetchNearbyStores, storePatternOf, storeRegex } from './src/nearbyStores';
 import { CARD_COLORS, KIND_LABEL, useTheme } from './src/theme';
 
 const newId = () => Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
@@ -31,6 +32,8 @@ function Home() {
   const [editing, setEditing] = useState(null); // draft
   const [toast, setToast] = useState(null);
   const toastTimer = useRef(null);
+  const [stores, setStores] = useState([]);
+  const [storeLookup, setStoreLookup] = useState(true);
 
   const say = useCallback((text) => {
     setToast(text);
@@ -40,7 +43,30 @@ function Home() {
 
   useEffect(() => {
     loadCards().then(setCards).catch(() => setCards([]));
+    getSetting('storeLookup', true).then(setStoreLookup).catch(() => {});
   }, []);
+
+  // Look up chain shops near here for cards tied to a shop (e.g. スギ薬局), so they can be suggested.
+  const patternKey = useMemo(() => {
+    if (!cards) return '';
+    return [...new Set(cards.map((c) => storePatternOf(c, cards)).filter(Boolean))].sort().join('||');
+  }, [cards]);
+  const posKey = pos ? `${Math.round(pos.lat * 1000)},${Math.round(pos.lng * 1000)}` : '';
+  useEffect(() => {
+    if (!storeLookup || !posKey || !patternKey) { setStores([]); return; }
+    let alive = true;
+    fetchNearbyStores(pos, patternKey.split('||'))
+      .then((list) => { if (alive) setStores(list); })
+      .catch(() => { if (alive) setStores([]); });
+    return () => { alive = false; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [storeLookup, posKey, patternKey]);
+
+  const toggleStoreLookup = () => {
+    const next = !storeLookup;
+    setStoreLookup(next);
+    setSetting('storeLookup', next).catch(() => {});
+  };
 
   // "While using the app" location: ask once, then re-read every time the app comes to the front.
   const locate = useCallback(async () => {
@@ -106,7 +132,7 @@ function Home() {
   }, [cards, say]);
 
   const startNew = () => setEditing({
-    id: newId(), isNew: true, name: '', kind: 'barcode', code: '', format: 'CODE128', photo: null, appMode: 'catalog', catalogId: null, appUrl: '', shortcutName: '', steps: [],
+    id: newId(), isNew: true, name: '', kind: 'app', code: '', format: 'CODE128', photo: null, appMode: 'catalog', catalogId: null, appUrl: '', shortcutName: '', steps: [],
     color: CARD_COLORS[(cards?.length || 0) % CARD_COLORS.length], places: [], uses: 0, created: Date.now(),
   });
 
@@ -114,7 +140,7 @@ function Home() {
     return <View style={[s.root, { alignItems: 'center', justifyContent: 'center' }]}><ActivityIndicator color={t.accent} /></View>;
   }
 
-  const { near, rest } = arrange(cards, pos, query);
+  const { recent, suggest, all } = arrange(cards, pos, query, stores, (c) => storeRegex(storePatternOf(c, cards)));
   const shownCard = showing ? cards.find((c) => c.id === showing) : null;
   const anyPlaces = cards.some((c) => c.places && c.places.length);
 
@@ -125,10 +151,12 @@ function Home() {
     fail: '現在地を取れません',
   }[loc.state];
 
-  let nearEmpty;
-  if (loc.state === 'ok') nearEmpty = (anyPlaces ? 'この近くで使ったカードはありません。' : 'まだ場所を覚えたカードがありません。') + 'カードを店で出すと、その場所を覚えて次から一番上に出します。';
-  else if (loc.state === 'wait') nearEmpty = '現在地を確認しています。';
-  else nearEmpty = '現在地が分からないため、最近使った順に並べています。';
+  let suggestEmpty;
+  if (loc.state === 'ok') suggestEmpty = anyPlaces || stores.length
+    ? 'この近くでおすすめできるカードはありません。'
+    : 'カードを店で使うと、その場所を覚えて次からここに出します。スギ薬局のような店のカードは、近くにその店があれば自動で出ます。';
+  else if (loc.state === 'wait') suggestEmpty = '現在地を確認しています。';
+  else suggestEmpty = '現在地が分からないため、おすすめを出せません。';
 
   return (
     <SafeAreaView style={s.root} edges={['top']}>
@@ -154,40 +182,67 @@ function Home() {
           </View>
         )}
 
+        {recent.length > 0 && (
+          <View>
+            <Text style={s.sec}>前回使った</Text>
+            <View style={s.grid}>
+              {recent.map((c) => (
+                <View key={c.id} style={s.cell}><Tile card={c} allCards={cards} onPress={() => open(c)} s={s} /></View>
+              ))}
+            </View>
+          </View>
+        )}
+
         <View>
-          <Text style={s.sec}>この近くで使ったカード</Text>
-          {near.length ? (
+          <Text style={s.sec}>近くのおすすめ</Text>
+          {suggest.length ? (
             <View style={{ gap: 10 }}>
-              {near.map((x, i) => (
-                <Tile key={x.card.id} card={x.card} allCards={cards} big={i === 0} dist={x.dist} onPress={() => open(x.card)} s={s} />
+              {suggest.map((x, i) => (
+                <Tile
+                  key={x.card.id}
+                  card={x.card}
+                  allCards={cards}
+                  big={i === 0}
+                  chip={x.reason === 'store' ? `近くに${x.store}(${formatDistance(x.dist)})` : `ここで使ったことがあります(${formatDistance(x.dist)})`}
+                  onPress={() => open(x.card)}
+                  s={s}
+                />
               ))}
             </View>
           ) : (
-            <View style={s.empty}><Text style={s.emptyText}>{nearEmpty}</Text></View>
+            <View style={s.empty}><Text style={s.emptyText}>{suggestEmpty}</Text></View>
           )}
         </View>
 
         <View>
-          <Text style={s.sec}>すべてのカード {cards.length ? <Text style={s.count}>{cards.length}</Text> : null}</Text>
+          <Text style={s.sec}>カード一覧 {cards.length ? <Text style={s.count}>{cards.length}</Text> : null}</Text>
           {cards.length >= 8 && (
             <TextInput style={s.search} value={query} onChangeText={setQuery} placeholder="カード名で探す" placeholderTextColor={t.muted} clearButtonMode="while-editing" />
           )}
-          {rest.length ? (
+          {all.length ? (
             <View style={s.grid}>
-              {rest.map((c) => (
+              {all.map((c) => (
                 <View key={c.id} style={s.cell}><Tile card={c} allCards={cards} onPress={() => open(c)} s={s} /></View>
               ))}
             </View>
           ) : (
             <View style={s.empty}>
               <Text style={s.emptyText}>
-                {query ? '見つかりません。' : cards.length ? '' : '下の「カードを追加」から、手持ちのポイントカードを登録してください。バーコードはカメラで読み取れます。'}
+                {query ? '見つかりません。' : '下の「カードを追加」から、よく使うお店の公式アプリを登録してください。'}
               </Text>
             </View>
           )}
         </View>
 
-        <Text style={s.foot}>データはこのスマホの中だけに保存されます。通知は送りません。</Text>
+        <Pressable onPress={toggleStoreLookup} style={s.setting} accessibilityRole="switch" accessibilityState={{ checked: storeLookup }}>
+          <View style={{ flex: 1 }}>
+            <Text style={s.settingTitle}>近くのお店を地図データで調べる</Text>
+            <Text style={s.settingText}>オンにすると、おおまかな現在地(約100m単位)をOpenStreetMapに送り、登録したお店が近くにあるか調べます。</Text>
+          </View>
+          <View style={[s.switch, storeLookup && s.switchOn]}><View style={[s.knob, storeLookup && s.knobOn]} /></View>
+        </Pressable>
+
+        <Text style={s.foot}>カードのデータはこのスマホの中だけに保存されます。通知は送りません。</Text>
       </ScrollView>
 
       <Pressable onPress={startNew} style={s.fab} accessibilityRole="button">
@@ -235,19 +290,19 @@ function Home() {
   );
 }
 
-function Tile({ card, allCards, big, dist, onPress, s }) {
+function Tile({ card, allCards, big, chip, onPress, s }) {
   const meta = card.kind === 'set'
     ? (card.steps || []).map((id) => allCards.find((c) => c.id === id)?.name).filter(Boolean).join(' → ') || 'カードが入っていません'
     : card.lastUsed
     ? `最後に使った日 ${new Date(card.lastUsed).getMonth() + 1}/${new Date(card.lastUsed).getDate()}`
     : 'まだ使っていません';
   return (
-    <Pressable onPress={onPress} style={({ pressed }) => [s.tile, { backgroundColor: card.color }, dist != null && s.tileNear, big && s.tileBig, pressed && { opacity: 0.85 }]} accessibilityRole="button" accessibilityLabel={`${card.name}を表示`}>
+    <Pressable onPress={onPress} style={({ pressed }) => [s.tile, { backgroundColor: card.color }, chip != null && s.tileNear, big && s.tileBig, pressed && { opacity: 0.85 }]} accessibilityRole="button" accessibilityLabel={`${card.name}を表示`}>
       <View style={s.tileDeco} />
       <Text style={s.kind}>{KIND_LABEL[card.kind]}</Text>
       <Text style={[s.tileName, big && s.tileNameBig]} numberOfLines={2}>{card.name}</Text>
-      {dist != null ? (
-        <View style={s.dist}><Text style={s.distText}>ここから {formatDistance(dist)}</Text></View>
+      {chip != null ? (
+        <View style={s.dist}><Text style={s.distText} numberOfLines={1}>{chip}</Text></View>
       ) : (
         <Text style={s.meta} numberOfLines={1}>{meta}</Text>
       )}
@@ -284,6 +339,13 @@ const styles = (t) => StyleSheet.create({
   dist: { alignSelf: 'flex-start', backgroundColor: '#FFF', borderRadius: 999, paddingHorizontal: 9, paddingVertical: 2 },
   distText: { color: t.near === '#FF8A73' ? '#D9452B' : t.near, fontSize: 12, fontWeight: '700' },
   search: { borderWidth: 1, borderColor: t.line, backgroundColor: t.surface, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 9, marginBottom: 10, color: t.ink, fontSize: 15 },
+  setting: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: t.surface, borderWidth: 1, borderColor: t.line, borderRadius: 14, padding: 12 },
+  settingTitle: { fontSize: 14, fontWeight: '700', color: t.ink },
+  settingText: { fontSize: 12, color: t.muted, lineHeight: 17, marginTop: 2 },
+  switch: { width: 46, height: 28, borderRadius: 14, backgroundColor: t.line, padding: 3 },
+  switchOn: { backgroundColor: t.accent },
+  knob: { width: 22, height: 22, borderRadius: 11, backgroundColor: '#FFF' },
+  knobOn: { transform: [{ translateX: 18 }] },
   foot: { fontSize: 12, color: t.muted, textAlign: 'center' },
   fab: { position: 'absolute', alignSelf: 'center', bottom: 34, backgroundColor: t.accent, borderRadius: 999, paddingVertical: 15, paddingHorizontal: 28, shadowColor: '#0A7552', shadowOpacity: 0.35, shadowRadius: 12, shadowOffset: { width: 0, height: 6 }, elevation: 6 },
   fabText: { color: t.accentInk, fontSize: 16, fontWeight: '800' },

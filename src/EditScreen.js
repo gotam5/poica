@@ -162,7 +162,7 @@ export default function EditScreen({ initial, allCards = [], onCancel, onSave, o
           <View style={s.field}>
             <Text style={s.label}>登録のしかた</Text>
             <View style={s.seg}>
-              {['barcode', 'photo', 'app', 'set'].map((k) => (
+              {['app', 'barcode', 'photo', 'set'].map((k) => (
                 <Pressable key={k} onPress={() => (k === 'app' ? toApp() : set({ kind: k }))} style={[s.segBtn, d.kind === k && s.segOn]} accessibilityRole="button" accessibilityState={{ selected: d.kind === k }}>
                   <Text style={[s.segText, d.kind === k && s.segTextOn]}>{KIND_LABEL[k]}</Text>
                 </Pressable>
@@ -240,7 +240,7 @@ export default function EditScreen({ initial, allCards = [], onCancel, onSave, o
               <View style={s.field}>
                 <Text style={s.label}>アプリの開き方</Text>
                 <View style={s.seg}>
-                  {[['catalog', '一覧から選ぶ'], ['url', 'URL'], ['shortcut', 'ショートカット']].map(([k, l]) => (
+                  {[['catalog', '一覧から選ぶ'], ['shortcut', '一覧にないアプリ']].map(([k, l]) => (
                     <Pressable key={k} onPress={() => { setTestResult(null); set({ appMode: k }); }} style={[s.segBtn, appMode(d) === k && s.segOn]} accessibilityRole="button" accessibilityState={{ selected: appMode(d) === k }}>
                       <Text style={[s.segText, appMode(d) === k && s.segTextOn]}>{l}</Text>
                     </Pressable>
@@ -271,7 +271,7 @@ export default function EditScreen({ initial, allCards = [], onCancel, onSave, o
                       </>
                     )}
                     <View style={s.chips}>{others.map(chip)}</View>
-                    {list.length === 0 && <Text style={s.hint}>一覧にありません。「URL」か「ショートカット」で登録できます。</Text>}
+                    {list.length === 0 && <Text style={s.hint}>一覧にありません。上の「一覧にないアプリ」から登録できます。</Text>}
                   </View>
                 );
               })()}
@@ -291,8 +291,9 @@ export default function EditScreen({ initial, allCards = [], onCancel, onSave, o
                   {isStoreUrl(d.appUrl) && <Text style={[s.status, s.statusErr]}>これはApp Storeのページのリンクなので、アプリではなくストアが開きます。</Text>}
                 </View>
               )}
-              <Pressable onPress={testOpen} style={[s.secondary, { alignSelf: 'flex-start' }]} accessibilityRole="button">
-                <Text style={s.secondaryText}>試しに開く</Text>
+              <Pressable onPress={testOpen} style={({ pressed }) => [s.tryBtn, pressed && { opacity: 0.7 }]} accessibilityRole="button">
+                <Text style={s.tryText}>↗ 試しに開く</Text>
+                <Text style={s.tryHint}>ちゃんと開けるか、ここで確かめられます</Text>
               </Pressable>
               {testResult === 'fail' && (
                 <Text style={[s.status, s.statusErr]}>
@@ -301,10 +302,6 @@ export default function EditScreen({ initial, allCards = [], onCancel, onSave, o
                     : '開けませんでした。アプリが入っているか、設定が正しいか確かめてください。'}
                 </Text>
               )}
-              <View style={s.field}>
-                <Text style={s.label}>会員番号(任意)</Text>
-                <TextInput style={[s.input, s.mono]} value={d.code} onChangeText={(v) => set({ code: v })} autoCorrect={false} />
-              </View>
             </>
           )}
 
@@ -418,6 +415,9 @@ const styles = (t) => StyleSheet.create({
   statusErr: { backgroundColor: t.nearBg, color: t.near },
   primary: { backgroundColor: t.accent, borderRadius: 12, paddingVertical: 14, alignItems: 'center' },
   primaryText: { color: t.accentInk, fontWeight: '700', fontSize: 15 },
+  tryBtn: { borderWidth: 2, borderColor: t.accent, backgroundColor: t.accent + '1A', borderRadius: 14, paddingVertical: 14, paddingHorizontal: 16, alignItems: 'center' },
+  tryText: { color: t.accent, fontWeight: '800', fontSize: 17 },
+  tryHint: { color: t.muted, fontSize: 12, marginTop: 2 },
   secondary: { borderWidth: 1, borderColor: t.line, backgroundColor: t.surface, borderRadius: 10, paddingVertical: 10, paddingHorizontal: 14, alignItems: 'center' },
   secondaryText: { color: t.ink, fontWeight: '700', fontSize: 14 },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
