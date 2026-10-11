@@ -5,7 +5,7 @@ import { Directory, File, Paths } from 'expo-file-system';
 
 let dbPromise = null;
 
-function db() {
+export function db() {
   if (!dbPromise) {
     dbPromise = (async () => {
       const d = await SQLite.openDatabaseAsync('poica.db');

@@ -5,7 +5,8 @@ import { useTheme } from './theme';
 import { FREE_LIMIT, buy, fetchPrice, isCancel, restore } from './purchase';
 
 // Shown when adding a card past the free limit.
-export default function Paywall({ onClose, onUnlocked }) {
+// reason: 'cards' when adding past the free card limit, 'suggest' when asking for more nearby recommendations.
+export default function Paywall({ reason = 'cards', onClose, onUnlocked }) {
   const t = useTheme();
   const s = styles(t);
   const [price, setPrice] = useState(null);
@@ -34,9 +35,13 @@ export default function Paywall({ onClose, onUnlocked }) {
   return (
     <SafeAreaView style={s.root} edges={['top', 'bottom']}>
       <View style={s.body}>
-        <Text style={s.title}>{FREE_LIMIT + 1}枚目からは{'\n'}Poica 無制限で</Text>
-        <Text style={s.text}>{price || '一度'}払うと、カードを何枚でも登録できます。サブスクではありません。</Text>
-        <Text style={s.note}>いまある{FREE_LIMIT}枚は、購入しなくてもこれまでどおり使えます。</Text>
+        <Text style={s.title}>{reason === 'suggest' ? '近くのおすすめを' : `${FREE_LIMIT + 1}枚目からは`}{'\n'}Poica 無制限で</Text>
+        <Text style={s.text}>{price || '一度'}払うと、ずっと使えます。サブスクではありません。</Text>
+        <View style={s.perks}>
+          <Text style={s.perk}>✓ カードを何枚でも登録できます</Text>
+          <Text style={s.perk}>✓ 近くのおすすめを3件まで表示</Text>
+        </View>
+        <Text style={s.note}>{reason === 'suggest' ? '購入しなくても、近くのおすすめは1件表示されます。' : `いまある${FREE_LIMIT}枚は、購入しなくてもこれまでどおり使えます。`}</Text>
         {msg && <Text style={s.msg}>{msg}</Text>}
       </View>
       <View style={s.foot}>
@@ -59,6 +64,8 @@ const styles = (t) => StyleSheet.create({
   body: { flex: 1, justifyContent: 'center', paddingHorizontal: 24, gap: 16 },
   title: { fontSize: 28, fontWeight: '900', color: t.ink, textAlign: 'center', lineHeight: 38 },
   text: { fontSize: 16, color: t.ink, textAlign: 'center', lineHeight: 24 },
+  perks: { alignSelf: 'center', gap: 6, backgroundColor: t.surface, borderRadius: 14, paddingVertical: 12, paddingHorizontal: 18 },
+  perk: { fontSize: 15, fontWeight: '700', color: t.ink },
   note: { fontSize: 13, color: t.muted, textAlign: 'center' },
   msg: { fontSize: 14, color: '#C2412D', textAlign: 'center' },
   foot: { paddingHorizontal: 20, paddingBottom: 12, gap: 6 },

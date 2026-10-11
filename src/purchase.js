@@ -3,7 +3,8 @@
 import { requireOptionalNativeModule } from 'expo-modules-core';
 
 export const PRODUCT_ID = 'com.gotam5.poica.unlimited';
-export const FREE_LIMIT = 5;
+export const FREE_LIMIT = 5; // cards
+export const FREE_SUGGEST = 1; // nearby recommendations (3 after buying)
 export const iapAvailable = !!requireOptionalNativeModule('ExpoIap');
 
 let lib = null;

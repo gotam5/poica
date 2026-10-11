@@ -7,12 +7,13 @@ import AddFlow from './src/AddFlow';
 import EditScreen from './src/EditScreen';
 import ShowScreen from './src/ShowScreen';
 import Paywall from './src/Paywall';
-import { FREE_LIMIT, checkOwned, iapAvailable } from './src/purchase';
+import { FREE_LIMIT, FREE_SUGGEST, checkOwned, iapAvailable } from './src/purchase';
 import { arrange, learnPlace } from './src/geo';
 import { deleteCard, getSetting, keepPhoto, loadCards, removePhoto, saveCard, setSetting } from './src/storage';
 import { TYPE_LABEL, cardPalette, cardTypes, openCardApp } from './src/appLink';
 import CardFace from './src/CardFace';
 import { fetchNearbyStores, storePatternOf, storeRegex } from './src/nearbyStores';
+import { recordUse, usageSummary } from './src/usage';
 import { CARD_COLORS, KIND_LABEL, useTheme } from './src/theme';
 
 const newId = () => Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
@@ -40,7 +41,7 @@ function Home() {
   const [openFailed, setOpenFailed] = useState(false);
   const [storeLookup, setStoreLookup] = useState(true);
   const [unlimited, setUnlimited] = useState(false);
-  const [paywall, setPaywall] = useState(false);
+  const [paywall, setPaywall] = useState(null); // null | 'cards' | 'suggest'
 
   const say = useCallback((text) => {
     setToast(text);
@@ -114,14 +115,20 @@ function Home() {
     const next = { ...card, places, uses: (card.uses || 0) + 1, lastUsed: Date.now() };
     updateCard(next);
     if (added) say('この場所を覚えました。次からここで一番上に出します');
+    const counted = (failed) => {
+      recordUse(card, { failed })
+        .then(() => __DEV__ && usageSummary(cards).then((u) => console.log('[usage 30d]', JSON.stringify(u))))
+        .catch(() => {});
+    };
     if (card.kind === 'app') {
       // Official apps open straight away; the card screen only shows up when the app could not be opened.
-      openCardApp(card).then((ok) => { if (!ok) { setOpenFailed(true); setShowing(card.id); } });
+      openCardApp(card).then((ok) => { counted(!ok); if (!ok) { setOpenFailed(true); setShowing(card.id); } });
       return;
     }
+    counted(false);
     setOpenFailed(false);
     setShowing(card.id);
-  }, [pos, updateCard, say]);
+  }, [pos, cards, updateCard, say]);
 
   const saveDraft = useCallback(async (draft, keepOpen = false) => {
     const { isNew, ...card } = draft;
@@ -151,13 +158,14 @@ function Home() {
   const unlock = () => {
     setUnlimited(true);
     setSetting('unlimited', true).catch(() => {});
-    setPaywall(false);
-    say('購入ありがとうございます。カードを何枚でも登録できます');
-    setTimeout(() => newDraft(), 450); // carry on to the card they were adding
+    const from = paywall;
+    setPaywall(null);
+    say('購入ありがとうございます。Poica 無制限になりました');
+    if (from === 'cards') setTimeout(() => newDraft(), 450); // carry on to the card they were adding
   };
 
   const startNew = () => {
-    if (iapAvailable && !unlimited && (cards?.length || 0) >= FREE_LIMIT) { setPaywall(true); return; }
+    if (iapAvailable && !unlimited && (cards?.length || 0) >= FREE_LIMIT) { setPaywall('cards'); return; }
     newDraft();
   };
   const newDraft = () => setEditing({
@@ -169,7 +177,10 @@ function Home() {
     return <View style={[s.root, { alignItems: 'center', justifyContent: 'center' }]}><ActivityIndicator color={t.accent} /></View>;
   }
 
-  const { recent, suggest, all } = arrange(cards, pos, query, stores, (c) => storeRegex(storePatternOf(c, cards)));
+  const { recent, suggest: allSuggest, all } = arrange(cards, pos, query, stores, (c) => storeRegex(storePatternOf(c, cards)));
+  // Free: the top nearby recommendation only (after the usage/distance sort); Poica 無制限 shows all 3.
+  const suggest = iapAvailable && !unlimited ? allSuggest.slice(0, FREE_SUGGEST) : allSuggest;
+  const hiddenSuggest = allSuggest.length - suggest.length;
   const shownCard = showing ? cards.find((c) => c.id === showing) : null;
   const anyPlaces = cards.some((c) => c.places && c.places.length);
 
@@ -238,6 +249,11 @@ function Home() {
                   s={s}
                 />
               ))}
+              {hiddenSuggest > 0 && (
+                <Pressable onPress={() => setPaywall('suggest')} hitSlop={6} accessibilityRole="button">
+                  <Text style={s.more}>近くのおすすめをあと{hiddenSuggest}件見るには Poica 無制限</Text>
+                </Pressable>
+              )}
             </View>
           ) : (
             <View style={s.empty}><Text style={s.emptyText}>{suggestEmpty}</Text></View>
@@ -321,9 +337,9 @@ function Home() {
         </SafeAreaProvider>
       </Modal>
 
-      <Modal visible={paywall} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setPaywall(false)}>
+      <Modal visible={!!paywall} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setPaywall(null)}>
         <SafeAreaProvider>
-          {paywall && <Paywall onClose={() => setPaywall(false)} onUnlocked={unlock} />}
+          {paywall && <Paywall reason={paywall} onClose={() => setPaywall(null)} onUnlocked={unlock} />}
         </SafeAreaProvider>
       </Modal>
 
@@ -380,6 +396,7 @@ const styles = (t) => StyleSheet.create({
   switchOn: { backgroundColor: t.accent },
   knob: { width: 22, height: 22, borderRadius: 11, backgroundColor: '#FFF' },
   knobOn: { transform: [{ translateX: 18 }] },
+  more: { color: t.accent, fontSize: 13, fontWeight: '700', textAlign: 'center', paddingVertical: 4 },
   foot: { fontSize: 12, color: t.muted, textAlign: 'center' },
   fab: { position: 'absolute', alignSelf: 'center', bottom: 34, backgroundColor: t.accent, borderRadius: 999, paddingVertical: 15, paddingHorizontal: 28, shadowColor: '#0A7552', shadowOpacity: 0.35, shadowRadius: 12, shadowOffset: { width: 0, height: 6 }, elevation: 6 },
   fabText: { color: t.accentInk, fontSize: 16, fontWeight: '800' },

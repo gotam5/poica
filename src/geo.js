@@ -52,15 +52,21 @@ export function learnPlace(card, pos, force = false) {
 
 // Home screen sections:
 //  recent  - the last things used (up to 2)
-//  suggest - near you: places where a card was used before, or a shop of the card's chain (max 3)
+//  suggest - near you (max 3): cards used most around here first, then a shop of the card's chain
 //  all     - every card, last used first
 // storeRegexOf(card) returns a RegExp for the card's chain shop names, or null.
+// How many times a card was shown within r metres of pos (each learned place counts its uses in n).
+export function usesNear(card, pos, r) {
+  if (!pos || !card.places) return 0;
+  return card.places.reduce((sum, p) => (distance(pos, p) <= r ? sum + (p.n || 1) : sum), 0);
+}
+
 export function arrange(cards, pos, query, stores = [], storeRegexOf = () => null) {
   const r = nearRadius(pos);
   const byId = new Map();
   for (const c of cards) {
     const d = nearestPlace(c, pos);
-    if (d != null && d <= r) byId.set(c.id, { card: c, dist: d, reason: 'used' });
+    if (d != null && d <= r) byId.set(c.id, { card: c, dist: d, reason: 'used', here: usesNear(c, pos, r) });
   }
   if (pos && stores.length) {
     for (const c of cards) {
@@ -74,11 +80,11 @@ export function arrange(cards, pos, query, stores = [], storeRegexOf = () => nul
       }
       if (!best || best.dist > 300) continue;
       const prev = byId.get(c.id);
-      if (!prev) byId.set(c.id, { card: c, dist: best.dist, reason: 'store', store: best.store });
+      if (!prev) byId.set(c.id, { card: c, dist: best.dist, reason: 'store', store: best.store, here: 0 });
     }
   }
   const suggest = [...byId.values()]
-    .sort((a, b) => a.dist - b.dist || (b.card.uses || 0) - (a.card.uses || 0))
+    .sort((a, b) => b.here - a.here || a.dist - b.dist || (b.card.uses || 0) - (a.card.uses || 0))
     .slice(0, 3);
   const shown = new Set(suggest.map((x) => x.card.id));
   const recent = cards
