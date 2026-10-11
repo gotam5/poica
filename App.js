@@ -7,6 +7,8 @@ import AddFlow from './src/AddFlow';
 import CustomFlow from './src/CustomFlow';
 import EditScreen from './src/EditScreen';
 import SettingsScreen from './src/SettingsScreen';
+import MapScreen from './src/MapScreen';
+import StatsScreen, { monthKey } from './src/StatsScreen';
 import Toolbar from './src/Toolbar';
 import ShowScreen from './src/ShowScreen';
 import Paywall from './src/Paywall';
@@ -47,10 +49,8 @@ function Home() {
   const [unlimited, setUnlimited] = useState(false);
   const [paywall, setPaywall] = useState(null); // null | 'cards' | 'suggest'
   const [limits, setLimits] = useState(DEFAULT_LIMITS);
-  const [settingsOpen, setSettingsOpen] = useState(false);
-  const [searching, setSearching] = useState(false);
+  const [tab, setTab] = useState('home'); // home | map | stats | settings
   const scrollRef = useRef(null);
-  const listY = useRef(0);
 
   const say = useCallback((text) => {
     setToast(text);
@@ -122,7 +122,9 @@ function Home() {
 
   const open = useCallback((card) => {
     const { places, added } = learnPlace(card, pos);
-    const next = { ...card, places, uses: (card.uses || 0) + 1, lastUsed: Date.now() };
+    const month = monthKey();
+    const useMonths = { ...(card.useMonths || {}), [month]: ((card.useMonths || {})[month] || 0) + 1 };
+    const next = { ...card, places, uses: (card.uses || 0) + 1, useMonths, lastUsed: Date.now() };
     updateCard(next);
     if (added) say('この場所を覚えました。次からここで一番上に出します');
     const counted = (failed) => {
@@ -203,19 +205,10 @@ function Home() {
   const anyPlaces = cards.some((c) => c.places && c.places.length);
   const placeCount = cards.reduce((n, c) => n + (c.places ? c.places.length : 0), 0);
 
-  const goHome = () => {
-    setSearching(false);
-    setQuery('');
-    scrollRef.current?.scrollTo({ y: 0, animated: true });
-  };
-  const toggleSearch = () => {
-    if (searching) { setSearching(false); setQuery(''); return; }
-    setSearching(true);
-    setTimeout(() => scrollRef.current?.scrollTo({ y: Math.max(0, listY.current - 8), animated: true }), 50);
-  };
-  const relocate = () => {
-    say('現在地を取り直しています');
-    locate();
+  // Tapping ホーム again while on Home scrolls back to the top.
+  const goTab = (next) => {
+    if (next === 'home' && tab === 'home') scrollRef.current?.scrollTo({ y: 0, animated: true });
+    setTab(next);
   };
   const forgetAllPlaces = async () => {
     const next = cards.map((c) => (c.places && c.places.length ? { ...c, places: [] } : c));
@@ -241,7 +234,16 @@ function Home() {
   return (
     <SafeAreaView style={s.root} edges={['top']}>
       <StatusBar style="auto" />
-      <ScrollView ref={scrollRef} contentContainerStyle={s.wrap}>
+      {tab === 'map' && <MapScreen cards={cards} pos={pos} t={t} />}
+      {tab === 'stats' && <StatsScreen cards={cards} t={t} onEdit={(c) => setEditing({ ...c })} />}
+      {tab === 'settings' && (
+        <SettingsScreen
+          unlimited={unlimited} iapAvailable={iapAvailable} limits={limits} cardCount={cards.length} placeCount={placeCount}
+          storeLookup={storeLookup} onToggleStoreLookup={toggleStoreLookup} onForgetPlaces={forgetAllPlaces}
+          onUnlocked={markUnlocked} privacyUrl={PRIVACY_URL} supportUrl={SUPPORT_URL}
+        />
+      )}
+      {tab === 'home' && <ScrollView ref={scrollRef} contentContainerStyle={s.wrap}>
         <View style={s.header}>
           <Text style={s.logo}>Poi<Text style={{ color: t.accent }}>ca</Text></Text>
           <Pressable onPress={locate} style={s.loc} accessibilityRole="button" accessibilityLabel={`${locLabel}。タップで取り直す`}>
@@ -304,15 +306,15 @@ function Home() {
           )}
         </View>
 
-        <View onLayout={(e) => { listY.current = e.nativeEvent.layout.y; }}>
+        <View>
           <View style={s.listHead}>
             <Text style={[s.sec, { marginBottom: 0 }]}>カード一覧 {cards.length ? <Text style={s.count}>{cards.length}</Text> : null}</Text>
             <Pressable onPress={startNew} style={({ pressed }) => [s.addBtn, pressed && { opacity: 0.6 }]} hitSlop={6} accessibilityRole="button" accessibilityLabel="カードを追加">
               <Text style={s.addBtnText}>＋ 追加</Text>
             </Pressable>
           </View>
-          {(searching || cards.length >= 8) && (
-            <TextInput style={s.search} value={query} onChangeText={setQuery} placeholder="カード名で探す" placeholderTextColor={t.muted} clearButtonMode="while-editing" autoFocus={searching} returnKeyType="search" />
+          {cards.length >= 4 && (
+            <TextInput style={s.search} value={query} onChangeText={setQuery} placeholder="カード名で探す" placeholderTextColor={t.muted} clearButtonMode="while-editing" returnKeyType="search" />
           )}
           {all.length ? (
             <View style={{ gap: 14 }}>
@@ -338,16 +340,17 @@ function Home() {
           ) : query ? (
             <View style={s.empty}><Text style={s.emptyText}>見つかりません。</Text></View>
           ) : (
-            <Pressable onPress={startNew} style={({ pressed }) => [s.addTile, pressed && { opacity: 0.6 }]} accessibilityRole="button">
-              <Text style={s.addTileText}>＋ カードを追加</Text>
-              <Text style={s.emptyText}>よく使うお店の公式アプリを登録してください。</Text>
+            <Pressable onPress={startNew} style={({ pressed }) => [s.firstAdd, pressed && { opacity: 0.85 }]} accessibilityRole="button">
+              <View style={s.firstPlus}><Text style={s.firstPlusText}>＋</Text></View>
+              <Text style={s.firstTitle}>カードを追加する</Text>
+              <Text style={s.firstText}>よく使うお店の公式アプリや、ポイントカードを登録しましょう。</Text>
             </Pressable>
           )}
         </View>
 
-      </ScrollView>
+      </ScrollView>}
 
-      <Toolbar t={t} active={searching ? 'search' : 'home'} onHome={goHome} onSearch={toggleSearch} onLocate={relocate} onSettings={() => setSettingsOpen(true)} />
+      <Toolbar t={t} active={tab} onChange={goTab} />
 
       {toast && <View style={s.toast} pointerEvents="none"><Text style={s.toastText}>{toast}</Text></View>}
 
@@ -377,16 +380,6 @@ function Home() {
       <Modal visible={!!paywall} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setPaywall(null)}>
         <SafeAreaProvider>
           {paywall && <Paywall reason={paywall} limits={limits} onClose={() => setPaywall(null)} onUnlocked={unlock} />}
-        </SafeAreaProvider>
-      </Modal>
-
-      <Modal visible={settingsOpen} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setSettingsOpen(false)}>
-        <SafeAreaProvider>
-          <SettingsScreen
-            unlimited={unlimited} iapAvailable={iapAvailable} limits={limits} cardCount={cards.length} placeCount={placeCount}
-            storeLookup={storeLookup} onToggleStoreLookup={toggleStoreLookup} onForgetPlaces={forgetAllPlaces}
-            onUnlocked={markUnlocked} onClose={() => setSettingsOpen(false)} privacyUrl={PRIVACY_URL} supportUrl={SUPPORT_URL}
-          />
         </SafeAreaProvider>
       </Modal>
 
@@ -446,6 +439,11 @@ const styles = (t) => StyleSheet.create({
   addBtnText: { color: t.accent, fontSize: 13, fontWeight: '800' },
   addTile: { borderWidth: 1.5, borderStyle: 'dashed', borderColor: t.accent, borderRadius: 14, paddingVertical: 18, paddingHorizontal: 14, alignItems: 'center', gap: 4 },
   addTileText: { color: t.accent, fontSize: 15, fontWeight: '800' },
+  firstAdd: { backgroundColor: t.accent, borderRadius: 18, paddingVertical: 26, paddingHorizontal: 20, alignItems: 'center', gap: 8, shadowColor: '#0A7552', shadowOpacity: 0.3, shadowRadius: 12, shadowOffset: { width: 0, height: 6 }, elevation: 5 },
+  firstPlus: { width: 56, height: 56, borderRadius: 28, backgroundColor: 'rgba(255,255,255,0.22)', alignItems: 'center', justifyContent: 'center' },
+  firstPlusText: { color: t.accentInk, fontSize: 32, fontWeight: '800', lineHeight: 38 },
+  firstTitle: { color: t.accentInk, fontSize: 20, fontWeight: '900' },
+  firstText: { color: t.accentInk, fontSize: 13, lineHeight: 19, textAlign: 'center', opacity: 0.9 },
   more: { color: t.accent, fontSize: 13, fontWeight: '700', textAlign: 'center', paddingVertical: 4 },
   foot: { fontSize: 12, color: t.muted, textAlign: 'center' },
   toast: { position: 'absolute', alignSelf: 'center', bottom: 110, backgroundColor: '#15211C', paddingHorizontal: 16, paddingVertical: 9, borderRadius: 999, maxWidth: '90%' },

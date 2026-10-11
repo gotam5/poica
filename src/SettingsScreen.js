@@ -1,13 +1,12 @@
 import { useState } from 'react';
 import { Alert, Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { PaywallModal } from './Paywall';
 import { useTheme } from './theme';
 import appJson from '../app.json';
 
 const VERSION = appJson.expo.version;
 
-export default function SettingsScreen({ unlimited, iapAvailable, limits, cardCount, placeCount, storeLookup, onToggleStoreLookup, onForgetPlaces, onUnlocked, onClose, privacyUrl, supportUrl }) {
+export default function SettingsScreen({ unlimited, iapAvailable, limits, cardCount, placeCount, storeLookup, onToggleStoreLookup, onForgetPlaces, onUnlocked, privacyUrl, supportUrl }) {
   const t = useTheme();
   const s = styles(t);
   const [paywall, setPaywall] = useState(null);
@@ -20,12 +19,9 @@ export default function SettingsScreen({ unlimited, iapAvailable, limits, cardCo
   };
 
   return (
-    <SafeAreaView style={s.root} edges={['top', 'bottom']}>
-      <View style={s.head}>
-        <Text style={s.title}>設定</Text>
-        <Pressable onPress={onClose} hitSlop={10} style={s.done} accessibilityRole="button"><Text style={s.doneText}>閉じる</Text></Pressable>
-      </View>
+    <View style={s.root}>
       <ScrollView contentContainerStyle={s.body}>
+        <Text style={s.title}>設定</Text>
         <Text style={s.sec}>Poica 無制限</Text>
         <View style={s.box}>
           {unlimited || !iapAvailable ? (
@@ -61,7 +57,7 @@ export default function SettingsScreen({ unlimited, iapAvailable, limits, cardCo
         <View style={s.box}>
           <Text style={s.tip}>・お店でカードを使うと、その場所を覚えて次から「近くのおすすめ」に出ます。</Text>
           <Text style={s.tip}>・カードを長押しすると、名前やデザインの変更、削除ができます。</Text>
-          <Text style={s.tip}>・下の「探す」でカード名から探せます。「現在地」で位置を取り直します。</Text>
+          <Text style={s.tip}>・カードが4枚以上になると、一覧の上の欄でカード名から探せます。右上の現在地を押すと、位置を取り直します。</Text>
           <Text style={s.tip}>・公式アプリが開かないときは、カードの編集で「ショートカット」に切り替えると確実に開けます。</Text>
         </View>
 
@@ -77,17 +73,14 @@ export default function SettingsScreen({ unlimited, iapAvailable, limits, cardCo
         </View>
       </ScrollView>
       <PaywallModal reason={paywall} limits={limits} onClose={() => setPaywall(null)} onUnlocked={() => { setPaywall(null); onUnlocked(); }} />
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = (t) => StyleSheet.create({
   root: { flex: 1, backgroundColor: t.bg },
-  head: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingTop: 26, paddingBottom: 12 },
-  title: { color: t.ink, fontSize: 22, fontWeight: '900' },
-  done: { backgroundColor: t.accent, paddingVertical: 10, paddingHorizontal: 22, borderRadius: 999 },
-  doneText: { color: t.accentInk, fontWeight: '700', fontSize: 15 },
-  body: { paddingHorizontal: 16, paddingBottom: 40, gap: 8 },
+  title: { color: t.ink, fontSize: 26, fontWeight: '900' },
+  body: { paddingHorizontal: 16, paddingTop: 8, paddingBottom: 40, gap: 8 },
   sec: { fontSize: 13, fontWeight: '700', letterSpacing: 1.5, color: t.muted, marginTop: 14 },
   box: { backgroundColor: t.surface, borderWidth: 1, borderColor: t.line, borderRadius: 14, padding: 14, gap: 8 },
   rowTitle: { fontSize: 15, fontWeight: '700', color: t.ink },
