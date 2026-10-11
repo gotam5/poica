@@ -1,37 +1,30 @@
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, Image, KeyboardAvoidingView, Linking, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View, useWindowDimensions } from 'react-native';
-import * as ImagePicker from 'expo-image-picker';
-import { ImageManipulator, SaveFormat } from 'expo-image-manipulator';
-import { scanFromURLAsync } from 'expo-camera';
-import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
-import BarcodeView from './BarcodeView';
-import ScannerScreen from './ScannerScreen';
-import { FORMATS } from './barcode';
-import { KIND_LABEL, PALETTES, useTheme } from './theme';
-import CardFace from './CardFace';
+import { KeyboardAvoidingView, Linking, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View, useWindowDimensions } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { KIND_LABEL, useTheme } from './theme';
+import DesignPicker from './DesignPicker';
 import ShortcutGuide from './ShortcutGuide';
-import { photoUri } from './storage';
-import { CATALOG, TYPE_LABEL, appMode, cardPalette, catalogApp, launchCandidates, schemeUrl, guessCatalogApp, installedCatalogIds, isStoreUrl, normalizeAppUrl, openCardApp } from './appLink';
-import { base64ToBytes, decodeBarcodeImage } from './decodeImage';
+import { PaywallModal } from './Paywall';
+import { CaptureSection, useCapture } from './capture';
+import { CATALOG, TYPE_LABEL, appMode, catalogApp, launchCandidates, schemeUrl, guessCatalogApp, installedCatalogIds, isStoreUrl, normalizeAppUrl, openCardApp } from './appLink';
 import { lookupKnownApp } from './knownApps';
 
 // draft.photo is either a saved file name, or { temp: uri } for a newly taken photo not yet saved.
-export default function EditScreen({ initial, allCards = [], onCancel, onSave, onDelete }) {
+export default function EditScreen({ initial, allCards = [], canDesign = true, limits, onUnlocked, onCancel, onSave, onDelete }) {
   const t = useTheme();
   const s = styles(t);
   const { width } = useWindowDimensions();
   const [d, setD] = useState(initial.kind === 'photo' ? { ...initial, kind: 'barcode' } : initial);
-  const [scanning, setScanning] = useState(false);
   const [status, setStatus] = useState(null); // { text, error }
   const [confirmDelete, setConfirmDelete] = useState(false);
-  const [reading, setReading] = useState(false);
-  const [shotCode, setShotCode] = useState(null); // code read from the first screenshot, for the "changes over time?" check
+  const [paywall, setPaywall] = useState(null);
   const isNew = !!initial.isNew;
   const custom = !!initial.custom; // came from 「自分でカードを作る」: listed apps are picked in the guided flow instead
   const set = (patch) => setD((prev) => ({ ...prev, ...patch }));
   const [installed, setInstalled] = useState([]);
   const [appQuery, setAppQuery] = useState('');
   const [testResult, setTestResult] = useState(null);
+  const cap = useCapture(set);
 
   useEffect(() => {
     installedCatalogIds().then(setInstalled).catch(() => {});
@@ -54,71 +47,6 @@ export default function EditScreen({ initial, allCards = [], onCancel, onSave, o
     setTestResult(ok ? 'ok' : 'fail');
   };
 
-  const pickPhoto = async (fromCamera) => {
-    try {
-      if (fromCamera) {
-        const perm = await ImagePicker.requestCameraPermissionsAsync();
-        if (!perm.granted) {
-          setStatus({ text: '写真を撮るにはカメラの許可が必要です。設定アプリの「Poica」からオンにできます。', error: true });
-          return;
-        }
-      }
-      const opts = { mediaTypes: 'images', quality: 0.7 };
-      const res = fromCamera ? await ImagePicker.launchCameraAsync(opts) : await ImagePicker.launchImageLibraryAsync(opts);
-      if (res.canceled || !res.assets?.length) return;
-      set({ photo: { temp: res.assets[0].uri } });
-      setStatus(null);
-    } catch {
-      setStatus({ text: '写真を取り込めませんでした。もう一度試してください。', error: true });
-    }
-  };
-
-  // Pick a screenshot of the official app's member screen and read its barcode.
-  const readScreenshot = async (verify) => {
-    let res;
-    try {
-      res = await ImagePicker.launchImageLibraryAsync({ mediaTypes: 'images', quality: 1 });
-    } catch {
-      return setStatus({ text: '写真を開けませんでした。もう一度試してください。', error: true });
-    }
-    if (res.canceled || !res.assets?.length) return;
-    const asset = res.assets[0];
-    setReading(true);
-    setStatus(null);
-    let found = null;
-    try {
-      try {
-        const q = await scanFromURLAsync(asset.uri, ['qr']);
-        if (q && q[0]?.data) found = { code: q[0].data, format: 'QR' };
-      } catch {}
-      if (!found) {
-        const ctx = ImageManipulator.manipulate(asset.uri);
-        if ((asset.width || 0) > 1000) ctx.resize({ width: 1000 });
-        const ref = await ctx.renderAsync();
-        const out = await ref.saveAsync({ format: SaveFormat.PNG, base64: true });
-        await new Promise((r) => setTimeout(r, 30)); // let the spinner draw before the busy decode
-        found = decodeBarcodeImage(base64ToBytes(out.base64 || ''));
-      }
-    } catch {
-      found = null;
-    }
-    setReading(false);
-    if (!found) {
-      return setStatus({ text: 'このスクショからバーコードを読み取れませんでした。会員証の画面を、バーコード全体が写るように撮り直してください。', error: true });
-    }
-    if (verify) {
-      if (found.code === shotCode) {
-        setShotCode(null);
-        return setStatus({ text: '2枚とも同じ番号でした。時間で変わらないバーコードなので、Poicaから出せます。' });
-      }
-      setShotCode(null);
-      return setStatus({ text: '2枚で番号が違いました。時間で変わるバーコードなので、Poicaからは出せません。「公式アプリ」として登録してください。', error: true, toApp: true });
-    }
-    set({ code: found.code, format: found.format, source: 'screenshot' });
-    setShotCode(found.code);
-    setStatus({ text: '読み取れました。番号が合っているか確かめてください。' });
-  };
-
   const save = () => {
     const name = (d.name || '').trim() || (d.kind === 'app' && appMode(d) === 'catalog' ? catalogApp(d.catalogId)?.name || '' : '');
     if (!name && !(d.kind === 'app' && appMode(d) === 'catalog')) return setStatus({ text: '名前を入れてください。', error: true });
@@ -135,7 +63,6 @@ export default function EditScreen({ initial, allCards = [], onCancel, onSave, o
   const known = lookupKnownApp(d.name);
   // Official apps from the list are named after the app; the name can be changed later by long-pressing the card on Home.
   const showName = d.kind !== 'app' || !isNew || appMode(d) !== 'catalog';
-  const photoSource = d.photo ? { uri: typeof d.photo === 'object' ? d.photo.temp : photoUri(d.photo) } : null;
 
   return (
     <SafeAreaView style={s.root} edges={['top', 'bottom']}>
@@ -176,67 +103,9 @@ export default function EditScreen({ initial, allCards = [], onCancel, onSave, o
           )}
 
           {status && <Text style={[s.status, status.error && s.statusErr]}>{status.text}</Text>}
-          {status?.toApp && (
-            <Pressable onPress={() => { toApp({ code: '' }); setStatus(null); }} style={[s.secondary, { alignSelf: 'flex-start' }]} accessibilityRole="button">
-              <Text style={s.secondaryText}>公式アプリとして登録する</Text>
-            </Pressable>
-          )}
-          {reading && (
-            <View style={[s.row, { alignItems: 'center' }]}><ActivityIndicator color={t.accent} /><Text style={s.hint}>スクショを読み取っています…</Text></View>
-          )}
 
           {d.kind === 'barcode' && (
-            <>
-              <View style={s.row}>
-                <Pressable onPress={() => readScreenshot(false)} disabled={reading} style={[s.primary, { flex: 1 }]} accessibilityRole="button">
-                  <Text style={s.primaryText}>スクショから読む</Text>
-                </Pressable>
-                <Pressable onPress={() => setScanning(true)} disabled={reading} style={[s.secondary, { flex: 1 }]} accessibilityRole="button">
-                  <Text style={s.secondaryText}>カメラで読む</Text>
-                </Pressable>
-              </View>
-              <Text style={s.hint}>公式アプリの会員証画面をスクショして選ぶと、バーコードを読み取ります。プラスチックのカードはカメラで読めます。</Text>
-              {shotCode && (
-                <View style={s.warn}>
-                  <Text style={s.warnText}>時間で変わるバーコードだと、レジで使えません。少し時間をおいてから公式アプリでもう一度スクショを撮り、同じ番号か確かめられます。</Text>
-                  <Pressable onPress={() => readScreenshot(true)} disabled={reading} style={[s.secondary, { alignSelf: 'flex-start' }]} accessibilityRole="button">
-                    <Text style={s.secondaryText}>2枚目のスクショで確かめる</Text>
-                  </Pressable>
-                </View>
-              )}
-              <View style={s.field}>
-                <Text style={s.label}>番号(任意)</Text>
-                <TextInput style={[s.input, s.mono]} value={d.code} onChangeText={(v) => set({ code: v })} placeholder="読めないときは手で入力" placeholderTextColor={t.muted} autoCapitalize="characters" autoCorrect={false} />
-              </View>
-              <View style={s.field}>
-                <Text style={s.label}>種類</Text>
-                <View style={s.chips}>
-                  {FORMATS.map((f) => (
-                    <Pressable key={f.key} onPress={() => set({ format: f.key })} style={[s.chip, d.format === f.key && s.chipOn]} accessibilityRole="button" accessibilityState={{ selected: d.format === f.key }}>
-                      <Text style={[s.chipText, d.format === f.key && s.chipTextOn]}>{f.label}</Text>
-                    </Pressable>
-                  ))}
-                </View>
-                <Text style={s.hint}>カメラで読むと自動で決まります。分からなければ「自動」のままで大丈夫です。</Text>
-              </View>
-              {(d.code || '').trim() ? (
-                <View style={s.preview}><BarcodeView code={d.code.trim()} format={d.format} width={width - 56} height={90} /></View>
-              ) : null}
-              <View style={s.field}>
-                <Text style={s.label}>カードの写真(任意)</Text>
-                <View style={s.row}>
-                  <Pressable onPress={() => pickPhoto(true)} style={[s.secondary, { flex: 1 }]} accessibilityRole="button"><Text style={s.secondaryText}>カメラで撮る</Text></Pressable>
-                  <Pressable onPress={() => pickPhoto(false)} style={[s.secondary, { flex: 1 }]} accessibilityRole="button"><Text style={s.secondaryText}>写真を選ぶ</Text></Pressable>
-                </View>
-                <Text style={s.hint}>バーコードが読めないカードやスタンプカードは、写真だけでも登録できます。</Text>
-                {photoSource && (
-                  <>
-                    <View style={s.preview}><Image source={photoSource} style={{ width: '100%', height: 220 }} resizeMode="contain" /></View>
-                    <Pressable onPress={() => set({ photo: null })} style={[s.secondary, { alignSelf: 'flex-start' }]} accessibilityRole="button"><Text style={s.secondaryText}>写真を外す</Text></Pressable>
-                  </>
-                )}
-              </View>
-            </>
+            <CaptureSection d={d} set={set} cap={cap} t={t} width={width} onToApp={() => toApp({ code: '' })} />
           )}
 
           {d.kind === 'app' && (
@@ -348,23 +217,8 @@ export default function EditScreen({ initial, allCards = [], onCancel, onSave, o
           )}
 
           <View style={s.field}>
-            <Text style={s.label}>カードの配色</Text>
-            <CardFace card={{ ...d, name: d.name || catalogApp(d.catalogId)?.name || '' }} palette={cardPalette(d, allCards)} />
-            <View style={[s.row, { flexWrap: 'wrap' }]}>
-              {(() => {
-                const app = d.kind === 'app' && appMode(d) === 'catalog' ? catalogApp(d.catalogId) : null;
-                const options = [...(app && app.colors ? [{ key: 'app', colors: app.colors, label: 'アプリの色' }] : []), ...PALETTES.map((p, i) => ({ key: String(i), colors: p }))];
-                const current = cardPalette(d, allCards).join();
-                return options.map((o) => {
-                  const on = o.colors.join() === current;
-                  return (
-                    <Pressable key={o.key} onPress={() => set(o.key === 'app' ? { palette: null, color: o.colors[0] } : { palette: o.colors, color: o.colors[0] })} style={[s.pal, on && { borderColor: t.ink }]} accessibilityRole="button" accessibilityLabel={o.label || `配色 ${Number(o.key) + 1}`} accessibilityState={{ selected: on }}>
-                      {o.colors.map((c, i) => <View key={i} style={{ flex: i === 0 ? 2 : 1, backgroundColor: c }} />)}
-                    </Pressable>
-                  );
-                });
-              })()}
-            </View>
+            <Text style={s.label}>カードのデザイン</Text>
+            <DesignPicker d={d} set={set} allCards={allCards} canDesign={canDesign} onLocked={() => setPaywall('design')} t={t} big={false} />
             <Text style={s.hint}>公式アプリは、そのお店のイメージ色を最初から使います。ロゴは各社の許可が必要なため使っていません。</Text>
           </View>
 
@@ -384,18 +238,7 @@ export default function EditScreen({ initial, allCards = [], onCancel, onSave, o
         </ScrollView>
       </KeyboardAvoidingView>
 
-      <Modal visible={scanning} animationType="slide" presentationStyle="fullScreen" onRequestClose={() => setScanning(false)}>
-        <SafeAreaProvider>
-        <ScannerScreen
-          onCancel={() => setScanning(false)}
-          onScanned={({ code, format }) => {
-            set({ code, format });
-            setScanning(false);
-            setStatus({ text: '読み取れました。番号が合っているか確かめてください。' });
-          }}
-        />
-        </SafeAreaProvider>
-      </Modal>
+      <PaywallModal reason={paywall} limits={limits} onClose={() => setPaywall(null)} onUnlocked={() => { setPaywall(null); onUnlocked && onUnlocked(); }} />
     </SafeAreaView>
   );
 }

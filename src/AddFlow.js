@@ -2,13 +2,15 @@ import { useEffect, useState } from 'react';
 import { KeyboardAvoidingView, Linking, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import CardFace from './CardFace';
+import DesignPicker from './DesignPicker';
 import ShortcutGuide from './ShortcutGuide';
+import { PaywallModal } from './Paywall';
 import { CATALOG, TYPE_LABEL, cardPalette, installedCatalogIds, openCardApp } from './appLink';
-import { PALETTES, TYPE_COLORS, useTheme } from './theme';
+import { TYPE_COLORS, useTheme } from './theme';
 
-// Guided add: 1. pick the card (and try opening it) → 2. pick a design → 3. done.
-// 「自分でカードを作る」 hands over to the full editor (barcode/photo, other apps).
-export default function AddFlow({ initial, allCards = [], onCancel, onSave, onCustom }) {
+// Guided add: 1. pick the card (and try opening it) → 2. pick a design (Poica 無制限 only) → 3. done.
+// 「自分でカードを作る」 hands over to the step-by-step CustomFlow (barcode/photo, other apps).
+export default function AddFlow({ initial, allCards = [], canDesign, limits, onUnlocked, onCancel, onSave, onCustom }) {
   const t = useTheme();
   const s = styles(t);
   const [step, setStep] = useState('pick'); // pick | try | design | done
@@ -16,6 +18,7 @@ export default function AddFlow({ initial, allCards = [], onCancel, onSave, onCu
   const [query, setQuery] = useState('');
   const [installed, setInstalled] = useState([]);
   const [result, setResult] = useState(null); // null | 'ok' | 'fail'
+  const [paywall, setPaywall] = useState(null);
   const set = (patch) => setD((prev) => ({ ...prev, ...patch }));
 
   useEffect(() => {
@@ -46,8 +49,16 @@ export default function AddFlow({ initial, allCards = [], onCancel, onSave, onCu
     set({ appMode: 'shortcut', shortcutName: d.shortcutName || `${app.name}を開く` });
   };
 
+  // Back from 「ショートカットで開く」 to opening the app directly (only for apps that can be opened directly).
+  const canGoDirect = viaShortcut && app && app.openWith !== 'shortcut';
+  const useDirect = () => {
+    setResult(null);
+    set({ appMode: 'catalog' });
+  };
+
   const back = () => {
-    if (step === 'try') setStep('pick');
+    if (step === 'try' && canGoDirect) useDirect();
+    else if (step === 'try') setStep('pick');
     else if (step === 'design') setStep('try');
     else onCancel();
   };
@@ -57,7 +68,8 @@ export default function AddFlow({ initial, allCards = [], onCancel, onSave, onCu
     if (ok !== false) setStep('done');
   };
 
-  const stepNo = { pick: 1, try: 1, design: 2, done: 3 }[step];
+  const steps = canDesign ? 3 : 2;
+  const stepNo = { pick: 1, try: 1, design: 2, done: steps }[step];
 
   return (
     <SafeAreaView style={s.root} edges={['top', 'bottom']}>
@@ -66,9 +78,9 @@ export default function AddFlow({ initial, allCards = [], onCancel, onSave, onCu
           <Text style={s.headText}>{step === 'pick' ? 'キャンセル' : step === 'done' ? '' : '戻る'}</Text>
         </Pressable>
         <Text style={s.title}>カードを追加</Text>
-        <Text style={s.stepText}>{stepNo} / 3</Text>
+        <Text style={s.stepText}>{stepNo} / {steps}</Text>
       </View>
-      <View style={s.progress}>{[1, 2, 3].map((n) => <View key={n} style={[s.bar, n <= stepNo && s.barOn]} />)}</View>
+      <View style={s.progress}>{Array.from({ length: steps }, (_, i) => i + 1).map((n) => <View key={n} style={[s.bar, n <= stepNo && s.barOn]} />)}</View>
 
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         {step === 'pick' && (
@@ -133,6 +145,11 @@ export default function AddFlow({ initial, allCards = [], onCancel, onSave, onCu
             <Text style={s.lead}>{app.name}が開けるか試してください</Text>
             {viaShortcut ? (
               <View style={s.box}>
+                {canGoDirect && (
+                  <Pressable onPress={useDirect} hitSlop={8} accessibilityRole="button" style={({ pressed }) => [s.backLink, pressed && s.pressed]}>
+                    <Text style={s.backLinkText}>‹ やっぱり直接開く</Text>
+                  </Pressable>
+                )}
                 <Text style={s.boxTitle}>{app.openWith === 'shortcut' ? `${app.name}は、iPhoneの「ショートカット」から開きます` : 'ショートカットで開く'}</Text>
                 {app.openWith === 'shortcut' && <Text style={s.hint}>{app.name}のアプリは、起動中に直接開くとSafariに移ってしまうためです。最初に1回だけ準備が要ります。</Text>}
                 <Text style={s.stepLine}>ショートカットの名前</Text>
@@ -170,17 +187,7 @@ export default function AddFlow({ initial, allCards = [], onCancel, onSave, onCu
         {step === 'design' && (
           <ScrollView contentContainerStyle={s.body}>
             <Text style={s.lead}>カードのデザインを選んでください</Text>
-            <CardFace card={d} palette={cardPalette(d, allCards)} big />
-            <View style={s.palettes}>
-              {[...(app ? [{ key: 'app', colors: app.colors, label: `${app.name}の色` }] : []), ...PALETTES.map((p, i) => ({ key: String(i), colors: p, label: `配色${i + 1}` }))].map((o) => {
-                const on = o.colors.join() === cardPalette(d, allCards).join();
-                return (
-                  <Pressable key={o.key} onPress={() => set(o.key === 'app' ? { palette: null, color: o.colors[0] } : { palette: o.colors, color: o.colors[0] })} style={[s.pal, on && { borderColor: t.ink }]} accessibilityRole="button" accessibilityLabel={o.label} accessibilityState={{ selected: on }}>
-                    {o.colors.map((c, k) => <View key={k} style={{ flex: k === 0 ? 2 : 1, backgroundColor: c }} />)}
-                  </Pressable>
-                );
-              })}
-            </View>
+            <DesignPicker d={d} set={set} allCards={allCards} canDesign t={t} />
             <Text style={s.hint}>最初はお店のイメージ色になっています。あとからカードを長押しして変えることもできます。</Text>
           </ScrollView>
         )}
@@ -191,6 +198,11 @@ export default function AddFlow({ initial, allCards = [], onCancel, onSave, onCu
             <Text style={[s.lead, { textAlign: 'center' }]}>登録しました</Text>
             <CardFace card={d} palette={cardPalette(d, allCards)} big />
             <Text style={[s.hint, { textAlign: 'center' }]}>ホームでこのカードを押すと、すぐに{app ? app.name : 'アプリ'}が開きます。</Text>
+            {!canDesign && (
+              <Pressable onPress={() => setPaywall('design')} hitSlop={6} accessibilityRole="button">
+                <Text style={s.link}>カードのデザインを変えるには Poica 無制限</Text>
+              </Pressable>
+            )}
           </View>
         )}
       </KeyboardAvoidingView>
@@ -198,8 +210,8 @@ export default function AddFlow({ initial, allCards = [], onCancel, onSave, onCu
       {step !== 'pick' && (
         <View style={s.foot}>
           {step === 'try' && (
-            <Pressable onPress={() => setStep('design')} disabled={viaShortcut && !(d.shortcutName || '').trim()} style={({ pressed }) => [s.next, viaShortcut && !(d.shortcutName || '').trim() && s.nextOff, pressed && s.pressed]} accessibilityRole="button">
-              <Text style={s.nextText}>次へ</Text>
+            <Pressable onPress={() => (canDesign ? setStep('design') : finish())} disabled={viaShortcut && !(d.shortcutName || '').trim()} style={({ pressed }) => [s.next, viaShortcut && !(d.shortcutName || '').trim() && s.nextOff, pressed && s.pressed]} accessibilityRole="button">
+              <Text style={s.nextText}>{canDesign ? '次へ' : '登録する'}</Text>
             </Pressable>
           )}
           {step === 'design' && (
@@ -214,6 +226,7 @@ export default function AddFlow({ initial, allCards = [], onCancel, onSave, onCu
           )}
         </View>
       )}
+      <PaywallModal reason={paywall} limits={limits} onClose={() => setPaywall(null)} onUnlocked={() => { setPaywall(null); onUnlocked && onUnlocked(); }} />
     </SafeAreaView>
   );
 }
@@ -258,6 +271,8 @@ const styles = (t) => StyleSheet.create({
   errText: { color: t.near, fontSize: 13, lineHeight: 19 },
   scBtn: { borderWidth: 1, borderColor: t.line, backgroundColor: t.bg, borderRadius: 999, paddingVertical: 13, alignItems: 'center' },
   scText: { color: t.ink, fontWeight: '700', fontSize: 15 },
+  backLink: { alignSelf: 'flex-start', paddingVertical: 4 },
+  backLinkText: { color: t.accent, fontSize: 14, fontWeight: '700' },
   link: { color: t.accent, fontSize: 14, fontWeight: '700', textAlign: 'center', paddingVertical: 6 },
   palettes: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
   pal: { width: 64, height: 40, borderRadius: 10, borderWidth: 3, borderColor: 'transparent', flexDirection: 'row', overflow: 'hidden' },

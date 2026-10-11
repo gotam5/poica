@@ -1,16 +1,34 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { Image, StyleSheet, Text, View } from 'react-native';
 import { TYPE_COLORS } from './theme';
 import { TYPE_LABEL, cardTypes } from './appLink';
+import { photoUri } from './storage';
+
+// card.bgImage: a saved file name, or { temp: uri } while editing (Poica 無制限 only).
+export function bgImageUri(card) {
+  const b = card && card.bgImage;
+  if (!b) return null;
+  return typeof b === 'object' ? b.temp : photoUri(b);
+}
 
 // Card face drawn from 2-4 colors: background, a wide band, a thin band and a bottom stripe.
 // No logos: brands' marks can't be used without each company's permission.
 export default function CardFace({ card, palette, big, wide, chip, style }) {
   const [bg, c1, c2, c3] = palette;
+  const img = bgImageUri(card);
   return (
     <View style={[s.face, { backgroundColor: bg }, big && s.big, style]}>
-      {c1 && <View style={[s.band, { backgroundColor: c1 }]} />}
-      {c2 && <View style={[s.thin, { backgroundColor: c2 }]} />}
-      {c3 && <View style={[s.stripe, { backgroundColor: c3 }]} />}
+      {img ? (
+        <>
+          <Image source={{ uri: img }} style={StyleSheet.absoluteFill} resizeMode="cover" />
+          <View style={[StyleSheet.absoluteFill, s.shade]} />
+        </>
+      ) : (
+        <>
+          {c1 && <View style={[s.band, { backgroundColor: c1 }]} />}
+          {c2 && <View style={[s.thin, { backgroundColor: c2 }]} />}
+          {c3 && <View style={[s.stripe, { backgroundColor: c3 }]} />}
+        </>
+      )}
       {chip != null ? (
         <View style={s.chip}><Text style={s.chipText} numberOfLines={1}>{chip}</Text></View>
       ) : null}
@@ -34,6 +52,7 @@ const s = StyleSheet.create({
   big: { minHeight: 140, paddingHorizontal: 16, paddingVertical: 14 },
   band: { position: 'absolute', right: 6, top: -60, width: 30, height: 260, transform: [{ rotate: '22deg' }] },
   thin: { position: 'absolute', right: 44, top: -60, width: 9, height: 260, transform: [{ rotate: '22deg' }] },
+  shade: { backgroundColor: 'rgba(0,0,0,0.28)' },
   stripe: { position: 'absolute', left: 0, right: 0, bottom: 0, height: 6 },
   nameRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
   name: { flex: 1, paddingRight: 8, color: '#FFF', fontSize: 18, fontWeight: '900', lineHeight: 23, ...shadow },

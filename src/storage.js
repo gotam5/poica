@@ -35,6 +35,7 @@ export async function deleteCard(card) {
   const d = await db();
   await d.runAsync('DELETE FROM cards WHERE id = ?', [card.id]);
   if (card.photo) removePhoto(card.photo);
+  if (typeof card.bgImage === 'string') removePhoto(card.bgImage);
 }
 
 function photoDir() {

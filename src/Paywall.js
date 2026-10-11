@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { ActivityIndicator, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
+import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from './theme';
 import { buy, fetchPrice, isCancel, restore } from './purchase';
 import { DEFAULT_LIMITS } from './limits';
 
 // Shown when adding a card past the free limit.
-// reason: 'cards' when adding past the free card limit, 'suggest' when asking for more nearby recommendations.
+// reason: 'cards' when adding past the free card limit, 'suggest' when asking for more nearby recommendations,
+// 'design' when changing a card's design, 'info' when opened from the settings.
 export default function Paywall({ reason = 'cards', limits = DEFAULT_LIMITS, onClose, onUnlocked }) {
   const FREE_LIMIT = limits.freeCardLimit;
   const t = useTheme();
@@ -37,13 +38,18 @@ export default function Paywall({ reason = 'cards', limits = DEFAULT_LIMITS, onC
   return (
     <SafeAreaView style={s.root} edges={['top', 'bottom']}>
       <View style={s.body}>
-        <Text style={s.title}>{reason === 'suggest' ? '近くのおすすめを' : `${FREE_LIMIT + 1}枚目からは`}{'\n'}Poica 無制限で</Text>
+        <Text style={s.title}>{TITLE[reason] ?? `${FREE_LIMIT + 1}枚目からは\n`}Poica 無制限{reason === 'info' ? '' : 'で'}</Text>
         <Text style={s.text}>{price || '一度'}払うと、ずっと使えます。サブスクではありません。</Text>
         <View style={s.perks}>
           <Text style={s.perk}>✓ カードを何枚でも登録できます</Text>
           <Text style={s.perk}>✓ 近くのおすすめを{limits.paidNearbyLimit}件まで表示</Text>
+          <Text style={s.perk}>✓ カードのデザインを自由に(好きな画像も)</Text>
         </View>
-        <Text style={s.note}>{reason === 'suggest' ? `購入しなくても、近くのおすすめは${limits.freeNearbyLimit}件表示されます。` : `いまある${FREE_LIMIT}枚は、購入しなくてもこれまでどおり使えます。`}</Text>
+        <Text style={s.note}>{{
+          suggest: `購入しなくても、近くのおすすめは${limits.freeNearbyLimit}件表示されます。`,
+          design: 'いまのデザインは、購入しなくてもそのまま使えます。',
+          info: `無料版はカード${FREE_LIMIT}枚まで、近くのおすすめ${limits.freeNearbyLimit}件です。`,
+        }[reason] ?? `いまある${FREE_LIMIT}枚は、購入しなくてもこれまでどおり使えます。`}</Text>
         {msg && <Text style={s.msg}>{msg}</Text>}
       </View>
       <View style={s.foot}>
@@ -58,6 +64,19 @@ export default function Paywall({ reason = 'cards', limits = DEFAULT_LIMITS, onC
         </Pressable>
       </View>
     </SafeAreaView>
+  );
+}
+
+const TITLE = { suggest: '近くのおすすめを\n', design: 'カードのデザインを\n', info: '' };
+
+// For screens that are themselves in a modal: a sibling modal can't be shown on top of them on iOS.
+export function PaywallModal({ reason, ...props }) {
+  return (
+    <Modal visible={!!reason} animationType="slide" presentationStyle="pageSheet" onRequestClose={props.onClose}>
+      <SafeAreaProvider>
+        {reason ? <Paywall reason={reason} {...props} /> : null}
+      </SafeAreaProvider>
+    </Modal>
   );
 }
 

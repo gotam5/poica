@@ -78,6 +78,11 @@
         }
       ],
       "expo-iap"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "2d0c0628-149d-4672-9e9b-c71544c52fe0"
+      }
+    }
   }
 }

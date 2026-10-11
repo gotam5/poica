@@ -4,7 +4,10 @@ import * as Location from 'expo-location';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import AddFlow from './src/AddFlow';
+import CustomFlow from './src/CustomFlow';
 import EditScreen from './src/EditScreen';
+import SettingsScreen from './src/SettingsScreen';
+import Toolbar from './src/Toolbar';
 import ShowScreen from './src/ShowScreen';
 import Paywall from './src/Paywall';
 import { checkOwned, iapAvailable } from './src/purchase';
@@ -44,6 +47,10 @@ function Home() {
   const [unlimited, setUnlimited] = useState(false);
   const [paywall, setPaywall] = useState(null); // null | 'cards' | 'suggest'
   const [limits, setLimits] = useState(DEFAULT_LIMITS);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [searching, setSearching] = useState(false);
+  const scrollRef = useRef(null);
+  const listY = useRef(0);
 
   const say = useCallback((text) => {
     setToast(text);
@@ -136,10 +143,12 @@ function Home() {
   const saveDraft = useCallback(async (draft, keepOpen = false) => {
     const { isNew, ...card } = draft;
     try {
-      if (card.photo && typeof card.photo === 'object') {
-        const old = cards.find((c) => c.id === card.id)?.photo;
-        card.photo = await keepPhoto(card.photo.temp, card.id);
-        if (old && typeof old === 'string') removePhoto(old);
+      const prev = cards.find((c) => c.id === card.id);
+      // Photos and card pictures are copied in on save; a replaced or removed one is deleted.
+      for (const key of ['photo', 'bgImage']) {
+        const old = prev?.[key];
+        if (card[key] && typeof card[key] === 'object') card[key] = await keepPhoto(card[key].temp, card.id);
+        if (old && typeof old === 'string' && old !== card[key]) removePhoto(old);
       }
       await saveCard(card);
       setCards((prev) => (prev.some((c) => c.id === card.id) ? prev.map((c) => (c.id === card.id ? card : c)) : [...prev, card]));
@@ -158,12 +167,16 @@ function Home() {
     say('削除しました');
   }, [cards, say]);
 
-  const unlock = () => {
+  const markUnlocked = () => {
     setUnlimited(true);
     setSetting('unlimited', true).catch(() => {});
+    say('購入ありがとうございます。Poica 無制限になりました');
+  };
+
+  const unlock = () => {
+    markUnlocked();
     const from = paywall;
     setPaywall(null);
-    say('購入ありがとうございます。Poica 無制限になりました');
     if (from === 'cards') setTimeout(() => newDraft(), 450); // carry on to the card they were adding
   };
 
@@ -182,10 +195,34 @@ function Home() {
 
   const { recent, suggest: allSuggest, all } = arrange(cards, pos, query, stores, (c) => storeRegex(storePatternOf(c, cards)), limits.paidNearbyLimit);
   // Free: only the top freeNearbyLimit recommendations (after the usage/distance sort); Poica 無制限 shows paidNearbyLimit.
-  const suggest = iapAvailable && !unlimited ? allSuggest.slice(0, limits.freeNearbyLimit) : allSuggest;
+  const free = iapAvailable && !unlimited;
+  const canDesign = !free;
+  const suggest = free ? allSuggest.slice(0, limits.freeNearbyLimit) : allSuggest;
   const hiddenSuggest = allSuggest.length - suggest.length;
   const shownCard = showing ? cards.find((c) => c.id === showing) : null;
   const anyPlaces = cards.some((c) => c.places && c.places.length);
+  const placeCount = cards.reduce((n, c) => n + (c.places ? c.places.length : 0), 0);
+
+  const goHome = () => {
+    setSearching(false);
+    setQuery('');
+    scrollRef.current?.scrollTo({ y: 0, animated: true });
+  };
+  const toggleSearch = () => {
+    if (searching) { setSearching(false); setQuery(''); return; }
+    setSearching(true);
+    setTimeout(() => scrollRef.current?.scrollTo({ y: Math.max(0, listY.current - 8), animated: true }), 50);
+  };
+  const relocate = () => {
+    say('現在地を取り直しています');
+    locate();
+  };
+  const forgetAllPlaces = async () => {
+    const next = cards.map((c) => (c.places && c.places.length ? { ...c, places: [] } : c));
+    setCards(next);
+    for (const c of next) { try { await saveCard(c); } catch {} }
+    say('覚えた場所をすべて消しました');
+  };
 
   const locLabel = {
     wait: '現在地を確認中',
@@ -204,7 +241,7 @@ function Home() {
   return (
     <SafeAreaView style={s.root} edges={['top']}>
       <StatusBar style="auto" />
-      <ScrollView contentContainerStyle={s.wrap}>
+      <ScrollView ref={scrollRef} contentContainerStyle={s.wrap}>
         <View style={s.header}>
           <Text style={s.logo}>Poi<Text style={{ color: t.accent }}>ca</Text></Text>
           <Pressable onPress={locate} style={s.loc} accessibilityRole="button" accessibilityLabel={`${locLabel}。タップで取り直す`}>
@@ -247,7 +284,7 @@ function Home() {
                   allCards={cards}
                   big={i === 0}
                   wide
-                  chip={x.reason === 'store' ? '近くにお店があります' : 'ここで使ったことがあります'}
+                  chip={x.reason === 'store' ? '近くにお店があります' : x.here >= 3 ? 'ここでよく使う' : 'ここで使ったことがある'}
                   onPress={() => open(x.card)} onLongPress={() => setEditing({ ...x.card })}
                   s={s}
                 />
@@ -267,10 +304,10 @@ function Home() {
           )}
         </View>
 
-        <View>
+        <View onLayout={(e) => { listY.current = e.nativeEvent.layout.y; }}>
           <Text style={s.sec}>カード一覧 {cards.length ? <Text style={s.count}>{cards.length}</Text> : null}</Text>
-          {cards.length >= 8 && (
-            <TextInput style={s.search} value={query} onChangeText={setQuery} placeholder="カード名で探す" placeholderTextColor={t.muted} clearButtonMode="while-editing" />
+          {(searching || cards.length >= 8) && (
+            <TextInput style={s.search} value={query} onChangeText={setQuery} placeholder="カード名で探す" placeholderTextColor={t.muted} clearButtonMode="while-editing" autoFocus={searching} returnKeyType="search" />
           )}
           {all.length ? (
             <View style={{ gap: 14 }}>
@@ -288,36 +325,20 @@ function Home() {
                   </View>
                 );
               })}
-              <Text style={s.foot}>カードを長押しすると、名前の変更や削除ができます。</Text>
+              <Text style={s.foot}>カードを長押しすると、名前やデザインの変更、削除ができます。</Text>
             </View>
           ) : (
             <View style={s.empty}>
               <Text style={s.emptyText}>
-                {query ? '見つかりません。' : '下の「カードを追加」から、よく使うお店の公式アプリを登録してください。'}
+                {query ? '見つかりません。' : '下の「＋ 追加」から、よく使うお店の公式アプリを登録してください。'}
               </Text>
             </View>
           )}
         </View>
 
-        <Pressable onPress={toggleStoreLookup} style={s.setting} accessibilityRole="switch" accessibilityState={{ checked: storeLookup }}>
-          <View style={{ flex: 1 }}>
-            <Text style={s.settingTitle}>近くのお店を地図データで調べる</Text>
-            <Text style={s.settingText}>オンにすると、おおまかな現在地(約100m単位)をOpenStreetMapに送り、登録したお店が近くにあるか調べます。</Text>
-          </View>
-          <View style={[s.switch, storeLookup && s.switchOn]}><View style={[s.knob, storeLookup && s.knobOn]} /></View>
-        </Pressable>
-
-        <Text style={s.foot}>カードのデータはこのスマホの中だけに保存されます。通知は送りません。</Text>
-        <View style={s.links}>
-          <Pressable onPress={() => Linking.openURL(PRIVACY_URL).catch(() => {})} hitSlop={8} accessibilityRole="link"><Text style={s.link}>プライバシーポリシー</Text></Pressable>
-          <Pressable onPress={() => Linking.openURL(SUPPORT_URL).catch(() => {})} hitSlop={8} accessibilityRole="link"><Text style={s.link}>お問い合わせ</Text></Pressable>
-        </View>
-        <Text style={s.foot}>お店の地図データ © OpenStreetMap contributors</Text>
       </ScrollView>
 
-      <Pressable onPress={startNew} style={s.fab} accessibilityRole="button">
-        <Text style={s.fabText}>＋ カードを追加</Text>
-      </Pressable>
+      <Toolbar t={t} active={searching ? 'search' : 'home'} onHome={goHome} onSearch={toggleSearch} onAdd={startNew} onLocate={relocate} onSettings={() => setSettingsOpen(true)} />
 
       {toast && <View style={s.toast} pointerEvents="none"><Text style={s.toastText}>{toast}</Text></View>}
 
@@ -350,11 +371,28 @@ function Home() {
         </SafeAreaProvider>
       </Modal>
 
+      <Modal visible={settingsOpen} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setSettingsOpen(false)}>
+        <SafeAreaProvider>
+          <SettingsScreen
+            unlimited={unlimited} iapAvailable={iapAvailable} limits={limits} cardCount={cards.length} placeCount={placeCount}
+            storeLookup={storeLookup} onToggleStoreLookup={toggleStoreLookup} onForgetPlaces={forgetAllPlaces}
+            onUnlocked={markUnlocked} onClose={() => setSettingsOpen(false)} privacyUrl={PRIVACY_URL} supportUrl={SUPPORT_URL}
+          />
+        </SafeAreaProvider>
+      </Modal>
+
       <Modal visible={!!editing} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setEditing(null)}>
         <SafeAreaProvider>
-        {editing && (editing.isNew && !editing.custom
-          ? <AddFlow initial={editing} allCards={cards} onCancel={() => setEditing(null)} onSave={(d) => saveDraft(d, true)} onCustom={() => setEditing({ ...editing, custom: true, kind: 'barcode', appMode: 'shortcut', catalogId: null })} />
-          : <EditScreen initial={editing} allCards={cards} onCancel={() => (editing.custom ? setEditing({ ...editing, custom: false, kind: 'app', appMode: 'catalog' }) : setEditing(null))} onSave={({ custom, ...d }) => saveDraft(d)} onDelete={removeCard} />)}
+        {editing && (() => {
+          const pay = { allCards: cards, canDesign, limits, onUnlocked: markUnlocked };
+          if (editing.isNew && editing.custom) {
+            return <CustomFlow {...pay} initial={editing} onCancel={() => setEditing({ ...editing, custom: false, kind: 'app', appMode: 'catalog' })} onSave={({ custom, ...d }) => saveDraft(d, true)} />;
+          }
+          if (editing.isNew) {
+            return <AddFlow {...pay} initial={editing} onCancel={() => setEditing(null)} onSave={(d) => saveDraft(d, true)} onCustom={() => setEditing({ ...editing, custom: true, kind: 'barcode', appMode: 'shortcut', catalogId: null })} />;
+          }
+          return <EditScreen {...pay} initial={editing} onCancel={() => setEditing(null)} onSave={({ custom, ...d }) => saveDraft(d)} onDelete={removeCard} />;
+        })()}
         </SafeAreaProvider>
       </Modal>
     </SafeAreaView>
@@ -375,7 +413,7 @@ function Tile({ card, allCards, big, wide, chip, onPress, onLongPress, s }) {
 
 const styles = (t) => StyleSheet.create({
   root: { flex: 1, backgroundColor: t.bg },
-  wrap: { paddingHorizontal: 16, paddingTop: 8, paddingBottom: 120, gap: 22 },
+  wrap: { paddingHorizontal: 16, paddingTop: 8, paddingBottom: 40, gap: 22 },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 },
   logo: { fontSize: 30, fontWeight: '900', color: t.ink, letterSpacing: 0.3 },
   loc: { flexDirection: 'row', alignItems: 'center', gap: 6, borderWidth: 1, borderColor: t.line, backgroundColor: t.surface, borderRadius: 999, paddingVertical: 5, paddingLeft: 10, paddingRight: 12 },
@@ -385,8 +423,6 @@ const styles = (t) => StyleSheet.create({
   noticeText: { fontSize: 13, color: t.muted, lineHeight: 20 },
   smallBtn: { alignSelf: 'flex-start', borderWidth: 1, borderColor: t.line, borderRadius: 10, paddingVertical: 6, paddingHorizontal: 12 },
   smallBtnText: { fontSize: 13, fontWeight: '700', color: t.ink },
-  links: { flexDirection: 'row', justifyContent: 'center', gap: 24 },
-  link: { color: t.accent, fontSize: 13, fontWeight: '700', textDecorationLine: 'underline' },
   sec: { fontSize: 13, fontWeight: '700', letterSpacing: 1.5, color: t.muted, marginBottom: 10 },
   secHot: { fontSize: 15, fontWeight: '800', color: t.accent },
   count: { fontVariant: ['tabular-nums'], letterSpacing: 0 },
@@ -396,17 +432,8 @@ const styles = (t) => StyleSheet.create({
   cell: { width: '50%', padding: 5 },
   search: { borderWidth: 1, borderColor: t.line, backgroundColor: t.surface, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 9, marginBottom: 10, color: t.ink, fontSize: 15 },
   group: { fontSize: 13, fontWeight: '700', color: t.muted },
-  setting: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: t.surface, borderWidth: 1, borderColor: t.line, borderRadius: 14, padding: 12 },
-  settingTitle: { fontSize: 14, fontWeight: '700', color: t.ink },
-  settingText: { fontSize: 12, color: t.muted, lineHeight: 17, marginTop: 2 },
-  switch: { width: 46, height: 28, borderRadius: 14, backgroundColor: t.line, padding: 3 },
-  switchOn: { backgroundColor: t.accent },
-  knob: { width: 22, height: 22, borderRadius: 11, backgroundColor: '#FFF' },
-  knobOn: { transform: [{ translateX: 18 }] },
   more: { color: t.accent, fontSize: 13, fontWeight: '700', textAlign: 'center', paddingVertical: 4 },
   foot: { fontSize: 12, color: t.muted, textAlign: 'center' },
-  fab: { position: 'absolute', alignSelf: 'center', bottom: 34, backgroundColor: t.accent, borderRadius: 999, paddingVertical: 15, paddingHorizontal: 28, shadowColor: '#0A7552', shadowOpacity: 0.35, shadowRadius: 12, shadowOffset: { width: 0, height: 6 }, elevation: 6 },
-  fabText: { color: t.accentInk, fontSize: 16, fontWeight: '800' },
-  toast: { position: 'absolute', alignSelf: 'center', bottom: 100, backgroundColor: '#15211C', paddingHorizontal: 16, paddingVertical: 9, borderRadius: 999, maxWidth: '90%' },
+  toast: { position: 'absolute', alignSelf: 'center', bottom: 110, backgroundColor: '#15211C', paddingHorizontal: 16, paddingVertical: 9, borderRadius: 999, maxWidth: '90%' },
   toastText: { color: '#FFF', fontSize: 13, textAlign: 'center' },
 });
