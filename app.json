@@ -73,7 +73,7 @@
         "expo-image-picker",
         {
           "cameraPermission": "バーコードが読めないカードを写真で保存するためにカメラを使います。",
-          "photosPermission": "カードの写真を選ぶために写真ライブラリを使います。",
+          "photosPermission": "カードの写真や、カードの背景にする写真を選ぶために写真ライブラリを使います。",
           "microphonePermission": false
         }
       ],
