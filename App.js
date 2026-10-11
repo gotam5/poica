@@ -7,7 +7,8 @@ import AddFlow from './src/AddFlow';
 import EditScreen from './src/EditScreen';
 import ShowScreen from './src/ShowScreen';
 import Paywall from './src/Paywall';
-import { FREE_LIMIT, FREE_SUGGEST, checkOwned, iapAvailable } from './src/purchase';
+import { checkOwned, iapAvailable } from './src/purchase';
+import { DEFAULT_LIMITS, loadLimits, refreshLimits } from './src/limits';
 import { arrange, learnPlace } from './src/geo';
 import { deleteCard, getSetting, keepPhoto, loadCards, removePhoto, saveCard, setSetting } from './src/storage';
 import { TYPE_LABEL, cardPalette, cardTypes, openCardApp } from './src/appLink';
@@ -42,6 +43,7 @@ function Home() {
   const [storeLookup, setStoreLookup] = useState(true);
   const [unlimited, setUnlimited] = useState(false);
   const [paywall, setPaywall] = useState(null); // null | 'cards' | 'suggest'
+  const [limits, setLimits] = useState(DEFAULT_LIMITS);
 
   const say = useCallback((text) => {
     setToast(text);
@@ -54,6 +56,7 @@ function Home() {
     loadCards().then((list) => setCards(list.filter((c) => c.kind !== 'set'))).catch(() => setCards([]));
     getSetting('storeLookup', true).then(setStoreLookup).catch(() => {});
     // The purchase is remembered on the phone so the limit stays off offline; StoreKit is the source of truth when reachable.
+    loadLimits().then(setLimits).then(() => refreshLimits()).then((l) => l && setLimits(l)).catch(() => {});
     getSetting('unlimited', false).then((v) => v && setUnlimited(true)).catch(() => {});
     if (iapAvailable) {
       checkOwned().then((owned) => { if (owned) { setUnlimited(true); setSetting('unlimited', true).catch(() => {}); } }).catch(() => {});
@@ -165,7 +168,7 @@ function Home() {
   };
 
   const startNew = () => {
-    if (iapAvailable && !unlimited && (cards?.length || 0) >= FREE_LIMIT) { setPaywall('cards'); return; }
+    if (iapAvailable && !unlimited && (cards?.length || 0) >= limits.freeCardLimit) { setPaywall('cards'); return; }
     newDraft();
   };
   const newDraft = () => setEditing({
@@ -177,9 +180,9 @@ function Home() {
     return <View style={[s.root, { alignItems: 'center', justifyContent: 'center' }]}><ActivityIndicator color={t.accent} /></View>;
   }
 
-  const { recent, suggest: allSuggest, all } = arrange(cards, pos, query, stores, (c) => storeRegex(storePatternOf(c, cards)));
-  // Free: the top nearby recommendation only (after the usage/distance sort); Poica 無制限 shows all 3.
-  const suggest = iapAvailable && !unlimited ? allSuggest.slice(0, FREE_SUGGEST) : allSuggest;
+  const { recent, suggest: allSuggest, all } = arrange(cards, pos, query, stores, (c) => storeRegex(storePatternOf(c, cards)), limits.paidNearbyLimit);
+  // Free: only the top freeNearbyLimit recommendations (after the usage/distance sort); Poica 無制限 shows paidNearbyLimit.
+  const suggest = iapAvailable && !unlimited ? allSuggest.slice(0, limits.freeNearbyLimit) : allSuggest;
   const hiddenSuggest = allSuggest.length - suggest.length;
   const shownCard = showing ? cards.find((c) => c.id === showing) : null;
   const anyPlaces = cards.some((c) => c.places && c.places.length);
@@ -255,6 +258,10 @@ function Home() {
                 </Pressable>
               )}
             </View>
+          ) : hiddenSuggest > 0 ? (
+            <Pressable onPress={() => setPaywall('suggest')} style={s.empty} accessibilityRole="button">
+              <Text style={s.more}>近くのおすすめが{hiddenSuggest}件あります。見るには Poica 無制限</Text>
+            </Pressable>
           ) : (
             <View style={s.empty}><Text style={s.emptyText}>{suggestEmpty}</Text></View>
           )}
@@ -339,7 +346,7 @@ function Home() {
 
       <Modal visible={!!paywall} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setPaywall(null)}>
         <SafeAreaProvider>
-          {paywall && <Paywall reason={paywall} onClose={() => setPaywall(null)} onUnlocked={unlock} />}
+          {paywall && <Paywall reason={paywall} limits={limits} onClose={() => setPaywall(null)} onUnlocked={unlock} />}
         </SafeAreaProvider>
       </Modal>
 

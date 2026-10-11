@@ -52,7 +52,7 @@ export function learnPlace(card, pos, force = false) {
 
 // Home screen sections:
 //  recent  - the last things used (up to 2)
-//  suggest - near you (max 3): cards used most around here first, then a shop of the card's chain
+//  suggest - near you (up to maxSuggest, 3 by default): cards used most around here first, then a shop of the card's chain
 //  all     - every card, last used first
 // storeRegexOf(card) returns a RegExp for the card's chain shop names, or null.
 // How many times a card was shown within r metres of pos (each learned place counts its uses in n).
@@ -61,7 +61,7 @@ export function usesNear(card, pos, r) {
   return card.places.reduce((sum, p) => (distance(pos, p) <= r ? sum + (p.n || 1) : sum), 0);
 }
 
-export function arrange(cards, pos, query, stores = [], storeRegexOf = () => null) {
+export function arrange(cards, pos, query, stores = [], storeRegexOf = () => null, maxSuggest = 3) {
   const r = nearRadius(pos);
   const byId = new Map();
   for (const c of cards) {
@@ -85,7 +85,7 @@ export function arrange(cards, pos, query, stores = [], storeRegexOf = () => nul
   }
   const suggest = [...byId.values()]
     .sort((a, b) => b.here - a.here || a.dist - b.dist || (b.card.uses || 0) - (a.card.uses || 0))
-    .slice(0, 3);
+    .slice(0, maxSuggest);
   const shown = new Set(suggest.map((x) => x.card.id));
   const recent = cards
     .filter((c) => c.lastUsed && !shown.has(c.id))

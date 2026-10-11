@@ -2,11 +2,13 @@ import { useEffect, useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from './theme';
-import { FREE_LIMIT, buy, fetchPrice, isCancel, restore } from './purchase';
+import { buy, fetchPrice, isCancel, restore } from './purchase';
+import { DEFAULT_LIMITS } from './limits';
 
 // Shown when adding a card past the free limit.
 // reason: 'cards' when adding past the free card limit, 'suggest' when asking for more nearby recommendations.
-export default function Paywall({ reason = 'cards', onClose, onUnlocked }) {
+export default function Paywall({ reason = 'cards', limits = DEFAULT_LIMITS, onClose, onUnlocked }) {
+  const FREE_LIMIT = limits.freeCardLimit;
   const t = useTheme();
   const s = styles(t);
   const [price, setPrice] = useState(null);
@@ -39,9 +41,9 @@ export default function Paywall({ reason = 'cards', onClose, onUnlocked }) {
         <Text style={s.text}>{price || '一度'}払うと、ずっと使えます。サブスクではありません。</Text>
         <View style={s.perks}>
           <Text style={s.perk}>✓ カードを何枚でも登録できます</Text>
-          <Text style={s.perk}>✓ 近くのおすすめを3件まで表示</Text>
+          <Text style={s.perk}>✓ 近くのおすすめを{limits.paidNearbyLimit}件まで表示</Text>
         </View>
-        <Text style={s.note}>{reason === 'suggest' ? '購入しなくても、近くのおすすめは1件表示されます。' : `いまある${FREE_LIMIT}枚は、購入しなくてもこれまでどおり使えます。`}</Text>
+        <Text style={s.note}>{reason === 'suggest' ? `購入しなくても、近くのおすすめは${limits.freeNearbyLimit}件表示されます。` : `いまある${FREE_LIMIT}枚は、購入しなくてもこれまでどおり使えます。`}</Text>
         {msg && <Text style={s.msg}>{msg}</Text>}
       </View>
       <View style={s.foot}>
