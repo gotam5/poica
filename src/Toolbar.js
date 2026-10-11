@@ -2,8 +2,8 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Circle, Path } from 'react-native-svg';
 
-// Home's bottom toolbar: ホーム / 探す / ＋追加 / 現在地 / 設定.
-export default function Toolbar({ t, active, onHome, onSearch, onAdd, onLocate, onSettings }) {
+// Home's bottom toolbar: ホーム / 探す / 現在地 / 設定.
+export default function Toolbar({ t, active, onHome, onSearch, onLocate, onSettings }) {
   const insets = useSafeAreaInsets();
   const s = styles(t);
   const item = (key, label, icon, onPress) => {
@@ -20,10 +20,6 @@ export default function Toolbar({ t, active, onHome, onSearch, onAdd, onLocate, 
     <View style={[s.bar, { paddingBottom: Math.max(insets.bottom, 8) }]}>
       {item('home', 'ホーム', (c) => <HomeIcon c={c} />, onHome)}
       {item('search', '探す', (c) => <SearchIcon c={c} />, onSearch)}
-      <Pressable onPress={onAdd} style={({ pressed }) => [s.addWrap, pressed && { opacity: 0.8 }]} accessibilityRole="button" accessibilityLabel="カードを追加">
-        <View style={s.add}><Text style={s.addPlus}>＋</Text></View>
-        <Text style={[s.label, { color: t.accent, fontWeight: '800' }]}>追加</Text>
-      </Pressable>
       {item('locate', '現在地', (c) => <PinIcon c={c} />, onLocate)}
       {item('settings', '設定', (c) => <GearIcon c={c} />, onSettings)}
     </View>
@@ -42,10 +38,7 @@ const GearIcon = ({ c }) => (
 );
 
 const styles = (t) => StyleSheet.create({
-  bar: { flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-around', paddingTop: 6, paddingHorizontal: 4, backgroundColor: t.surface, borderTopWidth: 1, borderTopColor: t.line },
+  bar: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-around', paddingTop: 6, paddingHorizontal: 4, backgroundColor: t.surface, borderTopWidth: 1, borderTopColor: t.line },
   item: { flex: 1, alignItems: 'center', gap: 2, paddingVertical: 4 },
   label: { fontSize: 11, fontWeight: '700' },
-  addWrap: { flex: 1, alignItems: 'center', gap: 2 },
-  add: { width: 54, height: 54, borderRadius: 27, backgroundColor: t.accent, alignItems: 'center', justifyContent: 'center', marginTop: -24, borderWidth: 4, borderColor: t.surface, shadowColor: '#0A7552', shadowOpacity: 0.3, shadowRadius: 8, shadowOffset: { width: 0, height: 4 }, elevation: 5 },
-  addPlus: { color: t.accentInk, fontSize: 26, fontWeight: '800', lineHeight: 30 },
 });

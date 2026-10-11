@@ -305,7 +305,12 @@ function Home() {
         </View>
 
         <View onLayout={(e) => { listY.current = e.nativeEvent.layout.y; }}>
-          <Text style={s.sec}>カード一覧 {cards.length ? <Text style={s.count}>{cards.length}</Text> : null}</Text>
+          <View style={s.listHead}>
+            <Text style={[s.sec, { marginBottom: 0 }]}>カード一覧 {cards.length ? <Text style={s.count}>{cards.length}</Text> : null}</Text>
+            <Pressable onPress={startNew} style={({ pressed }) => [s.addBtn, pressed && { opacity: 0.6 }]} hitSlop={6} accessibilityRole="button" accessibilityLabel="カードを追加">
+              <Text style={s.addBtnText}>＋ 追加</Text>
+            </Pressable>
+          </View>
           {(searching || cards.length >= 8) && (
             <TextInput style={s.search} value={query} onChangeText={setQuery} placeholder="カード名で探す" placeholderTextColor={t.muted} clearButtonMode="while-editing" autoFocus={searching} returnKeyType="search" />
           )}
@@ -325,20 +330,24 @@ function Home() {
                   </View>
                 );
               })}
+              <Pressable onPress={startNew} style={({ pressed }) => [s.addTile, pressed && { opacity: 0.6 }]} accessibilityRole="button">
+                <Text style={s.addTileText}>＋ カードを追加</Text>
+              </Pressable>
               <Text style={s.foot}>カードを長押しすると、名前やデザインの変更、削除ができます。</Text>
             </View>
+          ) : query ? (
+            <View style={s.empty}><Text style={s.emptyText}>見つかりません。</Text></View>
           ) : (
-            <View style={s.empty}>
-              <Text style={s.emptyText}>
-                {query ? '見つかりません。' : '下の「＋ 追加」から、よく使うお店の公式アプリを登録してください。'}
-              </Text>
-            </View>
+            <Pressable onPress={startNew} style={({ pressed }) => [s.addTile, pressed && { opacity: 0.6 }]} accessibilityRole="button">
+              <Text style={s.addTileText}>＋ カードを追加</Text>
+              <Text style={s.emptyText}>よく使うお店の公式アプリを登録してください。</Text>
+            </Pressable>
           )}
         </View>
 
       </ScrollView>
 
-      <Toolbar t={t} active={searching ? 'search' : 'home'} onHome={goHome} onSearch={toggleSearch} onAdd={startNew} onLocate={relocate} onSettings={() => setSettingsOpen(true)} />
+      <Toolbar t={t} active={searching ? 'search' : 'home'} onHome={goHome} onSearch={toggleSearch} onLocate={relocate} onSettings={() => setSettingsOpen(true)} />
 
       {toast && <View style={s.toast} pointerEvents="none"><Text style={s.toastText}>{toast}</Text></View>}
 
@@ -432,6 +441,11 @@ const styles = (t) => StyleSheet.create({
   cell: { width: '50%', padding: 5 },
   search: { borderWidth: 1, borderColor: t.line, backgroundColor: t.surface, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 9, marginBottom: 10, color: t.ink, fontSize: 15 },
   group: { fontSize: 13, fontWeight: '700', color: t.muted },
+  listHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 },
+  addBtn: { borderWidth: 1, borderColor: t.accent, borderRadius: 999, paddingVertical: 5, paddingHorizontal: 12 },
+  addBtnText: { color: t.accent, fontSize: 13, fontWeight: '800' },
+  addTile: { borderWidth: 1.5, borderStyle: 'dashed', borderColor: t.accent, borderRadius: 14, paddingVertical: 18, paddingHorizontal: 14, alignItems: 'center', gap: 4 },
+  addTileText: { color: t.accent, fontSize: 15, fontWeight: '800' },
   more: { color: t.accent, fontSize: 13, fontWeight: '700', textAlign: 'center', paddingVertical: 4 },
   foot: { fontSize: 12, color: t.muted, textAlign: 'center' },
   toast: { position: 'absolute', alignSelf: 'center', bottom: 110, backgroundColor: '#15211C', paddingHorizontal: 16, paddingVertical: 9, borderRadius: 999, maxWidth: '90%' },
