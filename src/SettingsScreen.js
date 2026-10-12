@@ -6,7 +6,7 @@ import appJson from '../app.json';
 
 const VERSION = appJson.expo.version;
 
-export default function SettingsScreen({ unlimited, iapAvailable, limits, cardCount, placeCount, storeLookup, onToggleStoreLookup, onForgetPlaces, shareUsage, onToggleShareUsage, previewReport, onUnlocked, privacyUrl, supportUrl }) {
+export default function SettingsScreen({ unlimited, iapAvailable, limits, cardCount, placeCount, storeLookup, onToggleStoreLookup, onForgetPlaces, shareUsage, onToggleShareUsage, onUnlocked, privacyUrl, supportUrl }) {
   const t = useTheme();
   const s = styles(t);
   const [paywall, setPaywall] = useState(null);
@@ -16,12 +16,6 @@ export default function SettingsScreen({ unlimited, iapAvailable, limits, cardCo
       { text: 'やめる', style: 'cancel' },
       { text: 'すべて消す', style: 'destructive', onPress: onForgetPlaces },
     ]);
-  };
-
-  const showReport = async () => {
-    let text = '';
-    try { text = JSON.stringify(await previewReport(), null, 1); } catch { text = '読み込めませんでした'; }
-    Alert.alert('送る内容', text);
   };
 
   return (
@@ -55,7 +49,7 @@ export default function SettingsScreen({ unlimited, iapAvailable, limits, cardCo
           <View style={s.line} />
           <Pressable onPress={forget} disabled={!placeCount} style={({ pressed }) => [s.linkRow, pressed && s.pressed, !placeCount && { opacity: 0.4 }]} accessibilityRole="button">
             <Text style={[s.rowTitle, { color: t.near }]}>覚えた場所をすべて消す</Text>
-            <Text style={s.rowText}>{placeCount ? `いま${placeCount}か所を覚えています。` : 'まだ覚えた場所はありません。'}</Text>
+            <Text style={s.rowText}>Poicaは、カードを使った場所を覚えておき、次にその近くに来たときに「近くのおすすめ」にそのカードを出しています。消すと、また使いながら覚え直します。{placeCount ? `いま${placeCount}か所を覚えています。` : 'まだ覚えた場所はありません。'}</Text>
           </Pressable>
         </View>
 
@@ -68,18 +62,6 @@ export default function SettingsScreen({ unlimited, iapAvailable, limits, cardCo
             </View>
             <View style={[s.switch, shareUsage && s.switchOn]}><View style={[s.knob, shareUsage && s.knobOn]} /></View>
           </Pressable>
-          <View style={s.line} />
-          <Pressable onPress={showReport} style={({ pressed }) => [s.linkRow, pressed && s.pressed]} accessibilityRole="button">
-            <Text style={[s.rowTitle, { color: t.accent }]}>送る内容を見る</Text>
-          </Pressable>
-        </View>
-
-        <Text style={s.sec}>使い方</Text>
-        <View style={s.box}>
-          <Text style={s.tip}>・お店でカードを使うと、その場所を覚えて次から「近くのおすすめ」に出ます。</Text>
-          <Text style={s.tip}>・カードを長押しすると、名前やデザインの変更、削除ができます。</Text>
-          <Text style={s.tip}>・カードが4枚以上になると、一覧の上の欄でカード名から探せます。右上の現在地を押すと、位置を取り直します。</Text>
-          <Text style={s.tip}>・公式アプリが開かないときは、カードの編集で「ショートカット」に切り替えると確実に開けます。</Text>
         </View>
 
         <Text style={s.sec}>このアプリについて</Text>

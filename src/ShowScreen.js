@@ -13,7 +13,7 @@ export function mapsUrl(name) {
 }
 
 // Full-screen, always white, brightness up: what you hold out at the register.
-export default function ShowScreen({ card, openFailed, hasPosition, onClose, onRememberHere, onForget, onSetupShortcut }) {
+export default function ShowScreen({ card, openFailed, hasPosition, onClose, onRememberHere, onForget, onSetupShortcut, onOpened }) {
   useRegisterMode();
   const { width } = useWindowDimensions();
   const [appError, setAppError] = useState(!!openFailed);
@@ -29,6 +29,7 @@ export default function ShowScreen({ card, openFailed, hasPosition, onClose, onR
     setAppError(false);
     const ok = await openCardApp(card);
     if (!ok) setAppError(true);
+    else if (onOpened) onOpened();
   };
 
   return (
@@ -80,7 +81,7 @@ export default function ShowScreen({ card, openFailed, hasPosition, onClose, onR
           </View>
         )}
 
-        <View style={s.meta}>
+        {!(card.kind === 'app' && appError) && <View style={s.meta}>
           <Text style={s.muted}>{places ? `覚えた場所 ${places}か所` : 'まだ場所を覚えていません'}</Text>
           <View style={s.row}>
             {hasPosition && (
@@ -99,7 +100,7 @@ export default function ShowScreen({ card, openFailed, hasPosition, onClose, onR
               </Pressable>
             )}
           </View>
-        </View>
+        </View>}
       </ScrollView>
       <BottomBar onClose={onClose} />
     </SafeAreaView>

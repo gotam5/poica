@@ -20,7 +20,7 @@ import { TYPE_LABEL, cardPalette, cardTypes, openCardApp } from './src/appLink';
 import CardFace from './src/CardFace';
 import { fetchNearbyStores, storePatternOf, storeRegex } from './src/nearbyStores';
 import { recordUse, usageSummary } from './src/usage';
-import { buildReport, sendReportIfDue } from './src/report';
+import { sendReportIfDue } from './src/report';
 import { CARD_COLORS, KIND_LABEL, useTheme } from './src/theme';
 
 const newId = () => Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
@@ -138,13 +138,16 @@ function Home() {
     try { await saveCard(card); } catch { say('保存できませんでした'); }
   }, [say]);
 
-  const open = useCallback((card) => {
+  // A use counts (and teaches the place) only when the card was actually shown or its app opened.
+  const countUse = useCallback((card) => {
     const { places, added } = learnPlace(card, pos);
     const month = monthKey();
     const useMonths = { ...(card.useMonths || {}), [month]: ((card.useMonths || {})[month] || 0) + 1 };
-    const next = { ...card, places, uses: (card.uses || 0) + 1, useMonths, lastUsed: Date.now() };
-    updateCard(next);
+    updateCard({ ...card, places, uses: (card.uses || 0) + 1, useMonths, lastUsed: Date.now() });
     if (added) say('この場所を覚えました。次からここで一番上に出します');
+  }, [pos, updateCard, say]);
+
+  const open = useCallback((card) => {
     const counted = (failed) => {
       recordUse(card, { failed })
         .then(() => __DEV__ && usageSummary(cards).then((u) => console.log('[usage 30d]', JSON.stringify(u))))
@@ -152,13 +155,18 @@ function Home() {
     };
     if (card.kind === 'app') {
       // Official apps open straight away; the card screen only shows up when the app could not be opened.
-      openCardApp(card).then((ok) => { counted(!ok); if (!ok) { setOpenFailed(true); setShowing(card.id); } });
+      openCardApp(card).then((ok) => {
+        counted(!ok);
+        if (ok) countUse(card);
+        else { setOpenFailed(true); setShowing(card.id); }
+      });
       return;
     }
     counted(false);
+    countUse(card);
     setOpenFailed(false);
     setShowing(card.id);
-  }, [pos, cards, updateCard, say]);
+  }, [cards, countUse]);
 
   const saveDraft = useCallback(async (draft, keepOpen = false) => {
     const { isNew, ...card } = draft;
@@ -258,7 +266,7 @@ function Home() {
         <SettingsScreen
           unlimited={unlimited} iapAvailable={iapAvailable} limits={limits} cardCount={cards.length} placeCount={placeCount}
           storeLookup={storeLookup} onToggleStoreLookup={toggleStoreLookup} onForgetPlaces={forgetAllPlaces}
-          shareUsage={shareUsage} onToggleShareUsage={toggleShareUsage} previewReport={() => buildReport(cards)}
+          shareUsage={shareUsage} onToggleShareUsage={toggleShareUsage}
           onUnlocked={markUnlocked} privacyUrl={PRIVACY_URL} supportUrl={SUPPORT_URL}
         />
       )}
@@ -386,7 +394,7 @@ function Home() {
             },
             onForget: () => { updateCard({ ...shownCard, places: [] }); say('覚えた場所を消しました'); },
           };
-          return <ShowScreen {...common} card={shownCard} openFailed={openFailed} onSetupShortcut={(name) => {
+          return <ShowScreen {...common} card={shownCard} openFailed={openFailed} onOpened={() => { recordUse(shownCard).catch(() => {}); countUse(shownCard); }} onSetupShortcut={(name) => {
             // Close the card, then open its editor on the shortcut settings (iOS can't swap two modals at once).
             const draft = { ...shownCard, appMode: 'shortcut', shortcutName: shownCard.shortcutName || name };
             setShowing(null);
