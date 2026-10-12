@@ -11,6 +11,19 @@ export function bgImageUri(card) {
   return typeof b === 'object' ? b.temp : photoUri(b);
 }
 
+// card.textColor: a hex color (Poica 無制限), or the older 'light' / 'dark'.
+export function textHex(card) {
+  const c = card && card.textColor;
+  if (c === 'dark') return '#15211C';
+  if (typeof c === 'string' && c.startsWith('#')) return c;
+  return '#FFFFFF';
+}
+function isDarkText(hex) {
+  const n = parseInt(hex.slice(1), 16);
+  const lum = 0.299 * ((n >> 16) & 255) + 0.587 * ((n >> 8) & 255) + 0.114 * (n & 255);
+  return lum < 140;
+}
+
 // Card patterns. 'bands' is the original look; the others are for Poica 無制限.
 export const PATTERNS = [
   { key: 'bands', label: '斜めライン' },
@@ -32,7 +45,8 @@ export default function CardFace({ card, palette, big, wide, chip, style, mini }
   const [bg, c1, c2, c3] = palette;
   const img = bgImageUri(card);
   const pattern = card.pattern || 'bands';
-  const dark = card.textColor === 'dark';
+  const ink = textHex(card);
+  const dark = isDarkText(ink);
   const shade = (SHADES.find((x) => x.key === (card.shade || 'soft')) || SHADES[1]).a;
   return (
     <View style={[s.face, { backgroundColor: bg }, big && s.big, mini && s.mini, style]}>
@@ -50,7 +64,7 @@ export default function CardFace({ card, palette, big, wide, chip, style, mini }
             <View style={s.chip}><Text style={s.chipText} numberOfLines={1}>{chip}</Text></View>
           ) : null}
           <View style={s.nameRow}>
-            <Text style={[s.name, big && s.nameBig, dark && s.nameDark, { paddingRight: 44 }]} numberOfLines={2}>{card.name || 'カード名'}</Text>
+            <Text style={[s.name, big && s.nameBig, dark && s.nameDark, { color: ink, paddingRight: 44 }]} numberOfLines={2}>{card.name || 'カード名'}</Text>
           </View>
           <View>
             <View style={s.types}>

@@ -1,10 +1,10 @@
 // Card design. Free: fixed to the shop's colors (or the card color).
 // Poica 無制限: pattern, background / pattern colors, text color, and the user's own picture,
-// shown one section at a time (模様 / 色 / 文字 / 画像) so the screen stays calm.
+// shown one section at a time (模様 / 色 / 画像) so the screen stays calm.
 import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
-import CardFace, { PATTERNS, SHADES } from './CardFace';
+import CardFace, { PATTERNS, SHADES, textHex } from './CardFace';
 import { cardPalette, catalogApp } from './appLink';
 
 const SWATCHES = [
@@ -13,7 +13,7 @@ const SWATCHES = [
   '#15211C', '#FFFFFF',
 ];
 
-const TABS = [['pattern', '模様'], ['color', '色'], ['text', '文字'], ['image', '画像']];
+const TABS = [['pattern', '模様'], ['color', '色'], ['image', '画像']];
 
 export default function DesignPicker({ d, set, allCards = [], canDesign, onLocked, t, big = true }) {
   const s = styles(t);
@@ -54,8 +54,17 @@ export default function DesignPicker({ d, set, allCards = [], canDesign, onLocke
 
   const pattern = d.pattern || 'bands';
   // Color slots that the current pattern actually uses.
-  const slots = [['背景', 0], ...(pattern !== 'plain' ? [['模様', 1]] : []), ...((pattern === 'bands' || pattern === 'circles') ? [['模様2', 2]] : [])];
+  // 'text' is the text color; numbers are palette positions.
+  const twoColors = pattern === 'bands' || pattern === 'circles';
+  const slots = [
+    ['背景色', 0],
+    ...(pattern !== 'plain' ? [[twoColors ? '模様色1' : '模様色', 1]] : []),
+    ...(twoColors ? [['模様色2', 2]] : []),
+    ['文字色', 'text'],
+  ];
   const slotNow = slots.some(([, i]) => i === slot) ? slot : 0;
+  const valueOf = (i) => (i === 'text' ? textHex(d) : palette[i] || '#FFFFFF');
+  const pick = (c) => (slotNow === 'text' ? set({ textColor: c }) : setColor(slotNow, c));
 
   return (
     <View style={{ gap: 14 }}>
@@ -90,12 +99,12 @@ export default function DesignPicker({ d, set, allCards = [], canDesign, onLocke
 
       {tab === 'color' && (
         <View style={{ gap: 12 }}>
-          <View style={s.row}>
+          <View style={s.slots}>
             {slots.map(([l, i]) => {
               const on = slotNow === i;
               return (
                 <Pressable key={i} onPress={() => setSlot(i)} style={[s.slot, on && { borderColor: t.ink }]} accessibilityRole="button" accessibilityState={{ selected: on }}>
-                  <View style={[s.slotDot, { backgroundColor: palette[i] || '#FFFFFF' }]} />
+                  <View style={[s.slotDot, { backgroundColor: valueOf(i) }]} />
                   <Text style={[s.slotText, on && { color: t.ink }]}>{l}</Text>
                 </Pressable>
               );
@@ -103,30 +112,17 @@ export default function DesignPicker({ d, set, allCards = [], canDesign, onLocke
           </View>
           <View style={s.swatches}>
             {SWATCHES.map((c) => {
-              const on = (palette[slotNow] || '').toUpperCase() === c;
+              const on = valueOf(slotNow).toUpperCase() === c;
               return (
-                <Pressable key={c} onPress={() => setColor(slotNow, c)} style={[s.swatch, { backgroundColor: c }, c === '#FFFFFF' && { borderColor: t.line }, on && { borderColor: t.ink, borderWidth: 3 }]} accessibilityRole="button" accessibilityLabel={c} accessibilityState={{ selected: on }} hitSlop={2} />
+                <Pressable key={c} onPress={() => pick(c)} style={[s.swatch, { backgroundColor: c }, c === '#FFFFFF' && { borderColor: t.line }, on && { borderColor: t.ink, borderWidth: 3 }]} accessibilityRole="button" accessibilityLabel={c} accessibilityState={{ selected: on }} hitSlop={2} />
               );
             })}
           </View>
           {app && app.colors ? (
-            <Pressable onPress={() => set({ palette: null, color: app.colors[0], bgImage: null })} hitSlop={6} accessibilityRole="button">
+            <Pressable onPress={() => set({ palette: null, color: app.colors[0], bgImage: null, textColor: null })} hitSlop={6} accessibilityRole="button">
               <Text style={s.reset}>{app.name}の色に戻す</Text>
             </Pressable>
           ) : null}
-        </View>
-      )}
-
-      {tab === 'text' && (
-        <View style={s.row}>
-          {[['light', '白'], ['dark', '黒']].map(([k, l]) => {
-            const on = (d.textColor || 'light') === k;
-            return (
-              <Pressable key={k} onPress={() => set({ textColor: k })} style={[s.opt, on && s.optOn]} accessibilityRole="button" accessibilityState={{ selected: on }}>
-                <Text style={[s.optText, on && s.optTextOn]}>{l}</Text>
-              </Pressable>
-            );
-          })}
         </View>
       )}
 
@@ -178,7 +174,8 @@ const styles = (t) => StyleSheet.create({
   tabOn: { backgroundColor: t.surface },
   tabText: { color: t.muted, fontWeight: '700', fontSize: 14 },
   tabTextOn: { color: t.ink },
-  slot: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, borderWidth: 2, borderColor: t.line, backgroundColor: t.surface, borderRadius: 10, paddingVertical: 8 },
+  slots: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  slot: { flexGrow: 1, flexBasis: '45%', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, borderWidth: 2, borderColor: t.line, backgroundColor: t.surface, borderRadius: 10, paddingVertical: 8 },
   slotDot: { width: 18, height: 18, borderRadius: 9, borderWidth: 1, borderColor: 'rgba(0,0,0,0.15)' },
   slotText: { color: t.muted, fontWeight: '700', fontSize: 13 },
   reset: { color: t.accent, fontSize: 13, fontWeight: '700', textDecorationLine: 'underline' },
