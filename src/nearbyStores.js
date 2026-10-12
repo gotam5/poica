@@ -1,6 +1,9 @@
-// Finds chain shops near the user so their own card/app can be suggested before it was ever used there.
-// Asks OpenStreetMap (Overpass API) with the position rounded to about 100 m. Only shop names that
-// match the user's registered cards are requested, and results are cached per rounded spot.
+// Finds shops near the user, then checks which of them have their own app in Poica's catalog
+// (appCatalog.json's "stores" patterns, matched against the shop's name or brand on OpenStreetMap).
+// A card is suggested only through its catalog app, never by its own name: the name a user gives a card
+// is not the shop's name. Asks the Overpass API with the position rounded to about 100 m; results are
+// cached per rounded spot.
+import catalog from './appCatalog.json';
 import { catalogApp } from './appLink';
 
 const ENDPOINT = 'https://overpass-api.de/api/interpreter';
@@ -10,22 +13,27 @@ const cache = new Map(); // key -> { t, stores }
 
 const round = (v) => Math.round(v * 1000) / 1000; // ~100 m
 
-function escapeRegex(s) {
-  return s.replace(/[.*+?^${}()[\]\\"]/g, '\\$&');
+const CHAINS = catalog.apps
+  .filter((x) => x.stores)
+  .map((x) => ({ id: x.id, re: new RegExp(x.stores, 'i'), pattern: x.stores }));
+const ALL = CHAINS.map((x) => x.pattern).join('|').replace(/"/g, '');
+
+// Which catalog apps belong to this shop (by its name or brand tag).
+function appsOf(tags) {
+  const text = [tags.name, tags.brand, tags['brand:ja'], tags['name:ja']].filter(Boolean).join(' ');
+  return CHAINS.filter((x) => x.re.test(text)).map((x) => x.id);
 }
 
-// patterns: array of "A|B" strings (already safe alternations from the catalog or escaped card names)
-export async function fetchNearbyStores(pos, patterns) {
-  const uniq = [...new Set(patterns.filter(Boolean))];
-  if (!pos || !uniq.length) return [];
+export async function fetchNearbyStores(pos) {
+  if (!pos || !ALL) return [];
   const lat = round(pos.lat);
   const lng = round(pos.lng);
-  const key = `${lat},${lng}|${uniq.sort().join('|')}`;
+  const key = `${lat},${lng}`;
   const hit = cache.get(key);
   if (hit && Date.now() - hit.t < CACHE_MS) return hit.stores;
 
-  const regex = uniq.join('|').replace(/"/g, '');
-  const query = `[out:json][timeout:8];nwr["name"~"${regex}",i](around:${RADIUS_M},${lat},${lng});out center tags 40;`;
+  const around = `(around:${RADIUS_M},${lat},${lng})`;
+  const query = `[out:json][timeout:8];(nwr["name"~"${ALL}",i]${around};nwr["brand"~"${ALL}",i]${around};);out center tags 60;`;
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), 9000);
   try {
@@ -39,11 +47,12 @@ export async function fetchNearbyStores(pos, patterns) {
     const json = await res.json();
     const stores = (json.elements || [])
       .map((e) => ({
-        name: e.tags?.name || '',
+        name: e.tags?.name || e.tags?.brand || '',
         lat: e.lat ?? e.center?.lat,
         lng: e.lon ?? e.center?.lon,
+        apps: appsOf(e.tags || {}),
       }))
-      .filter((s) => s.name && s.lat != null && s.lng != null);
+      .filter((s) => s.name && s.lat != null && s.lng != null && s.apps.length);
     cache.set(key, { t: Date.now(), stores });
     return stores;
   } finally {
@@ -51,21 +60,9 @@ export async function fetchNearbyStores(pos, patterns) {
   }
 }
 
-export function namePattern(name) {
-  const core = String(name || '').replace(/^見本\s*/, '').replace(/(ポイント)?(カード|アプリ|会員証)$/g, '').trim();
-  return core.length >= 2 ? escapeRegex(core) : null;
-}
-
-// The shop-name pattern for a card: its catalog chain, else its own name.
-export function storePatternOf(card, allCards) {
-  if (card.kind === 'app' && card.catalogId) {
-    const app = catalogApp(card.catalogId);
-    return app ? app.stores || null : null; // common points / payments are not tied to a shop
-  }
-  return namePattern(card.name);
-}
-
-export function storeRegex(pattern) {
-  if (!pattern) return null;
-  try { return new RegExp(pattern, 'i'); } catch { return null; }
+// Does this nearby shop have this card's app? Only cards made from the catalog can match.
+export function storeHasCard(store, card) {
+  if (card.kind !== 'app' || !card.catalogId) return false;
+  const app = catalogApp(card.catalogId);
+  return !!app && !!app.stores && store.apps.includes(card.catalogId);
 }

@@ -18,7 +18,7 @@ import { arrange, learnPlace } from './src/geo';
 import { deleteCard, getSetting, keepPhoto, loadCards, removePhoto, saveCard, setSetting } from './src/storage';
 import { TYPE_LABEL, cardPalette, cardTypes, openCardApp } from './src/appLink';
 import CardFace from './src/CardFace';
-import { fetchNearbyStores, storePatternOf, storeRegex } from './src/nearbyStores';
+import { fetchNearbyStores, storeHasCard } from './src/nearbyStores';
 import { recordUse, usageSummary } from './src/usage';
 import { sendReportIfDue } from './src/report';
 import { CARD_COLORS, KIND_LABEL, useTheme } from './src/theme';
@@ -73,21 +73,18 @@ function Home() {
     }
   }, []);
 
-  // Look up chain shops near here for cards tied to a shop (e.g. スギ薬局), so they can be suggested.
-  const patternKey = useMemo(() => {
-    if (!cards) return '';
-    return [...new Set(cards.map((c) => storePatternOf(c, cards)).filter(Boolean))].sort().join('||');
-  }, [cards]);
+  // Look up shops near here and which of them have a catalog app; only when a card comes from the catalog.
+  const hasCatalogCard = !!cards && cards.some((c) => c.kind === 'app' && c.catalogId);
   const posKey = pos ? `${Math.round(pos.lat * 1000)},${Math.round(pos.lng * 1000)}` : '';
   useEffect(() => {
-    if (!storeLookup || !posKey || !patternKey) { setStores([]); return; }
+    if (!storeLookup || !posKey || !hasCatalogCard) { setStores([]); return; }
     let alive = true;
-    fetchNearbyStores(pos, patternKey.split('||'))
+    fetchNearbyStores(pos)
       .then((list) => { if (alive) setStores(list); })
       .catch(() => { if (alive) setStores([]); });
     return () => { alive = false; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [storeLookup, posKey, patternKey]);
+  }, [storeLookup, posKey, hasCatalogCard]);
 
   // The opt-in usage report goes out at most weekly, after config.json says where (see report.js).
   const reportTried = useRef(false);
@@ -221,7 +218,7 @@ function Home() {
     return <View style={[s.root, { alignItems: 'center', justifyContent: 'center' }]}><ActivityIndicator color={t.accent} /></View>;
   }
 
-  const { recent, suggest: allSuggest, all } = arrange(cards, pos, query, stores, (c) => storeRegex(storePatternOf(c, cards)), limits.paidNearbyLimit);
+  const { recent, suggest: allSuggest, all } = arrange(cards, pos, query, stores, storeHasCard, limits.paidNearbyLimit);
   // Free: only the top freeNearbyLimit recommendations (after the usage/distance sort); Poica 無制限 shows paidNearbyLimit.
   const free = iapAvailable && !unlimited;
   const canDesign = !free;

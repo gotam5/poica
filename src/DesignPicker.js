@@ -1,9 +1,10 @@
 // Card design. Free: fixed to the shop's colors (or the card color).
-// Poica 無制限: pattern, preset palettes, background / pattern colors, text color, and the user's own picture.
+// Poica 無制限: pattern, background / pattern colors, text color, and the user's own picture,
+// shown one section at a time (模様 / 色 / 文字 / 画像) so the screen stays calm.
+import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import CardFace, { PATTERNS, SHADES } from './CardFace';
-import { PALETTES } from './theme';
 import { cardPalette, catalogApp } from './appLink';
 
 const SWATCHES = [
@@ -12,8 +13,12 @@ const SWATCHES = [
   '#15211C', '#FFFFFF',
 ];
 
+const TABS = [['pattern', '模様'], ['color', '色'], ['text', '文字'], ['image', '画像']];
+
 export default function DesignPicker({ d, set, allCards = [], canDesign, onLocked, t, big = true }) {
   const s = styles(t);
+  const [tab, setTab] = useState('pattern');
+  const [slot, setSlot] = useState(0);
   const app = d.kind === 'app' && d.catalogId ? catalogApp(d.catalogId) : null;
   const preview = { ...d, name: d.name || app?.name || '' };
   const palette = cardPalette(d, allCards);
@@ -47,103 +52,115 @@ export default function DesignPicker({ d, set, allCards = [], canDesign, onLocke
     set({ palette: next, color: next[0], bgImage: null });
   };
 
-  const current = palette.join();
-  const presets = [
-    ...(app && app.colors ? [{ key: 'app', colors: app.colors, label: `${app.name}の色` }] : []),
-    ...PALETTES.map((p, i) => ({ key: String(i), colors: p, label: `配色${i + 1}` })),
-  ];
   const pattern = d.pattern || 'bands';
+  // Color slots that the current pattern actually uses.
+  const slots = [['背景', 0], ...(pattern !== 'plain' ? [['模様', 1]] : []), ...((pattern === 'bands' || pattern === 'circles') ? [['模様2', 2]] : [])];
+  const slotNow = slots.some(([, i]) => i === slot) ? slot : 0;
 
   return (
-    <View style={{ gap: 12 }}>
+    <View style={{ gap: 14 }}>
       <CardFace card={preview} palette={palette} big={big} />
 
-      <Text style={s.label}>模様</Text>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
-        {PATTERNS.map((p) => {
-          const on = !d.bgImage && pattern === p.key;
+      <View style={s.tabs}>
+        {TABS.map(([k, l]) => {
+          const on = tab === k;
           return (
-            <Pressable key={p.key} onPress={() => set({ pattern: p.key, bgImage: null })} style={s.patWrap} accessibilityRole="button" accessibilityLabel={p.label} accessibilityState={{ selected: on }}>
-              <View style={[s.patFrame, on && { borderColor: t.ink }]}>
-                <CardFace card={{ pattern: p.key }} palette={palette} mini style={{ width: 76 }} />
-              </View>
-              <Text style={[s.small, on && { color: t.ink }]}>{p.label}</Text>
-            </Pressable>
-          );
-        })}
-      </ScrollView>
-
-      <Text style={s.label}>おすすめの配色</Text>
-      <View style={s.palettes}>
-        {presets.map((o) => {
-          const on = !d.bgImage && o.colors.join() === current;
-          return (
-            <Pressable key={o.key} onPress={() => set(o.key === 'app' ? { palette: null, color: o.colors[0], bgImage: null } : { palette: o.colors, color: o.colors[0], bgImage: null })} style={[s.pal, on && { borderColor: t.ink }]} accessibilityRole="button" accessibilityLabel={o.label} accessibilityState={{ selected: on }}>
-              {o.colors.map((c, k) => <View key={k} style={{ flex: k === 0 ? 2 : 1, backgroundColor: c }} />)}
+            <Pressable key={k} onPress={() => setTab(k)} style={[s.tab, on && s.tabOn]} accessibilityRole="tab" accessibilityState={{ selected: on }}>
+              <Text style={[s.tabText, on && s.tabTextOn]}>{l}</Text>
             </Pressable>
           );
         })}
       </View>
 
-      <Swatches s={s} t={t} label="背景の色" value={palette[0]} onPick={(c) => setColor(0, c)} />
-      {pattern !== 'plain' && <Swatches s={s} t={t} label="模様の色" value={palette[1]} onPick={(c) => setColor(1, c)} />}
-      {(pattern === 'bands' || pattern === 'circles') && <Swatches s={s} t={t} label="模様の色(2つめ)" value={palette[2]} onPick={(c) => setColor(2, c)} />}
+      {tab === 'pattern' && (
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
+          {PATTERNS.map((p) => {
+            const on = !d.bgImage && pattern === p.key;
+            return (
+              <Pressable key={p.key} onPress={() => set({ pattern: p.key, bgImage: null })} style={s.patWrap} accessibilityRole="button" accessibilityLabel={p.label} accessibilityState={{ selected: on }}>
+                <View style={[s.patFrame, on && { borderColor: t.ink }]}>
+                  <CardFace card={{ pattern: p.key }} palette={palette} mini style={{ width: 76 }} />
+                </View>
+                <Text style={[s.small, on && { color: t.ink }]}>{p.label}</Text>
+              </Pressable>
+            );
+          })}
+        </ScrollView>
+      )}
 
-      <Text style={s.label}>文字の色</Text>
-      <View style={s.row}>
-        {[['light', '白'], ['dark', '黒']].map(([k, l]) => {
-          const on = (d.textColor || 'light') === k;
-          return (
-            <Pressable key={k} onPress={() => set({ textColor: k })} style={[s.opt, on && s.optOn]} accessibilityRole="button" accessibilityState={{ selected: on }}>
-              <Text style={[s.optText, on && s.optTextOn]}>{l}</Text>
-            </Pressable>
-          );
-        })}
-      </View>
-
-      <Text style={s.label}>好きな画像</Text>
-      <View style={s.row}>
-        <Pressable onPress={pickImage} style={({ pressed }) => [s.btn, { flex: 1 }, pressed && s.pressed]} accessibilityRole="button">
-          <Text style={s.btnText}>{d.bgImage ? '画像を選び直す' : '画像を選ぶ'}</Text>
-        </Pressable>
-        {d.bgImage ? (
-          <Pressable onPress={() => set({ bgImage: null })} style={({ pressed }) => [s.btn, { flex: 1 }, pressed && s.pressed]} accessibilityRole="button">
-            <Text style={s.btnText}>画像を外す</Text>
-          </Pressable>
-        ) : null}
-      </View>
-      {d.bgImage ? (
-        <>
-          <Text style={s.small}>文字を読みやすくする暗さ</Text>
+      {tab === 'color' && (
+        <View style={{ gap: 12 }}>
           <View style={s.row}>
-            {SHADES.map((x) => {
-              const on = (d.shade || 'soft') === x.key;
+            {slots.map(([l, i]) => {
+              const on = slotNow === i;
               return (
-                <Pressable key={x.key} onPress={() => set({ shade: x.key })} style={[s.opt, on && s.optOn]} accessibilityRole="button" accessibilityState={{ selected: on }}>
-                  <Text style={[s.optText, on && s.optTextOn]}>{x.label}</Text>
+                <Pressable key={i} onPress={() => setSlot(i)} style={[s.slot, on && { borderColor: t.ink }]} accessibilityRole="button" accessibilityState={{ selected: on }}>
+                  <View style={[s.slotDot, { backgroundColor: palette[i] || '#FFFFFF' }]} />
+                  <Text style={[s.slotText, on && { color: t.ink }]}>{l}</Text>
                 </Pressable>
               );
             })}
           </View>
-        </>
-      ) : null}
-      <Text style={s.hint}>写真アプリから選んだ画像を、カードの背景にします。画像はこのiPhoneの中だけに保存されます。</Text>
-    </View>
-  );
-}
+          <View style={s.swatches}>
+            {SWATCHES.map((c) => {
+              const on = (palette[slotNow] || '').toUpperCase() === c;
+              return (
+                <Pressable key={c} onPress={() => setColor(slotNow, c)} style={[s.swatch, { backgroundColor: c }, c === '#FFFFFF' && { borderColor: t.line }, on && { borderColor: t.ink, borderWidth: 3 }]} accessibilityRole="button" accessibilityLabel={c} accessibilityState={{ selected: on }} hitSlop={2} />
+              );
+            })}
+          </View>
+          {app && app.colors ? (
+            <Pressable onPress={() => set({ palette: null, color: app.colors[0], bgImage: null })} hitSlop={6} accessibilityRole="button">
+              <Text style={s.reset}>{app.name}の色に戻す</Text>
+            </Pressable>
+          ) : null}
+        </View>
+      )}
 
-function Swatches({ s, t, label, value, onPick }) {
-  return (
-    <View style={{ gap: 6 }}>
-      <Text style={s.label}>{label}</Text>
-      <View style={s.swatches}>
-        {SWATCHES.map((c) => {
-          const on = (value || '').toUpperCase() === c;
-          return (
-            <Pressable key={c} onPress={() => onPick(c)} style={[s.swatch, { backgroundColor: c }, c === '#FFFFFF' && { borderColor: t.line }, on && { borderColor: t.ink, borderWidth: 3 }]} accessibilityRole="button" accessibilityLabel={`${label} ${c}`} accessibilityState={{ selected: on }} hitSlop={2} />
-          );
-        })}
-      </View>
+      {tab === 'text' && (
+        <View style={s.row}>
+          {[['light', '白'], ['dark', '黒']].map(([k, l]) => {
+            const on = (d.textColor || 'light') === k;
+            return (
+              <Pressable key={k} onPress={() => set({ textColor: k })} style={[s.opt, on && s.optOn]} accessibilityRole="button" accessibilityState={{ selected: on }}>
+                <Text style={[s.optText, on && s.optTextOn]}>{l}</Text>
+              </Pressable>
+            );
+          })}
+        </View>
+      )}
+
+      {tab === 'image' && (
+        <View style={{ gap: 10 }}>
+          <View style={s.row}>
+            <Pressable onPress={pickImage} style={({ pressed }) => [s.btn, { flex: 1 }, pressed && s.pressed]} accessibilityRole="button">
+              <Text style={s.btnText}>{d.bgImage ? '画像を選び直す' : '画像を選ぶ'}</Text>
+            </Pressable>
+            {d.bgImage ? (
+              <Pressable onPress={() => set({ bgImage: null })} style={({ pressed }) => [s.btn, { flex: 1 }, pressed && s.pressed]} accessibilityRole="button">
+                <Text style={s.btnText}>画像を外す</Text>
+              </Pressable>
+            ) : null}
+          </View>
+          {d.bgImage ? (
+            <>
+              <Text style={s.small}>文字を読みやすくする暗さ</Text>
+              <View style={s.row}>
+                {SHADES.map((x) => {
+                  const on = (d.shade || 'soft') === x.key;
+                  return (
+                    <Pressable key={x.key} onPress={() => set({ shade: x.key })} style={[s.opt, on && s.optOn]} accessibilityRole="button" accessibilityState={{ selected: on }}>
+                      <Text style={[s.optText, on && s.optTextOn]}>{x.label}</Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
+            </>
+          ) : (
+            <Text style={s.hint}>写真アプリから選んだ画像を、カードの背景にします。画像はこのiPhoneの中だけに保存されます。</Text>
+          )}
+        </View>
+      )}
     </View>
   );
 }
@@ -156,8 +173,15 @@ const styles = (t) => StyleSheet.create({
   pressed: { opacity: 0.6 },
   patWrap: { alignItems: 'center', gap: 4 },
   patFrame: { borderWidth: 3, borderColor: 'transparent', borderRadius: 12 },
-  palettes: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
-  pal: { width: 60, height: 38, borderRadius: 10, borderWidth: 3, borderColor: 'transparent', flexDirection: 'row', overflow: 'hidden' },
+  tabs: { flexDirection: 'row', backgroundColor: t.line, borderRadius: 10, padding: 3 },
+  tab: { flex: 1, paddingVertical: 8, borderRadius: 8, alignItems: 'center' },
+  tabOn: { backgroundColor: t.surface },
+  tabText: { color: t.muted, fontWeight: '700', fontSize: 14 },
+  tabTextOn: { color: t.ink },
+  slot: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, borderWidth: 2, borderColor: t.line, backgroundColor: t.surface, borderRadius: 10, paddingVertical: 8 },
+  slotDot: { width: 18, height: 18, borderRadius: 9, borderWidth: 1, borderColor: 'rgba(0,0,0,0.15)' },
+  slotText: { color: t.muted, fontWeight: '700', fontSize: 13 },
+  reset: { color: t.accent, fontSize: 13, fontWeight: '700', textDecorationLine: 'underline' },
   swatches: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   swatch: { width: 32, height: 32, borderRadius: 16, borderWidth: 1, borderColor: 'transparent' },
   opt: { flex: 1, borderWidth: 1, borderColor: t.line, backgroundColor: t.surface, borderRadius: 10, paddingVertical: 10, alignItems: 'center' },
