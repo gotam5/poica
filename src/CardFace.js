@@ -1,4 +1,5 @@
 import { Image, StyleSheet, Text, View } from 'react-native';
+import Svg, { Circle, Defs, LinearGradient, Pattern, Rect, Stop } from 'react-native-svg';
 import { TYPE_COLORS } from './theme';
 import { TYPE_LABEL, cardTypes } from './appLink';
 import { photoUri } from './storage';
@@ -10,39 +11,103 @@ export function bgImageUri(card) {
   return typeof b === 'object' ? b.temp : photoUri(b);
 }
 
-// Card face drawn from 2-4 colors: background, a wide band, a thin band and a bottom stripe.
+// Card patterns. 'bands' is the original look; the others are for Poica 無制限.
+export const PATTERNS = [
+  { key: 'bands', label: '斜めライン' },
+  { key: 'plain', label: '無地' },
+  { key: 'gradient', label: 'グラデーション' },
+  { key: 'dots', label: 'ドット' },
+  { key: 'circles', label: 'サークル' },
+];
+export const SHADES = [
+  { key: 'none', label: 'なし', a: 0 },
+  { key: 'soft', label: '弱め', a: 0.28 },
+  { key: 'strong', label: '強め', a: 0.5 },
+];
+
+// Card face drawn from 2-4 colors: background, then the pattern's colors.
 // No logos: brands' marks can't be used without each company's permission.
-export default function CardFace({ card, palette, big, wide, chip, style }) {
+// mini: just the face, no text (design swatches).
+export default function CardFace({ card, palette, big, wide, chip, style, mini }) {
   const [bg, c1, c2, c3] = palette;
   const img = bgImageUri(card);
+  const pattern = card.pattern || 'bands';
+  const dark = card.textColor === 'dark';
+  const shade = (SHADES.find((x) => x.key === (card.shade || 'soft')) || SHADES[1]).a;
   return (
-    <View style={[s.face, { backgroundColor: bg }, big && s.big, style]}>
+    <View style={[s.face, { backgroundColor: bg }, big && s.big, mini && s.mini, style]}>
       {img ? (
         <>
           <Image source={{ uri: img }} style={StyleSheet.absoluteFill} resizeMode="cover" />
-          <View style={[StyleSheet.absoluteFill, s.shade]} />
+          {shade > 0 && <View style={[StyleSheet.absoluteFill, { backgroundColor: dark ? `rgba(255,255,255,${shade})` : `rgba(0,0,0,${shade})` }]} />}
         </>
       ) : (
+        <PatternLayer pattern={pattern} bg={bg} c1={c1} c2={c2} c3={c3} />
+      )}
+      {mini ? null : (
         <>
-          {c1 && <View style={[s.band, { backgroundColor: c1 }]} />}
-          {c2 && <View style={[s.thin, { backgroundColor: c2 }]} />}
-          {c3 && <View style={[s.stripe, { backgroundColor: c3 }]} />}
+          {chip != null ? (
+            <View style={s.chip}><Text style={s.chipText} numberOfLines={1}>{chip}</Text></View>
+          ) : null}
+          <View style={s.nameRow}>
+            <Text style={[s.name, big && s.nameBig, dark && s.nameDark, { paddingRight: 44 }]} numberOfLines={2}>{card.name || 'カード名'}</Text>
+          </View>
+          <View>
+            <View style={s.types}>
+              {cardTypes(card).map((ty) => (
+                <View key={ty} style={[s.type, { backgroundColor: TYPE_COLORS[ty].bg }]}><Text style={[s.typeText, { color: TYPE_COLORS[ty].fg }]}>{TYPE_LABEL[ty]}</Text></View>
+              ))}
+            </View>
+          </View>
         </>
       )}
-      {chip != null ? (
-        <View style={s.chip}><Text style={s.chipText} numberOfLines={1}>{chip}</Text></View>
-      ) : null}
-      <View style={s.nameRow}>
-        <Text style={[s.name, big && s.nameBig, { paddingRight: 44 }]} numberOfLines={2}>{card.name || 'カード名'}</Text>
-      </View>
-      <View>
-        <View style={s.types}>
-          {cardTypes(card).map((ty) => (
-            <View key={ty} style={[s.type, { backgroundColor: TYPE_COLORS[ty].bg }]}><Text style={[s.typeText, { color: TYPE_COLORS[ty].fg }]}>{TYPE_LABEL[ty]}</Text></View>
-          ))}
-        </View>
-      </View>
     </View>
+  );
+}
+
+function PatternLayer({ pattern, bg, c1, c2, c3 }) {
+  if (pattern === 'plain') return null;
+  if (pattern === 'bands') {
+    return (
+      <>
+        {c1 && <View style={[s.band, { backgroundColor: c1 }]} />}
+        {c2 && <View style={[s.thin, { backgroundColor: c2 }]} />}
+        {c3 && <View style={[s.stripe, { backgroundColor: c3 }]} />}
+      </>
+    );
+  }
+  const a = c1 || '#FFFFFF';
+  const b = c2 || a;
+  return (
+    <Svg style={StyleSheet.absoluteFill} width="100%" height="100%" pointerEvents="none">
+      {pattern === 'gradient' && (
+        <>
+          <Defs>
+            <LinearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+              <Stop offset="0" stopColor={bg} />
+              <Stop offset="1" stopColor={a} />
+            </LinearGradient>
+          </Defs>
+          <Rect x="0" y="0" width="100%" height="100%" fill="url(#g)" />
+        </>
+      )}
+      {pattern === 'dots' && (
+        <>
+          <Defs>
+            <Pattern id="d" x="0" y="0" width="16" height="16" patternUnits="userSpaceOnUse">
+              <Circle cx="8" cy="8" r="2.6" fill={a} fillOpacity="0.45" />
+            </Pattern>
+          </Defs>
+          <Rect x="0" y="0" width="100%" height="100%" fill="url(#d)" />
+        </>
+      )}
+      {pattern === 'circles' && (
+        <>
+          <Circle cx="92%" cy="10%" r="70" fill={a} fillOpacity="0.85" />
+          <Circle cx="78%" cy="105%" r="46" fill={b} fillOpacity="0.7" />
+        </>
+      )}
+    </Svg>
   );
 }
 
@@ -50,12 +115,13 @@ const shadow = { textShadowColor: 'rgba(0,0,0,0.35)', textShadowOffset: { width:
 const s = StyleSheet.create({
   face: { borderRadius: 14, paddingVertical: 12, paddingHorizontal: 12, minHeight: 112, justifyContent: 'space-between', gap: 6, overflow: 'hidden' },
   big: { minHeight: 140, paddingHorizontal: 16, paddingVertical: 14 },
+  mini: { minHeight: 0, height: 44, padding: 0, borderRadius: 9 },
   band: { position: 'absolute', right: 6, top: -60, width: 30, height: 260, transform: [{ rotate: '22deg' }] },
   thin: { position: 'absolute', right: 44, top: -60, width: 9, height: 260, transform: [{ rotate: '22deg' }] },
-  shade: { backgroundColor: 'rgba(0,0,0,0.28)' },
   stripe: { position: 'absolute', left: 0, right: 0, bottom: 0, height: 6 },
   nameRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
   name: { flex: 1, paddingRight: 8, color: '#FFF', fontSize: 18, fontWeight: '900', lineHeight: 23, ...shadow },
+  nameDark: { color: '#15211C', textShadowColor: 'rgba(255,255,255,0.4)' },
   nameBig: { fontSize: 24, lineHeight: 30 },
   types: { flexDirection: 'row', flexWrap: 'wrap', gap: 4, paddingRight: 40 },
   type: { borderRadius: 999, paddingHorizontal: 8, paddingVertical: 2 },

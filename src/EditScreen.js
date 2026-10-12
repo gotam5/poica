@@ -60,6 +60,18 @@ export default function EditScreen({ initial, allCards = [], canDesign = true, l
     onSave({ ...d, name, code: (d.code || '').trim(), appMode: mode, appUrl, shortcutName });
   };
 
+  // Cards made from the official-app list can't change the app or how it opens; editing is about the design.
+  // (A card switched to a shortcut after failing to open still shows its shortcut name.)
+  const locked = !isNew && initial.kind === 'app' && !!initial.catalogId;
+  const lockedApp = locked ? catalogApp(initial.catalogId) : null;
+  const design = (
+    <View style={s.field}>
+      <Text style={locked ? s.bigLabel : s.label}>カードのデザイン</Text>
+      <DesignPicker d={d} set={set} allCards={allCards} canDesign={canDesign} onLocked={() => setPaywall('design')} t={t} big={locked} />
+      <Text style={s.hint}>公式アプリは、そのお店のイメージ色を最初から使います。ロゴは各社の許可が必要なため使っていません。</Text>
+    </View>
+  );
+
   const known = lookupKnownApp(d.name);
   // Official apps from the list are named after the app; the name can be changed later by long-pressing the card on Home.
   const showName = d.kind !== 'app' || !isNew || appMode(d) !== 'catalog';
@@ -83,7 +95,16 @@ export default function EditScreen({ initial, allCards = [], canDesign = true, l
             </View>
           )}
 
-          <View style={s.field}>
+          {locked && design}
+          {locked && (
+            <View style={s.appInfo}>
+              <Text style={s.label}>公式アプリ</Text>
+              <Text style={s.appInfoName}>{lockedApp ? lockedApp.name : d.name}</Text>
+              <Text style={s.hint}>アプリや開き方を変えたいときは、このカードを削除して追加し直してください。</Text>
+            </View>
+          )}
+
+          {!locked && <View style={s.field}>
             <Text style={s.label}>登録のしかた</Text>
             <View style={s.seg}>
               {(custom ? ['barcode', 'app'] : ['app', 'barcode']).map((k) => (
@@ -92,7 +113,7 @@ export default function EditScreen({ initial, allCards = [], canDesign = true, l
                 </Pressable>
               ))}
             </View>
-          </View>
+          </View>}
 
           {showName && (
             <View style={s.field}>
@@ -110,7 +131,7 @@ export default function EditScreen({ initial, allCards = [], canDesign = true, l
 
           {d.kind === 'app' && (
             <>
-              {!custom && <View style={s.field}>
+              {!custom && !locked && <View style={s.field}>
                 <Text style={s.label}>アプリの開き方</Text>
                 <View style={s.seg}>
                   {[['catalog', '一覧から選ぶ'], ['shortcut', '一覧にないアプリ']].map(([k, l]) => (
@@ -120,7 +141,7 @@ export default function EditScreen({ initial, allCards = [], canDesign = true, l
                   ))}
                 </View>
               </View>}
-              {appMode(d) === 'catalog' && (() => {
+              {appMode(d) === 'catalog' && !locked && (() => {
                 const chosen = catalogApp(d.catalogId);
                 const q = appQuery.trim().toLowerCase();
                 const list = CATALOG.filter((a) => !q || a.name.toLowerCase().includes(q) || a.keys.some((k) => k.toLowerCase().includes(q)));
@@ -172,7 +193,7 @@ export default function EditScreen({ initial, allCards = [], canDesign = true, l
                 <Text style={s.tryText}>↗ 試しに開く</Text>
                 <Text style={s.tryHint}>ちゃんと開けるか、ここで確かめられます</Text>
               </Pressable>
-              {appMode(d) === 'shortcut' && (
+              {appMode(d) === 'shortcut' && !locked && (
                 <View style={s.field}>
                   <Text style={s.subLabel}>このアプリでできること(両方選べます)</Text>
                   <View style={s.chips}>
@@ -189,7 +210,7 @@ export default function EditScreen({ initial, allCards = [], canDesign = true, l
                   </View>
                 </View>
               )}
-              {appMode(d) === 'catalog' && catalogApp(d.catalogId)?.openWith !== 'shortcut' && (catalogApp(d.catalogId)?.schemes.length || 0) > 1 && (() => {
+              {appMode(d) === 'catalog' && !locked && catalogApp(d.catalogId)?.openWith !== 'shortcut' && (catalogApp(d.catalogId)?.schemes.length || 0) > 1 && (() => {
                 const urls = catalogApp(d.catalogId).schemes.map(schemeUrl);
                 const current = launchCandidates(d)[0];
                 return (
@@ -216,11 +237,7 @@ export default function EditScreen({ initial, allCards = [], canDesign = true, l
             </>
           )}
 
-          <View style={s.field}>
-            <Text style={s.label}>カードのデザイン</Text>
-            <DesignPicker d={d} set={set} allCards={allCards} canDesign={canDesign} onLocked={() => setPaywall('design')} t={t} big={false} />
-            <Text style={s.hint}>公式アプリは、そのお店のイメージ色を最初から使います。ロゴは各社の許可が必要なため使っていません。</Text>
-          </View>
+          {!locked && design}
 
           {!isNew && (confirmDelete ? (
             <View style={s.confirm}>
@@ -290,5 +307,8 @@ const styles = (t) => StyleSheet.create({
   stepName: { flex: 1, color: t.ink, fontSize: 15, fontWeight: '700' },
   iconBtn: { width: 32, height: 32, borderRadius: 8, borderWidth: 1, borderColor: t.line, alignItems: 'center', justifyContent: 'center' },
   iconText: { color: t.ink, fontSize: 15, fontWeight: '700' },
+  bigLabel: { color: t.ink, fontWeight: '800', fontSize: 17 },
+  appInfo: { backgroundColor: t.surface, borderWidth: 1, borderColor: t.line, borderRadius: 12, padding: 12, gap: 4 },
+  appInfoName: { color: t.ink, fontSize: 16, fontWeight: '800' },
   subLabel: { color: t.muted, fontSize: 12, fontWeight: '700', marginTop: 4 },
 });

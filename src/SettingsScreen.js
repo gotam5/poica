@@ -6,7 +6,7 @@ import appJson from '../app.json';
 
 const VERSION = appJson.expo.version;
 
-export default function SettingsScreen({ unlimited, iapAvailable, limits, cardCount, placeCount, storeLookup, onToggleStoreLookup, onForgetPlaces, onUnlocked, privacyUrl, supportUrl }) {
+export default function SettingsScreen({ unlimited, iapAvailable, limits, cardCount, placeCount, storeLookup, onToggleStoreLookup, onForgetPlaces, shareUsage, onToggleShareUsage, previewReport, onUnlocked, privacyUrl, supportUrl }) {
   const t = useTheme();
   const s = styles(t);
   const [paywall, setPaywall] = useState(null);
@@ -16,6 +16,12 @@ export default function SettingsScreen({ unlimited, iapAvailable, limits, cardCo
       { text: 'やめる', style: 'cancel' },
       { text: 'すべて消す', style: 'destructive', onPress: onForgetPlaces },
     ]);
+  };
+
+  const showReport = async () => {
+    let text = '';
+    try { text = JSON.stringify(await previewReport(), null, 1); } catch { text = '読み込めませんでした'; }
+    Alert.alert('送る内容', text);
   };
 
   return (
@@ -50,6 +56,21 @@ export default function SettingsScreen({ unlimited, iapAvailable, limits, cardCo
           <Pressable onPress={forget} disabled={!placeCount} style={({ pressed }) => [s.linkRow, pressed && s.pressed, !placeCount && { opacity: 0.4 }]} accessibilityRole="button">
             <Text style={[s.rowTitle, { color: t.near }]}>覚えた場所をすべて消す</Text>
             <Text style={s.rowText}>{placeCount ? `いま${placeCount}か所を覚えています。` : 'まだ覚えた場所はありません。'}</Text>
+          </Pressable>
+        </View>
+
+        <Text style={s.sec}>データの送信</Text>
+        <View style={s.box}>
+          <Pressable onPress={onToggleShareUsage} style={s.switchRow} accessibilityRole="switch" accessibilityState={{ checked: shareUsage }}>
+            <View style={{ flex: 1 }}>
+              <Text style={s.rowTitle}>利用データを送る</Text>
+              <Text style={s.rowText}>オンにすると、アプリの改善のために、どの種類のカードを何回開いたか・開けなかったかの集計を週に1回まで送ります。カードの名前・番号・写真・場所や、あなたを特定できる情報は送りません。オフの間は何も送りません。</Text>
+            </View>
+            <View style={[s.switch, shareUsage && s.switchOn]}><View style={[s.knob, shareUsage && s.knobOn]} /></View>
+          </Pressable>
+          <View style={s.line} />
+          <Pressable onPress={showReport} style={({ pressed }) => [s.linkRow, pressed && s.pressed]} accessibilityRole="button">
+            <Text style={[s.rowTitle, { color: t.accent }]}>送る内容を見る</Text>
           </Pressable>
         </View>
 

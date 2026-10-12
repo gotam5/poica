@@ -33,8 +33,11 @@ export async function refreshLimits() {
     const timer = setTimeout(() => ctl.abort(), 8000);
     const res = await fetch(LIMITS_URL, { signal: ctl.signal, cache: 'no-store' }).finally(() => clearTimeout(timer));
     if (!res.ok) return null;
-    const limits = clean(await res.json(), await loadLimits());
+    const raw = await res.json();
+    const limits = clean(raw, await loadLimits());
     await setSetting('limits', limits);
+    // Where the opt-in usage report goes (report.js); empty or missing turns sending off.
+    await setSetting('usageUrl', typeof raw?.usageUrl === 'string' && /^https:\/\//.test(raw.usageUrl) ? raw.usageUrl : null);
     await setSetting('limitsFetchedAt', Date.now());
     return limits;
   } catch {

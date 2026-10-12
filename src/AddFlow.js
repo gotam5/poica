@@ -86,21 +86,13 @@ export default function AddFlow({ initial, allCards = [], canDesign, limits, onU
         {step === 'pick' && (
           <ScrollView contentContainerStyle={s.body} keyboardShouldPersistTaps="handled">
             <Text style={s.lead}>登録するカードを選んでください</Text>
-            <Pressable onPress={onCustom} style={({ pressed }) => [s.custom, pressed && s.pressed]} accessibilityRole="button">
-              <Text style={s.customIcon}>＋</Text>
-              <View style={{ flex: 1 }}>
-                <Text style={s.customTitle}>自分でカードを作る</Text>
-                <Text style={s.customText}>バーコード・写真で登録する、一覧にないアプリ</Text>
-              </View>
-              <Text style={s.chev}>›</Text>
-            </Pressable>
             <TextInput style={s.input} value={query} onChangeText={setQuery} placeholder="お店・アプリの名前で探す" placeholderTextColor={t.muted} autoCorrect={false} clearButtonMode="while-editing" />
             {(() => {
               const q = query.trim().toLowerCase();
               const list = CATALOG
                 .filter((a) => !q || a.name.toLowerCase().includes(q) || a.keys.some((k) => k.toLowerCase().includes(q)))
                 .sort((a, b) => installed.includes(b.id) - installed.includes(a.id));
-              if (!list.length) return <Text style={s.hint}>見つかりません。上の「自分でカードを作る」から登録できます。</Text>;
+              if (!list.length) return <Text style={s.hint}>見つかりません。下の「自分でカードを作る」から登録できます。</Text>;
               // Apps already registered go to the bottom and can't be picked again (an app has only one account per phone).
               const added = new Set(allCards.filter((c) => c.kind === 'app' && c.catalogId).map((c) => c.catalogId));
               const fresh = list.filter((a) => !added.has(a.id));
@@ -137,6 +129,15 @@ export default function AddFlow({ initial, allCards = [], canDesign, limits, onU
                 </>
               );
             })()}
+            <Text style={s.groupLabel}>一覧にないとき</Text>
+            <Pressable onPress={onCustom} style={({ pressed }) => [s.custom, pressed && s.pressed]} accessibilityRole="button">
+              <Text style={s.customIcon}>＋</Text>
+              <View style={{ flex: 1 }}>
+                <Text style={s.customTitle}>自分でカードを作る</Text>
+                <Text style={s.customText}>バーコード・写真で登録する、一覧にないアプリ</Text>
+              </View>
+              <Text style={s.chev}>›</Text>
+            </Pressable>
           </ScrollView>
         )}
 

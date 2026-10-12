@@ -20,6 +20,7 @@ import { TYPE_LABEL, cardPalette, cardTypes, openCardApp } from './src/appLink';
 import CardFace from './src/CardFace';
 import { fetchNearbyStores, storePatternOf, storeRegex } from './src/nearbyStores';
 import { recordUse, usageSummary } from './src/usage';
+import { buildReport, sendReportIfDue } from './src/report';
 import { CARD_COLORS, KIND_LABEL, useTheme } from './src/theme';
 
 const newId = () => Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
@@ -50,6 +51,7 @@ function Home() {
   const [paywall, setPaywall] = useState(null); // null | 'cards' | 'suggest'
   const [limits, setLimits] = useState(DEFAULT_LIMITS);
   const [tab, setTab] = useState('home'); // home | map | stats | settings
+  const [shareUsage, setShareUsage] = useState(false);
   const scrollRef = useRef(null);
 
   const say = useCallback((text) => {
@@ -62,6 +64,7 @@ function Home() {
     // セット was removed; old set cards stay hidden.
     loadCards().then((list) => setCards(list.filter((c) => c.kind !== 'set'))).catch(() => setCards([]));
     getSetting('storeLookup', true).then(setStoreLookup).catch(() => {});
+    getSetting('shareUsage', false).then(setShareUsage).catch(() => {});
     // The purchase is remembered on the phone so the limit stays off offline; StoreKit is the source of truth when reachable.
     loadLimits().then(setLimits).then(() => refreshLimits()).then((l) => l && setLimits(l)).catch(() => {});
     getSetting('unlimited', false).then((v) => v && setUnlimited(true)).catch(() => {});
@@ -85,6 +88,21 @@ function Home() {
     return () => { alive = false; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [storeLookup, posKey, patternKey]);
+
+  // The opt-in usage report goes out at most weekly, after config.json says where (see report.js).
+  const reportTried = useRef(false);
+  useEffect(() => {
+    if (!cards || !shareUsage || reportTried.current) return;
+    reportTried.current = true;
+    const id = setTimeout(() => sendReportIfDue(cards), 15000);
+    return () => clearTimeout(id);
+  }, [cards, shareUsage]);
+
+  const toggleShareUsage = () => {
+    const next = !shareUsage;
+    setShareUsage(next);
+    setSetting('shareUsage', next).catch(() => {});
+  };
 
   const toggleStoreLookup = () => {
     const next = !storeLookup;
@@ -240,6 +258,7 @@ function Home() {
         <SettingsScreen
           unlimited={unlimited} iapAvailable={iapAvailable} limits={limits} cardCount={cards.length} placeCount={placeCount}
           storeLookup={storeLookup} onToggleStoreLookup={toggleStoreLookup} onForgetPlaces={forgetAllPlaces}
+          shareUsage={shareUsage} onToggleShareUsage={toggleShareUsage} previewReport={() => buildReport(cards)}
           onUnlocked={markUnlocked} privacyUrl={PRIVACY_URL} supportUrl={SUPPORT_URL}
         />
       )}
