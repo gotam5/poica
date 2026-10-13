@@ -1,6 +1,6 @@
 // 設定 tab. The top page is a plain list; each item opens its own page, where the explanation lives.
 import { useRef, useState } from 'react';
-import { Alert, Animated, Linking, PanResponder, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
+import { Alert, Animated, LayoutAnimation, Linking, PanResponder, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { PaywallModal } from './Paywall';
 import Toggle from './Toggle';
 import CardFace from './CardFace';
@@ -10,12 +10,12 @@ import { useTheme } from './theme';
 import appJson from '../app.json';
 
 const VERSION = appJson.expo.version;
-const POSITIONS = [['top', '一番上'], ['afterRecent', '「前回使った」の下'], ['off', '表示しない']];
+const HOME_LABEL = { recent: '前回使った', suggest: '近くのおすすめ', list: 'カード一覧' };
 
 function SettingsPages({ page, go, ...props }) {
   const {
     unlimited, iapAvailable, limits, cards, ordered, manualOrder, onEditCard, onSaveOrder, onAutoOrder,
-    suggestPos, suggestCount, onSuggestPos, onSuggestCount,
+    suggestPos, suggestCount, onSuggestPos, onSuggestCount, homeOrder, onHomeOrder,
     placeCount, storeLookup, onToggleStoreLookup, onForgetPlaces, shareUsage, onToggleShareUsage,
     onUnlocked, privacyUrl, supportUrl,
   } = props;
@@ -86,17 +86,41 @@ function SettingsPages({ page, go, ...props }) {
     );
   }
 
+  if (page === 'home') {
+    const move = (i, d) => {
+      const next = [...homeOrder];
+      [next[i], next[i + d]] = [next[i + d], next[i]];
+      LayoutAnimation.configureNext(LayoutAnimation.create(260, LayoutAnimation.Types.easeInEaseOut, LayoutAnimation.Properties.opacity));
+      onHomeOrder(next);
+    };
+    return (
+      <Sub s={s} go={go} title="ホームの並び順">
+        <View style={s.box}>
+          {homeOrder.map((k, i) => (
+            <View key={k} style={[s.row, i < homeOrder.length - 1 && s.rowLine]}>
+              <Text style={s.rowLabel}>{HOME_LABEL[k]}</Text>
+              <Pressable onPress={() => move(i, -1)} disabled={i === 0} hitSlop={6} style={({ pressed }) => [s.arrow, i === 0 && s.arrowOff, pressed && s.pressed]} accessibilityRole="button" accessibilityLabel={`${HOME_LABEL[k]}を上へ`}>
+                <Text style={s.arrowText}>↑</Text>
+              </Pressable>
+              <Pressable onPress={() => move(i, 1)} disabled={i === homeOrder.length - 1} hitSlop={6} style={({ pressed }) => [s.arrow, i === homeOrder.length - 1 && s.arrowOff, pressed && s.pressed]} accessibilityRole="button" accessibilityLabel={`${HOME_LABEL[k]}を下へ`}>
+                <Text style={s.arrowText}>↓</Text>
+              </Pressable>
+            </View>
+          ))}
+        </View>
+        <Text style={s.lead}>ホーム画面に表示する順番です。</Text>
+      </Sub>
+    );
+  }
+
   if (page === 'suggest') {
     return (
       <Sub s={s} go={go} title="おすすめの表示">
-        <Text style={s.sec}>表示する場所</Text>
         <View style={s.box}>
-          {POSITIONS.map(([k, l], i) => (
-            <Pressable key={k} onPress={() => onSuggestPos(k)} style={[s.row, i < POSITIONS.length - 1 && s.rowLine]} accessibilityRole="radio" accessibilityState={{ checked: suggestPos === k }}>
-              <Text style={s.rowLabel}>{l}</Text>
-              {suggestPos === k ? <Text style={s.check}>✓</Text> : null}
-            </Pressable>
-          ))}
+          <Pressable onPress={() => onSuggestPos(suggestPos === 'off' ? 'afterRecent' : 'off')} style={s.switchRow} accessibilityRole="switch" accessibilityState={{ checked: suggestPos !== 'off' }}>
+            <Text style={[s.rowLabel, { flex: 1 }]}>近くのおすすめを表示する</Text>
+            <Toggle value={suggestPos !== 'off'} t={t} />
+          </Pressable>
         </View>
 
         <Text style={s.sec}>表示する数</Text>
@@ -206,11 +230,8 @@ function SettingsPages({ page, go, ...props }) {
         <Text style={s.sec}>カード</Text>
         <View style={s.box}>
           <Row s={s} go={go} label="カードの編集" to="edit" />
-          <Row s={s} go={go} label="並び替え" value={manualOrder ? '固定' : '自動'} to="order" last />
-        </View>
-
-        <Text style={s.sec}>近くのおすすめ</Text>
-        <View style={s.box}>
+          <Row s={s} go={go} label="並び替え" value={manualOrder ? '固定' : '自動'} to="order" />
+          <Row s={s} go={go} label="ホームの並び順" to="home" />
           <Row s={s} go={go} label="おすすめの表示" value={suggestPos === 'off' ? '表示しない' : `${count}件`} to="suggest" />
           <Row s={s} go={go} label="近くのお店を調べる" value={storeLookup ? 'オン' : 'オフ'} to="lookup" />
           <Row s={s} go={go} label="覚えた場所のリセット" value={`${placeCount}か所`} to="places" last />
@@ -324,6 +345,9 @@ const styles = (t) => StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center', gap: 8, minHeight: 50, paddingVertical: 10 },
   rowLine: { borderBottomWidth: 1, borderBottomColor: t.line },
   rowLabel: { flex: 1, fontSize: 16, fontWeight: '600', color: t.ink },
+  arrow: { width: 34, height: 30, borderRadius: 8, borderWidth: 1, borderColor: t.accent, alignItems: 'center', justifyContent: 'center' },
+  arrowOff: { borderColor: t.line, opacity: 0.4 },
+  arrowText: { color: t.accent, fontSize: 16, fontWeight: '800' },
   rowSub: { fontSize: 12, color: t.muted, marginTop: 2 },
   rowValue: { fontSize: 15, color: t.muted },
   chev: { fontSize: 22, color: t.muted, marginLeft: 2, marginTop: -2 },

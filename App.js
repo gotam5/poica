@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ActionSheetIOS, ActivityIndicator, Alert, AppState, LayoutAnimation, Linking, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import * as Location from 'expo-location';
 import { StatusBar } from 'expo-status-bar';
@@ -24,6 +24,8 @@ import { recordUse, usageSummary } from './src/usage';
 import { sendReportIfDue } from './src/report';
 import Svg, { Circle, Path } from 'react-native-svg';
 import { CARD_COLORS, KIND_LABEL, useTheme } from './src/theme';
+
+const HOME_ORDER = ['recent', 'suggest', 'list'];
 
 const newId = () => Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
 
@@ -58,7 +60,8 @@ function Home() {
   const [usageAsked, setUsageAsked] = useState(true); // asked about sending usage data (first visit to 記録)
   const [cardOrder, setCardOrder] = useState(null); // ids in the order the user chose; null = most used first
   const [reordering, setReordering] = useState(null); // focused card id while the reorder screen is open
-  const [suggestPos, setSuggestPos] = useState('afterRecent'); // top | afterRecent | off
+  const [suggestPos, setSuggestPos] = useState('afterRecent'); // 'off' hides 近くのおすすめ; anything else shows it
+  const [homeOrder, setHomeOrder] = useState(HOME_ORDER); // order of the blocks on ホーム
   const [suggestCount, setSuggestCount] = useState(null); // null = as many as allowed
   const scrollRef = useRef(null);
 
@@ -75,6 +78,11 @@ function Home() {
     getSetting('shareUsage', false).then(setShareUsage).catch(() => {});
     getSetting('usageAsked', false).then(setUsageAsked).catch(() => {});
     getSetting('suggestPos', 'afterRecent').then(setSuggestPos).catch(() => {});
+    getSetting('homeOrder', null).then(async (v) => {
+      if (Array.isArray(v) && v.length === HOME_ORDER.length && HOME_ORDER.every((k) => v.includes(k))) return setHomeOrder(v);
+      // Older versions only had 「おすすめを一番上」.
+      if ((await getSetting('suggestPos', 'afterRecent')) === 'top') setHomeOrder(['suggest', 'recent', 'list']);
+    }).catch(() => {});
     getSetting('suggestCount', null).then(setSuggestCount).catch(() => {});
     getSetting('cardOrder', null).then((v) => Array.isArray(v) && setCardOrder(v)).catch(() => {});
     // The purchase is remembered on the phone so the limit stays off offline; StoreKit is the source of truth when reachable.
@@ -311,6 +319,7 @@ function Home() {
     setReordering(null);
   };
   const changeSuggestPos = (v) => { setSuggestPos(v); setSetting('suggestPos', v).catch(() => {}); };
+  const changeHomeOrder = (v) => { setHomeOrder(v); setSetting('homeOrder', v).catch(() => {}); };
   const changeSuggestCount = (v) => { setSuggestCount(v); setSetting('suggestCount', v).catch(() => {}); };
   const autoOrder = () => {
     setCardOrder(null);
@@ -387,48 +396,7 @@ function Home() {
           )}
         </View>
   );
-
-  return (
-    <SafeAreaView style={s.root} edges={['top']}>
-      <StatusBar style="auto" />
-      {tab === 'map' && <MapScreen cards={cards} pos={pos} t={t} onForgetPlaces={forgetPlacesOf} />}
-      {tab === 'stats' && <StatsScreen cards={cards} t={t} onEdit={(c) => setEditing({ ...c })} />}
-      {tab === 'settings' && (
-        <SettingsScreen
-          unlimited={unlimited} iapAvailable={iapAvailable} limits={limits} placeCount={placeCount}
-          cards={cards} ordered={ordered(cards)} manualOrder={!!cardOrder} onEditCard={(c) => setEditing({ ...c })}
-          onSaveOrder={(ids) => { setCardOrder(ids); setSetting('cardOrder', ids).catch(() => {}); }} onAutoOrder={autoOrder}
-          suggestPos={suggestPos} suggestCount={suggestCount} onSuggestPos={changeSuggestPos} onSuggestCount={changeSuggestCount}
-          storeLookup={storeLookup} onToggleStoreLookup={toggleStoreLookup} onForgetPlaces={forgetAllPlaces}
-          shareUsage={shareUsage} onToggleShareUsage={toggleShareUsage}
-          onUnlocked={markUnlocked} privacyUrl={PRIVACY_URL} supportUrl={SUPPORT_URL}
-        />
-      )}
-      {tab === 'home' && <ScrollView ref={scrollRef} contentContainerStyle={s.wrap}>
-        <View style={s.header}>
-          <Text style={s.logo}>Poi<Text style={{ color: t.accent }}>ca</Text></Text>
-          <Pressable onPress={locate} style={s.loc} accessibilityRole="button" accessibilityLabel={`${locLabel}。タップで取り直す`}>
-            <View style={[s.dot, loc.state === 'ok' && { backgroundColor: t.accent }, (loc.state === 'denied' || loc.state === 'fail') && { backgroundColor: t.near }]} />
-            <Text style={s.locText}>{locLabel}</Text>
-          </Pressable>
-        </View>
-
-        {loc.state === 'denied' && (
-          <View style={s.notice}>
-            <Text style={s.noticeText}>
-              <Text style={{ fontWeight: '700', color: t.ink }}>近い順の並べ替えは止まっています。</Text>
-              位置情報を「使用中のみ」で許可すると、開いたときに近くの店のカードが一番上に出ます。
-            </Text>
-            <Pressable onPress={() => Linking.openSettings()} style={s.smallBtn} accessibilityRole="button">
-              <Text style={s.smallBtnText}>設定を開く</Text>
-            </Pressable>
-          </View>
-        )}
-
-        {suggestPos === 'top' && suggestBlock}
-        {recentBlock}
-        {suggestPos === 'afterRecent' && suggestBlock}
-
+  const listBlock = (
         <View>
           <View style={s.listHead}>
             <Text style={[s.sec, { marginBottom: 0 }]}>カード一覧 {cards.length ? <Text style={s.count}>{cards.length}</Text> : null}</Text>
@@ -471,6 +439,48 @@ function Home() {
             </Pressable>
           )}
         </View>
+  );
+
+  return (
+    <SafeAreaView style={s.root} edges={['top']}>
+      <StatusBar style="auto" />
+      {tab === 'map' && <MapScreen cards={cards} pos={pos} t={t} onForgetPlaces={forgetPlacesOf} />}
+      {tab === 'stats' && <StatsScreen cards={cards} t={t} onEdit={(c) => setEditing({ ...c })} />}
+      {tab === 'settings' && (
+        <SettingsScreen
+          unlimited={unlimited} iapAvailable={iapAvailable} limits={limits} placeCount={placeCount}
+          cards={cards} ordered={ordered(cards)} manualOrder={!!cardOrder} onEditCard={(c) => setEditing({ ...c })}
+          onSaveOrder={(ids) => { setCardOrder(ids); setSetting('cardOrder', ids).catch(() => {}); }} onAutoOrder={autoOrder}
+          suggestPos={suggestPos} homeOrder={homeOrder} onHomeOrder={changeHomeOrder} suggestCount={suggestCount} onSuggestPos={changeSuggestPos} onSuggestCount={changeSuggestCount}
+          storeLookup={storeLookup} onToggleStoreLookup={toggleStoreLookup} onForgetPlaces={forgetAllPlaces}
+          shareUsage={shareUsage} onToggleShareUsage={toggleShareUsage}
+          onUnlocked={markUnlocked} privacyUrl={PRIVACY_URL} supportUrl={SUPPORT_URL}
+        />
+      )}
+      {tab === 'home' && <ScrollView ref={scrollRef} contentContainerStyle={s.wrap}>
+        <View style={s.header}>
+          <Text style={s.logo}>Poi<Text style={{ color: t.accent }}>ca</Text></Text>
+          <Pressable onPress={locate} style={s.loc} accessibilityRole="button" accessibilityLabel={`${locLabel}。タップで取り直す`}>
+            <View style={[s.dot, loc.state === 'ok' && { backgroundColor: t.accent }, (loc.state === 'denied' || loc.state === 'fail') && { backgroundColor: t.near }]} />
+            <Text style={s.locText}>{locLabel}</Text>
+          </Pressable>
+        </View>
+
+        {loc.state === 'denied' && (
+          <View style={s.notice}>
+            <Text style={s.noticeText}>
+              <Text style={{ fontWeight: '700', color: t.ink }}>近い順の並べ替えは止まっています。</Text>
+              位置情報を「使用中のみ」で許可すると、開いたときに近くの店のカードが一番上に出ます。
+            </Text>
+            <Pressable onPress={() => Linking.openSettings()} style={s.smallBtn} accessibilityRole="button">
+              <Text style={s.smallBtnText}>設定を開く</Text>
+            </Pressable>
+          </View>
+        )}
+
+        {homeOrder.map((k) => (
+          <Fragment key={k}>{k === 'recent' ? recentBlock : k === 'suggest' ? (suggestPos !== 'off' && suggestBlock) : listBlock}</Fragment>
+        ))}
 
       </ScrollView>}
 
