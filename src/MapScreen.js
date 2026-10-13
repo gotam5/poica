@@ -87,7 +87,6 @@ export default function MapScreen({ cards, pos, t, onForgetPlaces }) {
     <View style={{ flex: 1 }}>
       <View style={s.head}>
         <Text style={s.title}>マップ</Text>
-        <Text style={s.sub}>{spots.length ? `${spots.length}か所` : ''}</Text>
       </View>
       <View style={{ flex: 1 }}>
         <MapView ref={mapRef} style={StyleSheet.absoluteFill} initialRegion={initial} showsUserLocation onMapReady={fit} onPress={close}>

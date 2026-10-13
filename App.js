@@ -487,8 +487,11 @@ function Home() {
         </SafeAreaProvider>
       </Modal>
 
-      <Modal visible={!!reordering} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setReordering(null)}>
-        {reordering && <ReorderScreen cards={ordered(cards)} t={t} onCancel={() => setReordering(null)} onSave={saveOrder} onAuto={autoOrder} />}
+      {/* Full screen, not a sheet: a sheet would slide down with the drag instead of the card moving. */}
+      <Modal visible={!!reordering} animationType="slide" presentationStyle="fullScreen" onRequestClose={() => setReordering(null)}>
+        <SafeAreaProvider>
+          {reordering && <ReorderScreen cards={ordered(cards)} t={t} onCancel={() => setReordering(null)} onSave={saveOrder} onAuto={autoOrder} />}
+        </SafeAreaProvider>
       </Modal>
 
       <Modal visible={!!paywall} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setPaywall(null)}>
