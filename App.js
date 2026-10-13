@@ -22,6 +22,7 @@ import CardFace from './src/CardFace';
 import { fetchNearbyStores, storeHasCard } from './src/nearbyStores';
 import { recordUse, usageSummary } from './src/usage';
 import { sendReportIfDue } from './src/report';
+import Svg, { Circle, Path } from 'react-native-svg';
 import { CARD_COLORS, KIND_LABEL, useTheme } from './src/theme';
 
 const newId = () => Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
@@ -41,6 +42,7 @@ function Home() {
   const [pos, setPos] = useState(null);
   const [loc, setLoc] = useState({ state: 'wait' }); // wait | ok | denied | fail
   const [query, setQuery] = useState('');
+  const [searching, setSearching] = useState(false);
   const [showing, setShowing] = useState(null); // card id
   const [editing, setEditing] = useState(null); // draft
   const [toast, setToast] = useState(null);
@@ -254,6 +256,11 @@ function Home() {
     );
   };
 
+  // The search bar hides again (and clears) whenever the user leaves the list: another tab, a card, an edit.
+  const away = tab !== 'home' || !!showing || !!editing || !!reordering;
+  useEffect(() => { if (away) { setSearching(false); setQuery(''); } }, [away]);
+  const toggleSearch = () => { if (searching) setQuery(''); setSearching(!searching); };
+
   // Tapping ホーム again while on Home scrolls back to the top.
   const goTab = (next) => {
     if (next === 'home' && tab === 'home') scrollRef.current?.scrollTo({ y: 0, animated: true });
@@ -414,12 +421,22 @@ function Home() {
         <View>
           <View style={s.listHead}>
             <Text style={[s.sec, { marginBottom: 0 }]}>カード一覧 {cards.length ? <Text style={s.count}>{cards.length}</Text> : null}</Text>
+            <View style={s.headBtns}>
+            {cards.length >= 4 && (
+              <Pressable onPress={toggleSearch} style={({ pressed }) => [s.searchBtn, searching && s.searchBtnOn, pressed && { opacity: 0.6 }]} hitSlop={6} accessibilityRole="button" accessibilityLabel={searching ? '検索を閉じる' : 'カードを検索'}>
+                <Svg width={16} height={16} viewBox="0 0 24 24">
+                  <Circle cx={10.5} cy={10.5} r={6.5} stroke={searching ? t.accentInk : t.accent} strokeWidth={2.6} fill="none" />
+                  <Path d="M15.5 15.5L21 21" stroke={searching ? t.accentInk : t.accent} strokeWidth={2.6} strokeLinecap="round" />
+                </Svg>
+              </Pressable>
+            )}
             <Pressable onPress={startNew} style={({ pressed }) => [s.addBtn, pressed && { opacity: 0.6 }]} hitSlop={6} accessibilityRole="button" accessibilityLabel="カードを追加">
               <Text style={s.addBtnText}>＋ 追加</Text>
             </Pressable>
+            </View>
           </View>
-          {cards.length >= 4 && (
-            <TextInput style={s.search} value={query} onChangeText={setQuery} placeholder="カード名で探す" placeholderTextColor={t.muted} clearButtonMode="while-editing" returnKeyType="search" />
+          {searching && (
+            <TextInput style={s.search} autoFocus value={query} onChangeText={setQuery} placeholder="カード名で探す" placeholderTextColor={t.muted} clearButtonMode="while-editing" returnKeyType="search" />
           )}
           {listed.length ? (
             <View style={{ gap: 14 }}>
@@ -534,6 +551,9 @@ const styles = (t) => StyleSheet.create({
   cell: { width: '50%', padding: 5 },
   search: { borderWidth: 1, borderColor: t.line, backgroundColor: t.surface, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 9, marginBottom: 10, color: t.ink, fontSize: 15 },
   listHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 },
+  headBtns: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  searchBtn: { width: 32, height: 30, borderRadius: 999, borderWidth: 1, borderColor: t.accent, alignItems: 'center', justifyContent: 'center' },
+  searchBtnOn: { backgroundColor: t.accent },
   addBtn: { borderWidth: 1, borderColor: t.accent, borderRadius: 999, paddingVertical: 5, paddingHorizontal: 12 },
   addBtnText: { color: t.accent, fontSize: 13, fontWeight: '800' },
   addTile: { borderWidth: 1.5, borderStyle: 'dashed', borderColor: t.accent, borderRadius: 14, paddingVertical: 18, paddingHorizontal: 14, alignItems: 'center', gap: 4 },
