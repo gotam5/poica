@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { KeyboardAvoidingView, Linking, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View, useWindowDimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { KIND_LABEL, useTheme } from './theme';
-import DesignPicker from './DesignPicker';
+import DesignPicker, { DesignPreview } from './DesignPicker';
 import ShortcutGuide from './ShortcutGuide';
 import { PaywallModal } from './Paywall';
 import { CaptureSection, useCapture } from './capture';
@@ -67,8 +67,8 @@ export default function EditScreen({ initial, allCards = [], canDesign = true, l
   const design = (
     <View style={s.field}>
       <Text style={locked ? s.bigLabel : s.label}>カードのデザイン</Text>
-      <DesignPicker d={d} set={set} allCards={allCards} canDesign={canDesign} onLocked={() => setPaywall('design')} t={t} big={locked} />
-      <Text style={s.hint}>公式アプリは、そのお店のイメージ色を最初から使います。ロゴは各社の許可が必要なため使っていません。</Text>
+      <DesignPicker d={d} set={set} allCards={allCards} canDesign={canDesign} onLocked={() => setPaywall('design')} t={t} big={locked} noPreview />
+      <Text style={s.hint}>公式アプリは、最初はそのお店のイメージ色になっています。</Text>
     </View>
   );
 
@@ -83,8 +83,9 @@ export default function EditScreen({ initial, allCards = [], canDesign = true, l
         <Text style={s.title}>{custom ? '自分でカードを作る' : isNew ? 'カードを追加' : 'カードを編集'}</Text>
         <Pressable onPress={save} hitSlop={10} style={s.saveBtn} accessibilityRole="button"><Text style={s.saveText}>保存</Text></Pressable>
       </View>
+      <DesignPreview d={d} allCards={allCards} t={t} big={locked} />
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <ScrollView contentContainerStyle={s.body} keyboardShouldPersistTaps="handled">
+        <ScrollView contentContainerStyle={[s.body, { paddingTop: 14 }]} keyboardShouldPersistTaps="handled">
           {known && d.kind === 'barcode' && (
             <View style={s.warn}>
               <Text style={s.warnTitle}>{known.label}は{known.kind === 'dynamic' ? 'バーコードが時間で変わります' : 'スクショでの利用が禁止されています'}</Text>

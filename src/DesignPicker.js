@@ -15,7 +15,17 @@ const SWATCHES = [
 
 const TABS = [['pattern', '模様'], ['color', '色'], ['image', 'ロゴ画像']];
 
-export default function DesignPicker({ d, set, allCards = [], canDesign, onLocked, t, big = true }) {
+// The card preview, kept above the scrolling settings so it stays in sight while the design changes.
+export function DesignPreview({ d, allCards = [], t, big = true }) {
+  const app = d.kind === 'app' && d.catalogId ? catalogApp(d.catalogId) : null;
+  return (
+    <View style={{ paddingHorizontal: 16, paddingTop: 4, paddingBottom: 10, backgroundColor: t.bg, borderBottomWidth: 1, borderBottomColor: t.line }}>
+      <CardFace card={{ ...d, name: d.name || app?.name || '' }} palette={cardPalette(d, allCards)} big={big} />
+    </View>
+  );
+}
+
+export default function DesignPicker({ d, set, allCards = [], canDesign, onLocked, t, big = true, noPreview = false }) {
   const s = styles(t);
   const [tab, setTab] = useState('pattern');
   const [slot, setSlot] = useState(0);
@@ -27,7 +37,7 @@ export default function DesignPicker({ d, set, allCards = [], canDesign, onLocke
     // A design chosen while unlimited stays as it was; free users just can't change it.
     return (
       <View style={{ gap: 12 }}>
-        <CardFace card={preview} palette={palette} big={big} />
+        {noPreview ? null : <CardFace card={preview} palette={palette} big={big} />}
         <Pressable onPress={onLocked} style={({ pressed }) => [s.lock, pressed && s.pressed]} accessibilityRole="button">
           <Text style={s.lockTitle}>🔒 デザインを変えるには Poica 無制限</Text>
           <Text style={s.lockText}>無料版は{app ? 'お店のイメージ色' : 'このデザイン'}で固定です。Poica 無制限なら、模様・背景色・模様色・文字色を選んだり、ロゴなどの画像をカードに載せられます。</Text>
@@ -68,7 +78,7 @@ export default function DesignPicker({ d, set, allCards = [], canDesign, onLocke
 
   return (
     <View style={{ gap: 14 }}>
-      <CardFace card={preview} palette={palette} big={big} />
+      {noPreview ? null : <CardFace card={preview} palette={palette} big={big} />}
 
       <View style={s.tabs}>
         {TABS.map(([k, l]) => {

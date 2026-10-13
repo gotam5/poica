@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { KeyboardAvoidingView, Linking, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import CardFace from './CardFace';
-import DesignPicker from './DesignPicker';
+import DesignPicker, { DesignPreview } from './DesignPicker';
 import ShortcutGuide from './ShortcutGuide';
 import { PaywallModal } from './Paywall';
 import { CATALOG, TYPE_LABEL, cardPalette, installedCatalogIds, openCardApp } from './appLink';
@@ -185,10 +185,11 @@ export default function AddFlow({ initial, allCards = [], canDesign, limits, onU
           </ScrollView>
         )}
 
+        {step === 'design' && <DesignPreview d={d} allCards={allCards} t={t} />}
         {step === 'design' && (
-          <ScrollView contentContainerStyle={s.body}>
+          <ScrollView contentContainerStyle={[s.body, { paddingTop: 12 }]}>
             <Text style={s.lead}>カードのデザインを選んでください</Text>
-            <DesignPicker d={d} set={set} allCards={allCards} canDesign t={t} />
+            <DesignPicker d={d} set={set} allCards={allCards} canDesign t={t} noPreview />
             <Text style={s.hint}>最初はお店のイメージ色になっています。あとからカードを長押しして変えることもできます。</Text>
           </ScrollView>
         )}

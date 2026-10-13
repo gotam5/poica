@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { KeyboardAvoidingView, Linking, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View, useWindowDimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import CardFace from './CardFace';
-import DesignPicker from './DesignPicker';
+import DesignPicker, { DesignPreview } from './DesignPicker';
 import ShortcutGuide from './ShortcutGuide';
 import { PaywallModal } from './Paywall';
 import { CaptureSection, useCapture } from './capture';
@@ -81,7 +81,8 @@ export default function CustomFlow({ initial, allCards = [], canDesign, limits, 
       <View style={s.progress}>{order.map((k, i) => <View key={k} style={[s.bar, i < stepNo && s.barOn]} />)}</View>
 
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <ScrollView contentContainerStyle={[s.body, step === 'done' && { flexGrow: 1, justifyContent: 'center' }]} keyboardShouldPersistTaps="handled">
+        {step === 'design' && <DesignPreview d={d} allCards={allCards} t={t} />}
+        <ScrollView contentContainerStyle={[s.body, step === 'design' && { paddingTop: 12 }, step === 'done' && { flexGrow: 1, justifyContent: 'center' }]} keyboardShouldPersistTaps="handled">
           {step === 'kind' && (
             <>
               <Text style={s.lead}>どうやって登録しますか？</Text>
@@ -148,7 +149,7 @@ export default function CustomFlow({ initial, allCards = [], canDesign, limits, 
           {step === 'design' && (
             <>
               <Text style={s.lead}>カードのデザインを選んでください</Text>
-              <DesignPicker d={d} set={set} allCards={allCards} canDesign t={t} />
+              <DesignPicker d={d} set={set} allCards={allCards} canDesign t={t} noPreview />
             </>
           )}
 
