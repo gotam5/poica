@@ -133,7 +133,7 @@ function SettingsPages({ page, go, ...props }) {
 
   if (page === 'places') {
     return (
-      <Sub s={s} go={go} title="覚えた場所">
+      <Sub s={s} go={go} title="覚えた場所のリセット">
         <View style={s.box}>
           <Text style={s.big}>{placeCount}<Text style={s.bigUnit}> か所</Text></Text>
         </View>
@@ -213,7 +213,7 @@ function SettingsPages({ page, go, ...props }) {
         <View style={s.box}>
           <Row s={s} go={go} label="おすすめの表示" value={suggestPos === 'off' ? '表示しない' : `${count}件`} to="suggest" />
           <Row s={s} go={go} label="近くのお店を調べる" value={storeLookup ? 'オン' : 'オフ'} to="lookup" />
-          <Row s={s} go={go} label="覚えた場所" value={`${placeCount}か所`} to="places" last />
+          <Row s={s} go={go} label="覚えた場所のリセット" value={`${placeCount}か所`} to="places" last />
         </View>
 
         <Text style={s.sec}>データ</Text>
