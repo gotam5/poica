@@ -228,7 +228,13 @@ function SettingsPages({ page, go, ...props }) {
               </Pressable>
             </>
           ) : (
-            <View style={s.row}><Text style={s.rowLabel}>{unlimited ? 'PRO' : 'すべての機能が使えます'}</Text>{unlimited ? <Text style={s.check}>✓</Text> : null}</View>
+            <View style={s.row}>
+              <View style={{ flex: 1 }}>
+                <Text style={s.rowLabel}>{unlimited ? 'PRO' : 'すべての機能が使えます'}</Text>
+                {unlimited && <Text style={s.rowSub}>現在、すべての機能を利用できます。</Text>}
+              </View>
+              {unlimited ? <Text style={s.check}>✓</Text> : null}
+            </View>
           )}
         </View>
 
