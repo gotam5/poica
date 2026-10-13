@@ -26,7 +26,7 @@ import smooth from './src/smooth';
 import Toast from './src/Toast';
 import { CARD_COLORS, KIND_LABEL, useTheme } from './src/theme';
 
-const HOME_ORDER = ['recent', 'suggest', 'list'];
+const HOME_ORDER = ['suggest', 'list'];
 
 const newId = () => Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
 
@@ -77,14 +77,19 @@ function Home() {
     loadCards().then((list) => setCards(list.filter((c) => c.kind !== 'set'))).catch(() => setCards([]));
     getSetting('storeLookup', true).then(setStoreLookup).catch(() => {});
     getSetting('homeHidden', null).then(async (v) => {
-      if (Array.isArray(v)) return setHomeHidden(v.filter((k) => HOME_ORDER.includes(k)));
+      if (Array.isArray(v)) {
+        // 前回使った was removed; keep at least one block visible.
+        const h = v.filter((k) => HOME_ORDER.includes(k));
+        return setHomeHidden(h.length < HOME_ORDER.length ? h : []);
+      }
       // Older versions had a separate 「おすすめを表示しない」.
       if ((await getSetting('suggestPos', 'afterRecent')) === 'off') setHomeHidden(['suggest']);
     }).catch(() => {});
     getSetting('homeOrder', null).then(async (v) => {
-      if (Array.isArray(v) && v.length === HOME_ORDER.length && HOME_ORDER.every((k) => v.includes(k))) return setHomeOrder(v);
+      const o = Array.isArray(v) ? v.filter((k) => HOME_ORDER.includes(k)) : [];
+      if (o.length === HOME_ORDER.length && HOME_ORDER.every((k) => o.includes(k))) return setHomeOrder(o);
       // Older versions only had 「おすすめを一番上」.
-      if ((await getSetting('suggestPos', 'afterRecent')) === 'top') setHomeOrder(['suggest', 'recent', 'list']);
+      if ((await getSetting('suggestPos', 'afterRecent')) === 'top') setHomeOrder(['suggest', 'list']);
     }).catch(() => {});
     getSetting('suggestCount', null).then(setSuggestCount).catch(() => {});
     getSetting('cardOrder', null).then((v) => Array.isArray(v) && setCardOrder(v)).catch(() => {});
@@ -235,7 +240,7 @@ function Home() {
     return <View style={[s.root, { alignItems: 'center', justifyContent: 'center' }]}><ActivityIndicator color={t.accent} /></View>;
   }
 
-  const { recent, suggest: allSuggest, all } = arrange(cards, pos, query, stores, storeHasCard, limits.paidNearbyLimit);
+  const { suggest: allSuggest, all } = arrange(cards, pos, query, stores, storeHasCard, limits.paidNearbyLimit);
   // Free: only the top freeNearbyLimit recommendations (after the usage/distance sort); PRO shows paidNearbyLimit. The user can also choose fewer, or hide them.
   const free = iapAvailable && !unlimited;
   const canDesign = !free;
@@ -329,27 +334,16 @@ function Home() {
   else if (loc.state === 'wait') suggestEmpty = '現在地を確認しています。';
   else suggestEmpty = '現在地が分からないため、おすすめを出せません。';
 
-  const recentBlock = (recent.length > 0 && (
-          <View>
-            <Text style={s.sec}>前回使った</Text>
-            <View style={s.grid}>
-              {recent.map((c) => (
-                <View key={c.id} style={s.cell}><Tile card={c} allCards={cards} onPress={() => open(c)} onLongPress={() => cardMenu(c)} s={s} /></View>
-              ))}
-            </View>
-          </View>
-        ));
   const suggestBlock = (
         <View>
           <Text style={[s.sec, s.secHot]}>近くのおすすめ</Text>
           {suggest.length ? (
             <View style={{ gap: 10 }}>
-              {suggest.map((x, i) => (
+              {suggest.map((x) => (
                 <Tile
                   key={x.card.id}
                   card={x.card}
                   allCards={cards}
-                  big={i === 0}
                   wide
                   chip={x.reason === 'store' ? '近くにお店があります' : x.here >= 3 ? 'ここでよく使う' : 'ここで使ったことがある'}
                   onPress={() => open(x.card)} onLongPress={() => cardMenu(x.card)}
@@ -399,9 +393,6 @@ function Home() {
                   <View key={c.id} style={s.cell}><Tile card={c} allCards={cards} onPress={() => open(c)} onLongPress={() => cardMenu(c)} s={s} /></View>
                 ))}
               </View>
-              <Pressable onPress={startNew} style={({ pressed }) => [s.addTile, pressed && { opacity: 0.6 }]} accessibilityRole="button">
-                <Text style={s.addTileText}>＋ カードを追加</Text>
-              </Pressable>
               <Text style={s.foot}>カードを長押しすると、編集や並び替えができます。</Text>
             </View>
           ) : query ? (
@@ -455,7 +446,7 @@ function Home() {
         )}
 
         {homeOrder.filter((k) => !homeHidden.includes(k)).map((k) => (
-          <Fragment key={k}>{k === 'recent' ? recentBlock : k === 'suggest' ? suggestBlock : listBlock}</Fragment>
+          <Fragment key={k}>{k === 'suggest' ? suggestBlock : listBlock}</Fragment>
         ))}
 
       </ScrollView>}
@@ -556,8 +547,6 @@ const styles = (t) => StyleSheet.create({
   searchBtnOn: { backgroundColor: t.accent },
   addBtn: { borderWidth: 1, borderColor: t.accent, borderRadius: 999, paddingVertical: 5, paddingHorizontal: 12 },
   addBtnText: { color: t.accent, fontSize: 13, fontWeight: '800' },
-  addTile: { borderWidth: 1.5, borderStyle: 'dashed', borderColor: t.accent, borderRadius: 14, paddingVertical: 18, paddingHorizontal: 14, alignItems: 'center', gap: 4 },
-  addTileText: { color: t.accent, fontSize: 15, fontWeight: '800' },
   firstAdd: { backgroundColor: t.accent, borderRadius: 18, paddingVertical: 26, paddingHorizontal: 20, alignItems: 'center', gap: 8, shadowColor: '#0A7552', shadowOpacity: 0.3, shadowRadius: 12, shadowOffset: { width: 0, height: 6 }, elevation: 5 },
   firstPlus: { width: 56, height: 56, borderRadius: 28, backgroundColor: 'rgba(255,255,255,0.22)', alignItems: 'center', justifyContent: 'center' },
   firstPlusText: { color: t.accentInk, fontSize: 32, fontWeight: '800', lineHeight: 38 },

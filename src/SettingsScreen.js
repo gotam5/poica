@@ -13,7 +13,7 @@ import { useTheme } from './theme';
 import appJson from '../app.json';
 
 const VERSION = appJson.expo.version;
-const HOME_LABEL = { recent: '前回使った', suggest: '近くのおすすめ', list: 'カード一覧' };
+const HOME_LABEL = { suggest: '近くのおすすめ', list: 'カード一覧' };
 
 function SettingsPages({ page, go, ...props }) {
   const {
