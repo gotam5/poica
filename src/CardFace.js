@@ -37,18 +37,19 @@ export const PATTERNS = [
 // Card face drawn from 2-4 colors: background, then the pattern's colors.
 // No logos: brands' marks can't be used without each company's permission.
 // mini: just the face, no text (design swatches).
-export default function CardFace({ card, palette, big, wide, chip, style, mini }) {
+// children: shown under the name instead of the type badges (the barcode on the show screen).
+export default function CardFace({ card, palette, big, wide, chip, style, mini, children }) {
   const [bg, c1, c2, c3] = palette;
   const img = bgImageUri(card);
   const pattern = card.pattern || 'bands';
   const ink = textHex(card);
   const dark = isDarkText(ink);
-  const logo = mini ? 0 : big ? 84 : 64;
+  const logo = mini ? 0 : children ? 52 : big ? 84 : 64;
   return (
     <View style={[s.face, { backgroundColor: bg }, big && s.big, mini && s.mini, style]}>
       <PatternLayer pattern={pattern} bg={bg} c1={c1} c2={c2} c3={c3} />
       {img && logo ? (
-        <View style={[s.logoWrap, { width: logo, height: logo, marginTop: -logo / 2 }, card.logoBg === 'white' && s.logoTile]} pointerEvents="none">
+        <View style={[s.logoWrap, { width: logo, height: logo, marginTop: -logo / 2 }, children && s.logoTop, card.logoBg === 'white' && s.logoTile]} pointerEvents="none">
           <Image source={{ uri: img }} style={s.logo} resizeMode="contain" />
         </View>
       ) : null}
@@ -60,13 +61,13 @@ export default function CardFace({ card, palette, big, wide, chip, style, mini }
           <View style={s.nameRow}>
             <Text style={[s.name, big && s.nameBig, dark && s.nameDark, { color: ink, paddingRight: img ? logo + 12 : 44 }]} numberOfLines={2}>{card.name || 'カード名'}</Text>
           </View>
-          <View>
+          {children || <View>
             <View style={[s.types, img && { paddingRight: logo + 12 }]}>
               {cardTypes(card).map((ty) => (
                 <View key={ty} style={[s.type, { backgroundColor: TYPE_COLORS[ty].bg }]}><Text style={[s.typeText, { color: TYPE_COLORS[ty].fg }]}>{TYPE_LABEL[ty]}</Text></View>
               ))}
             </View>
-          </View>
+          </View>}
         </>
       )}
     </View>
@@ -125,6 +126,7 @@ const s = StyleSheet.create({
   big: { minHeight: 140, paddingHorizontal: 16, paddingVertical: 14 },
   mini: { minHeight: 0, height: 44, padding: 0, borderRadius: 9 },
   logoWrap: { position: 'absolute', right: 14, top: '50%', borderRadius: 12, overflow: 'hidden' },
+  logoTop: { top: 14, marginTop: 0 },
   logoTile: { backgroundColor: '#FFF', padding: 6 },
   logo: { width: '100%', height: '100%' },
   band: { position: 'absolute', right: 6, top: -60, width: 30, height: 260, transform: [{ rotate: '22deg' }] },

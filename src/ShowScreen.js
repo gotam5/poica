@@ -1,25 +1,22 @@
 import { useState } from 'react';
-import { Image, Linking, Platform, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
+import { Image, Platform, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { useRegisterMode } from './registerMode';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import BarcodeView from './BarcodeView';
 import BottomBar from './BottomBar';
+import CardFace from './CardFace';
 import { photoUri } from './storage';
 import { appMode, catalogApp, isStoreUrl, launchUrl, openCardApp } from './appLink';
 
-export function mapsUrl(name) {
-  const q = encodeURIComponent(name);
-  return Platform.OS === 'ios' ? `https://maps.apple.com/?q=${q}` : `https://www.google.com/maps/search/?api=1&query=${q}`;
-}
-
 // Full-screen, always white, brightness up: what you hold out at the register.
-export default function ShowScreen({ card, openFailed, hasPosition, onClose, onRememberHere, onForget, onSetupShortcut, onOpened }) {
+export default function ShowScreen({ card, palette, openFailed, onClose, onSetupShortcut, onOpened }) {
   useRegisterMode();
   const { width } = useWindowDimensions();
   const [appError, setAppError] = useState(!!openFailed);
 
-  const places = (card.places || []).length;
-  const codeWidth = Math.min(width - 32, 460);
+  const cardWidth = Math.min(width - 32, 460);
+  // The code sits on a white panel inside the card so scanners still read it.
+  const codeWidth = cardWidth - 64;
 
   const appLink = card.kind === 'app' ? launchUrl(card) : null;
   const viaShortcut = card.kind === 'app' && appMode(card) === 'shortcut';
@@ -35,16 +32,18 @@ export default function ShowScreen({ card, openFailed, hasPosition, onClose, onR
   return (
     <SafeAreaView style={s.root} edges={['top', 'bottom']}>
       <ScrollView contentContainerStyle={[s.body, { paddingTop: 20 }]}>
-        <Text style={s.name}>{card.name}</Text>
+        {card.kind !== 'barcode' && card.kind !== 'photo' && <Text style={s.name}>{card.name}</Text>}
 
         {(card.kind === 'barcode' || card.kind === 'photo') && (
-          <View style={[s.codeBox, { gap: 14 }]}>
-            {card.kind === 'barcode' && card.code ? <BarcodeView code={card.code} format={card.format} width={codeWidth} /> : null}
-            {card.code ? <Text style={s.num} selectable>{card.code}</Text> : null}
-            {card.photo ? (
-              <Image source={{ uri: photoUri(card.photo) }} style={{ width: codeWidth, height: codeWidth * 0.75 }} resizeMode="contain" accessibilityLabel={`${card.name}のカードの写真`} />
-            ) : null}
-          </View>
+          <CardFace card={card} palette={palette} big style={[s.card, { width: cardWidth }]}>
+            <View style={s.panel}>
+              {card.kind === 'barcode' && card.code ? <BarcodeView code={card.code} format={card.format} width={codeWidth} /> : null}
+              {card.code ? <Text style={s.num} selectable>{card.code}</Text> : null}
+              {card.photo ? (
+                <Image source={{ uri: photoUri(card.photo) }} style={{ width: codeWidth, height: codeWidth * 0.75 }} resizeMode="contain" accessibilityLabel={`${card.name}のカードの写真`} />
+              ) : null}
+            </View>
+          </CardFace>
         )}
 
         {card.kind === 'app' && appError && (
@@ -81,26 +80,6 @@ export default function ShowScreen({ card, openFailed, hasPosition, onClose, onR
           </View>
         )}
 
-        {!(card.kind === 'app' && appError) && <View style={s.meta}>
-          <Text style={s.muted}>{places ? `覚えた場所 ${places}か所` : 'まだ場所を覚えていません'}</Text>
-          <View style={s.row}>
-            {hasPosition && (
-              <Pressable onPress={onRememberHere} style={s.small} accessibilityRole="button">
-                <Text style={s.smallText}>ここをこの店として覚える</Text>
-              </Pressable>
-            )}
-            {places > 0 && (
-              <Pressable onPress={onForget} style={s.small} accessibilityRole="button">
-                <Text style={s.smallText}>覚えた場所を消す</Text>
-              </Pressable>
-            )}
-            {places === 0 && (
-              <Pressable onPress={() => Linking.openURL(mapsUrl(card.name)).catch(() => {})} style={s.small} accessibilityRole="button">
-                <Text style={s.smallText}>近くの「{card.name}」を地図で探す</Text>
-              </Pressable>
-            )}
-          </View>
-        </View>}
       </ScrollView>
       <BottomBar onClose={onClose} />
     </SafeAreaView>
@@ -115,6 +94,8 @@ const s = StyleSheet.create({
   headBtnText: { fontSize: 15, fontWeight: '700', color: '#111' },
   body: { paddingHorizontal: 16, paddingBottom: 40, gap: 18 },
   name: { fontSize: 26, fontWeight: '900', textAlign: 'center', color: '#111' },
+  card: { alignSelf: 'center', borderRadius: 18, paddingVertical: 18, paddingHorizontal: 16, gap: 16, shadowColor: '#000', shadowOpacity: 0.18, shadowRadius: 12, shadowOffset: { width: 0, height: 6 } },
+  panel: { backgroundColor: '#FFFFFF', borderRadius: 12, paddingVertical: 14, paddingHorizontal: 16, alignItems: 'center', gap: 10 },
   codeBox: { alignItems: 'center', gap: 10, paddingVertical: 12 },
   num: { fontSize: 20, letterSpacing: 2, color: '#111', fontVariant: ['tabular-nums'], fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', textAlign: 'center' },
   bigBtn: { backgroundColor: '#0A7552', paddingVertical: 16, paddingHorizontal: 28, borderRadius: 14 },
@@ -127,9 +108,5 @@ const s = StyleSheet.create({
   outlineBtn: { borderWidth: 1, borderColor: '#D0D5D3', borderRadius: 14, paddingVertical: 15 },
   outlineText: { fontSize: 16, fontWeight: '700', color: '#111' },
   err: { color: '#C2412D', fontSize: 13, textAlign: 'center' },
-  meta: { borderTopWidth: 1, borderTopColor: '#E6E6E6', paddingTop: 14, gap: 10 },
   muted: { color: '#666', fontSize: 13 },
-  row: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  small: { borderWidth: 1, borderColor: '#D9D9D9', borderRadius: 10, paddingVertical: 7, paddingHorizontal: 12 },
-  smallText: { fontSize: 13, fontWeight: '700', color: '#111' },
 });

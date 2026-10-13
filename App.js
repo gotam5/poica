@@ -459,14 +459,8 @@ function Home() {
         <SafeAreaProvider>
         {shownCard && (() => {
           const common = {
-            hasPosition: !!pos,
             onClose: () => setShowing(null),
-            onRememberHere: () => {
-              const { places, added } = learnPlace(shownCard, pos, true);
-              updateCard({ ...shownCard, places });
-              say(added ? 'この場所を覚えました' : 'この場所はもう覚えています');
-            },
-            onForget: () => { updateCard({ ...shownCard, places: [] }); say('覚えた場所を消しました'); },
+            palette: cardPalette(shownCard, cards),
           };
           return <ShowScreen {...common} card={shownCard} openFailed={openFailed} onOpened={() => { recordUse(shownCard).catch(() => {}); countUse(shownCard); }} onSetupShortcut={(name) => {
             // Close the card, then open its editor on the shortcut settings (iOS can't swap two modals at once).
