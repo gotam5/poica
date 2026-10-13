@@ -41,20 +41,16 @@ export default function Paywall({ reason = 'cards', limits = DEFAULT_LIMITS, onC
         <Text style={s.title}>{TITLE[reason] ?? `${FREE_LIMIT + 1}枚目からは\n`}PRO{reason === 'info' ? '' : 'で'}</Text>
         <Text style={s.text}>{price || '一度'}払うと、ずっと使えます。サブスクではありません。</Text>
         <View style={s.table}>
-          <View style={[s.tr, s.trHead]}>
-            <Text style={[s.th, s.colLabel]} />
-            <Text style={[s.th, s.colFree]}>無料版</Text>
-            <Text style={[s.th, s.colPaid, { color: t.accent }]}>PRO</Text>
-          </View>
           {[
-            ['カード', `${FREE_LIMIT}枚まで`, '何枚でも'],
-            ['近くのおすすめ', `${limits.freeNearbyLimit}件`, `${limits.paidNearbyLimit}件`],
-            ['デザイン', '固定', '自由に\n(ロゴ画像も)'],
-          ].map(([label, free, paid]) => (
-            <View key={label} style={s.tr}>
-              <Text style={[s.td, s.colLabel]}>{label}</Text>
-              <Text style={[s.td, s.colFree, { color: t.muted }]}>{free}</Text>
-              <Text style={[s.td, s.colPaid, s.tdPaid]}>{paid}</Text>
+            ['カード枚数', `${FREE_LIMIT}`, '無制限'],
+            ['おすすめ表示数', `${limits.freeNearbyLimit}`, `${limits.paidNearbyLimit}`],
+            ['カードデザイン', '固定', 'カスタム可'],
+          ].map(([label, free, paid], i) => (
+            <View key={label} style={[s.tr, i === 0 && s.trFirst]}>
+              <Text style={s.tdLabel}>{label}</Text>
+              <Text style={s.tdFree}>{free}</Text>
+              <Text style={s.arrow}>→</Text>
+              <Text style={s.tdPaid}>{paid}</Text>
             </View>
           ))}
         </View>
@@ -99,14 +95,12 @@ const styles = (t) => StyleSheet.create({
   title: { fontSize: 28, fontWeight: '900', color: t.ink, textAlign: 'center', lineHeight: 38 },
   text: { fontSize: 16, color: t.ink, textAlign: 'center', lineHeight: 24 },
   table: { backgroundColor: t.surface, borderRadius: 14, borderWidth: 1, borderColor: t.line, overflow: 'hidden' },
-  tr: { flexDirection: 'row', alignItems: 'center', paddingVertical: 12, paddingHorizontal: 12, borderTopWidth: 1, borderTopColor: t.line },
-  trHead: { borderTopWidth: 0, paddingVertical: 10 },
-  th: { fontSize: 13, fontWeight: '800', color: t.muted, textAlign: 'center' },
-  td: { fontSize: 15, fontWeight: '700', color: t.ink, textAlign: 'center' },
-  tdPaid: { color: t.accent, fontWeight: '900' },
-  colLabel: { flex: 1.1, textAlign: 'left' },
-  colFree: { flex: 1 },
-  colPaid: { flex: 1.2 },
+  tr: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 14, paddingHorizontal: 14, borderTopWidth: 1, borderTopColor: t.line },
+  trFirst: { borderTopWidth: 0 },
+  tdLabel: { flex: 1, fontSize: 15, fontWeight: '700', color: t.ink },
+  tdFree: { fontSize: 15, fontWeight: '700', color: t.muted, fontVariant: ['tabular-nums'] },
+  arrow: { fontSize: 15, fontWeight: '800', color: t.muted },
+  tdPaid: { minWidth: 76, textAlign: 'right', fontSize: 16, fontWeight: '900', color: t.accent, fontVariant: ['tabular-nums'] },
   note: { fontSize: 13, color: t.muted, textAlign: 'center' },
   msg: { fontSize: 14, color: '#C2412D', textAlign: 'center' },
   foot: { paddingHorizontal: 20, paddingBottom: 12, gap: 6 },
