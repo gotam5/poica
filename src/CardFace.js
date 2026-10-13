@@ -49,16 +49,22 @@ export default function CardFace({ card, palette, big, wide, chip, style, mini, 
   return (
     <View style={[s.face, { backgroundColor: bg }, big && s.big, mini && s.mini, style]}>
       <PatternLayer pattern={pattern} bg={bg} c1={c1} c2={c2} c3={c3} />
-      {img && logo ? (
-        <View style={[s.logoWrap, { width: logo, height: logo, marginTop: -logo / 2 }, children && s.logoTop, card.logoBg === 'white' && s.logoTile]} pointerEvents="none">
-          <Image source={{ uri: img }} style={s.logo} resizeMode="contain" />
-        </View>
-      ) : logoSlot && logo ? (
-        <View style={[s.logoWrap, s.slot, { width: logo, height: logo, marginTop: -logo / 2, borderColor: ink }]} pointerEvents="none">
-          <Text style={[s.slotText, { color: ink }]}>ロゴ</Text>
+      {logo && (img || logoSlot) ? (
+        // A full-height column so the logo always sits in the vertical middle of the card.
+        <View style={s.logoCol} pointerEvents="none">
+          <View style={[{ width: logo + 8, height: logo + 8, alignItems: 'center', justifyContent: 'center' }, img && logoSlot && [s.slotRing, { borderColor: ink.length === 7 ? `${ink}73` : ink }]]}>
+            {img ? (
+              <View style={[s.logoBox, { width: logo, height: logo }, card.logoBg === 'white' && s.logoTile]}>
+                <Image source={{ uri: img }} style={s.logo} resizeMode="contain" />
+              </View>
+            ) : (
+              <View style={[s.logoBox, s.slot, { width: logo, height: logo, borderColor: ink }]}>
+                <Text style={[s.slotText, { color: ink }]}>ロゴ</Text>
+              </View>
+            )}
+          </View>
         </View>
       ) : null}
-      {img && logoSlot && logo ? <View style={[s.logoWrap, s.slotRing, { width: logo + 8, height: logo + 8, right: 10, marginTop: -logo / 2 - 4, borderColor: ink }]} pointerEvents="none" /> : null}
       {mini ? null : (
         <>
           {chip != null ? (
@@ -131,11 +137,11 @@ const s = StyleSheet.create({
   face: { borderRadius: 14, paddingVertical: 12, paddingHorizontal: 12, minHeight: 112, justifyContent: 'space-between', gap: 6, overflow: 'hidden' },
   big: { minHeight: 140, paddingHorizontal: 16, paddingVertical: 14 },
   mini: { minHeight: 0, height: 44, padding: 0, borderRadius: 9 },
-  logoWrap: { position: 'absolute', right: 14, top: '50%', borderRadius: 12, overflow: 'hidden' },
+  logoCol: { position: 'absolute', right: 10, top: 0, bottom: 0, justifyContent: 'center' },
+  logoBox: { borderRadius: 12, overflow: 'hidden' },
   slot: { borderWidth: 1.5, borderStyle: 'dashed', opacity: 0.45, alignItems: 'center', justifyContent: 'center' },
-  slotRing: { borderWidth: 1.5, borderStyle: 'dashed', opacity: 0.45, borderRadius: 14, overflow: 'visible' },
+  slotRing: { borderWidth: 1.5, borderStyle: 'dashed', borderRadius: 14 },
   slotText: { fontSize: 12, fontWeight: '800' },
-  logoTop: { top: 14, marginTop: 0 },
   logoTile: { backgroundColor: '#FFF', padding: 6 },
   logo: { width: '100%', height: '100%' },
   band: { position: 'absolute', right: 6, top: -60, width: 30, height: 260, transform: [{ rotate: '22deg' }] },
