@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ActionSheetIOS, ActivityIndicator, Alert, AppState, Linking, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ActionSheetIOS, ActivityIndicator, Alert, AppState, LayoutAnimation, Linking, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import * as Location from 'expo-location';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
@@ -260,7 +260,17 @@ function Home() {
     );
   };
 
-  const toggleSearch = () => { if (searching) setQuery(''); setSearching(!searching); };
+  const toggleSearch = () => {
+    // The bar fades in while the cards below glide down (and back up on close).
+    LayoutAnimation.configureNext({
+      duration: 340,
+      create: { type: LayoutAnimation.Types.easeInEaseOut, property: LayoutAnimation.Properties.opacity },
+      update: { type: LayoutAnimation.Types.spring, springDamping: 0.86 },
+      delete: { type: LayoutAnimation.Types.easeInEaseOut, property: LayoutAnimation.Properties.opacity, duration: 200 },
+    });
+    if (searching) setQuery('');
+    setSearching(!searching);
+  };
 
   // Tapping ホーム again while on Home scrolls back to the top.
   const goTab = (next) => {
