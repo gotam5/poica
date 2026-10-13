@@ -59,7 +59,6 @@ export default function StatsScreen({ cards, t, onEdit }) {
         <View style={s.empty}><Text style={s.emptyText}>カードを登録すると、ここに使った回数が出ます。</Text></View>
       )}
       {range === 'month' && <Text style={s.foot}>今月の回数は、この機能を入れた2026年10月から数えています。</Text>}
-      <Text style={s.foot}>記録はこのiPhoneの中だけにあります。</Text>
     </ScrollView>
   );
 }

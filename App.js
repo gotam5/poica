@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, AppState, Linking, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ActionSheetIOS, ActivityIndicator, Alert, AppState, Linking, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import * as Location from 'expo-location';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
@@ -11,12 +11,13 @@ import MapScreen from './src/MapScreen';
 import StatsScreen, { monthKey } from './src/StatsScreen';
 import Toolbar from './src/Toolbar';
 import ShowScreen from './src/ShowScreen';
+import ReorderScreen from './src/ReorderScreen';
 import Paywall from './src/Paywall';
 import { checkOwned, iapAvailable } from './src/purchase';
 import { DEFAULT_LIMITS, loadLimits, refreshLimits } from './src/limits';
 import { arrange, learnPlace } from './src/geo';
 import { deleteCard, getSetting, keepPhoto, loadCards, removePhoto, saveCard, setSetting } from './src/storage';
-import { TYPE_LABEL, cardPalette, cardTypes, openCardApp } from './src/appLink';
+import { cardPalette, openCardApp } from './src/appLink';
 import CardFace from './src/CardFace';
 import { fetchNearbyStores, storeHasCard } from './src/nearbyStores';
 import { recordUse, usageSummary } from './src/usage';
@@ -52,6 +53,9 @@ function Home() {
   const [limits, setLimits] = useState(DEFAULT_LIMITS);
   const [tab, setTab] = useState('home'); // home | map | stats | settings
   const [shareUsage, setShareUsage] = useState(false);
+  const [usageAsked, setUsageAsked] = useState(true); // asked about sending usage data (first visit to 記録)
+  const [cardOrder, setCardOrder] = useState(null); // ids in the order the user chose; null = most used first
+  const [reordering, setReordering] = useState(null); // focused card id while the reorder screen is open
   const scrollRef = useRef(null);
 
   const say = useCallback((text) => {
@@ -65,6 +69,8 @@ function Home() {
     loadCards().then((list) => setCards(list.filter((c) => c.kind !== 'set'))).catch(() => setCards([]));
     getSetting('storeLookup', true).then(setStoreLookup).catch(() => {});
     getSetting('shareUsage', false).then(setShareUsage).catch(() => {});
+    getSetting('usageAsked', false).then(setUsageAsked).catch(() => {});
+    getSetting('cardOrder', null).then((v) => Array.isArray(v) && setCardOrder(v)).catch(() => {});
     // The purchase is remembered on the phone so the limit stays off offline; StoreKit is the source of truth when reachable.
     loadLimits().then(setLimits).then(() => refreshLimits()).then((l) => l && setLimits(l)).catch(() => {});
     getSetting('unlimited', false).then((v) => v && setUnlimited(true)).catch(() => {});
@@ -228,10 +234,64 @@ function Home() {
   const anyPlaces = cards.some((c) => c.places && c.places.length);
   const placeCount = cards.reduce((n, c) => n + (c.places ? c.places.length : 0), 0);
 
+  // The first time 記録 opens, ask whether usage data may be sent (it stays off unless they agree).
+  const askUsage = () => {
+    setUsageAsked(true);
+    setSetting('usageAsked', true).catch(() => {});
+    const answer = (yes) => { setShareUsage(yes); setSetting('shareUsage', yes).catch(() => {}); };
+    Alert.alert(
+      '利用データの送信について',
+      'アプリの改善のために、どの種類のカードを何回開いたか・開けなかったかの集計を、週に1回まで送ってもいいですか？\n\nカードの名前・番号・写真・場所や、あなたやこのiPhoneを特定できる情報は送りません。あとから設定でいつでも変えられます。',
+      [
+        { text: '送らない', style: 'cancel', onPress: () => answer(false) },
+        { text: '送る', onPress: () => answer(true) },
+      ],
+    );
+  };
+
   // Tapping ホーム again while on Home scrolls back to the top.
   const goTab = (next) => {
     if (next === 'home' && tab === 'home') scrollRef.current?.scrollTo({ y: 0, animated: true });
     setTab(next);
+    if (next === 'stats' && !usageAsked) askUsage();
+  };
+
+  // Long-press on a card: edit it, or reorder the list.
+  const cardMenu = (c) => {
+    const edit = () => setEditing({ ...c });
+    const reorder = () => setReordering(c.id);
+    if (Platform.OS === 'ios') {
+      ActionSheetIOS.showActionSheetWithOptions(
+        { title: c.name, options: ['カードを編集', '並び替え', 'キャンセル'], cancelButtonIndex: 2 },
+        (i) => { if (i === 0) edit(); else if (i === 1) reorder(); },
+      );
+    } else {
+      Alert.alert(c.name, undefined, [{ text: 'カードを編集', onPress: edit }, { text: '並び替え', onPress: reorder }, { text: 'キャンセル', style: 'cancel' }]);
+    }
+  };
+
+  // The card list: the user's own order if they set one, otherwise the most used first.
+  const rank = new Map((cardOrder || []).map((id, i) => [id, i]));
+  const byUse = (a, b) => (b.uses || 0) - (a.uses || 0) || (b.lastUsed || 0) - (a.lastUsed || 0) || (b.created || 0) - (a.created || 0);
+  const ordered = (list) => [...list].sort((a, b) => {
+    if (cardOrder) {
+      const ra = rank.has(a.id) ? rank.get(a.id) : Infinity;
+      const rb = rank.has(b.id) ? rank.get(b.id) : Infinity;
+      if (ra !== rb) return ra - rb;
+    }
+    return byUse(a, b);
+  });
+  const listed = ordered(all);
+  const saveOrder = (ids) => {
+    setCardOrder(ids);
+    setSetting('cardOrder', ids).catch(() => {});
+    setReordering(null);
+  };
+  const autoOrder = () => {
+    setCardOrder(null);
+    setSetting('cardOrder', null).catch(() => {});
+    setReordering(null);
+    say('よく使う順に並べました');
   };
   const forgetAllPlaces = async () => {
     const next = cards.map((c) => (c.places && c.places.length ? { ...c, places: [] } : c));
@@ -293,7 +353,7 @@ function Home() {
             <Text style={s.sec}>前回使った</Text>
             <View style={s.grid}>
               {recent.map((c) => (
-                <View key={c.id} style={s.cell}><Tile card={c} allCards={cards} onPress={() => open(c)} onLongPress={() => setEditing({ ...c })} s={s} /></View>
+                <View key={c.id} style={s.cell}><Tile card={c} allCards={cards} onPress={() => open(c)} onLongPress={() => cardMenu(c)} s={s} /></View>
               ))}
             </View>
           </View>
@@ -311,7 +371,7 @@ function Home() {
                   big={i === 0}
                   wide
                   chip={x.reason === 'store' ? '近くにお店があります' : x.here >= 3 ? 'ここでよく使う' : 'ここで使ったことがある'}
-                  onPress={() => open(x.card)} onLongPress={() => setEditing({ ...x.card })}
+                  onPress={() => open(x.card)} onLongPress={() => cardMenu(x.card)}
                   s={s}
                 />
               ))}
@@ -340,26 +400,17 @@ function Home() {
           {cards.length >= 4 && (
             <TextInput style={s.search} value={query} onChangeText={setQuery} placeholder="カード名で探す" placeholderTextColor={t.muted} clearButtonMode="while-editing" returnKeyType="search" />
           )}
-          {all.length ? (
+          {listed.length ? (
             <View style={{ gap: 14 }}>
-              {['point', 'pay'].map((ty) => {
-                const group = all.filter((c) => cardTypes(c).includes(ty));
-                if (!group.length) return null;
-                return (
-                  <View key={ty} style={{ gap: 8 }}>
-                    <Text style={s.group}>{TYPE_LABEL[ty]}</Text>
-                    <View style={s.grid}>
-                      {group.map((c) => (
-                        <View key={c.id} style={s.cell}><Tile card={c} allCards={cards} onPress={() => open(c)} onLongPress={() => setEditing({ ...c })} s={s} /></View>
-                      ))}
-                    </View>
-                  </View>
-                );
-              })}
+              <View style={s.grid}>
+                {listed.map((c) => (
+                  <View key={c.id} style={s.cell}><Tile card={c} allCards={cards} onPress={() => open(c)} onLongPress={() => cardMenu(c)} s={s} /></View>
+                ))}
+              </View>
               <Pressable onPress={startNew} style={({ pressed }) => [s.addTile, pressed && { opacity: 0.6 }]} accessibilityRole="button">
                 <Text style={s.addTileText}>＋ カードを追加</Text>
               </Pressable>
-              <Text style={s.foot}>カードを長押しすると、名前やデザインの変更、削除ができます。</Text>
+              <Text style={s.foot}>カードを長押しすると、編集や並び替えができます。</Text>
             </View>
           ) : query ? (
             <View style={s.empty}><Text style={s.emptyText}>見つかりません。</Text></View>
@@ -401,6 +452,10 @@ function Home() {
         </SafeAreaProvider>
       </Modal>
 
+      <Modal visible={!!reordering} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setReordering(null)}>
+        {reordering && <ReorderScreen cards={ordered(cards)} focusId={reordering} t={t} onCancel={() => setReordering(null)} onSave={saveOrder} onAuto={autoOrder} />}
+      </Modal>
+
       <Modal visible={!!paywall} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setPaywall(null)}>
         <SafeAreaProvider>
           {paywall && <Paywall reason={paywall} limits={limits} onClose={() => setPaywall(null)} onUnlocked={unlock} />}
@@ -431,7 +486,7 @@ const SUPPORT_URL = 'https://gotam5.github.io/poica-site/#support';
 
 function Tile({ card, allCards, big, wide, chip, onPress, onLongPress, s }) {
   return (
-    <Pressable onPress={onPress} onLongPress={onLongPress} delayLongPress={400} style={({ pressed }) => [pressed && { opacity: 0.85 }]} accessibilityRole="button" accessibilityLabel={`${KIND_LABEL[card.kind]} ${card.name}を表示`} accessibilityHint="長押しで編集">
+    <Pressable onPress={onPress} onLongPress={onLongPress} delayLongPress={400} style={({ pressed }) => [pressed && { opacity: 0.85 }]} accessibilityRole="button" accessibilityLabel={`${KIND_LABEL[card.kind]} ${card.name}を表示`} accessibilityHint="長押しで編集・並び替え">
       <CardFace card={card} palette={cardPalette(card, allCards)} big={big} wide={wide} chip={chip} />
     </Pressable>
   );
@@ -457,7 +512,6 @@ const styles = (t) => StyleSheet.create({
   grid: { flexDirection: 'row', flexWrap: 'wrap', marginHorizontal: -5 },
   cell: { width: '50%', padding: 5 },
   search: { borderWidth: 1, borderColor: t.line, backgroundColor: t.surface, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 9, marginBottom: 10, color: t.ink, fontSize: 15 },
-  group: { fontSize: 13, fontWeight: '700', color: t.muted },
   listHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 },
   addBtn: { borderWidth: 1, borderColor: t.accent, borderRadius: 999, paddingVertical: 5, paddingHorizontal: 12 },
   addBtnText: { color: t.accent, fontSize: 13, fontWeight: '800' },

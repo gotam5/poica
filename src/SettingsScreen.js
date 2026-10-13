@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Alert, Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { PaywallModal } from './Paywall';
+import Toggle from './Toggle';
 import { useTheme } from './theme';
 import appJson from '../app.json';
 
@@ -44,7 +45,7 @@ export default function SettingsScreen({ unlimited, iapAvailable, limits, cardCo
               <Text style={s.rowTitle}>近くのお店を地図データで調べる</Text>
               <Text style={s.rowText}>オンにすると、おおまかな現在地(約100m単位)をOpenStreetMapに送り、登録したお店が近くにあるか調べます。</Text>
             </View>
-            <View style={[s.switch, storeLookup && s.switchOn]}><View style={[s.knob, storeLookup && s.knobOn]} /></View>
+            <Toggle value={storeLookup} t={t} />
           </Pressable>
           <View style={s.line} />
           <Pressable onPress={forget} disabled={!placeCount} style={({ pressed }) => [s.linkRow, pressed && s.pressed, !placeCount && { opacity: 0.4 }]} accessibilityRole="button">
@@ -60,7 +61,7 @@ export default function SettingsScreen({ unlimited, iapAvailable, limits, cardCo
               <Text style={s.rowTitle}>利用データを送る</Text>
               <Text style={s.rowText}>オンにすると、アプリの改善のために、どの種類のカードを何回開いたか・開けなかったかの集計を週に1回まで送ります。カードの名前・番号・写真・場所や、あなたを特定できる情報は送りません。オフの間は何も送りません。</Text>
             </View>
-            <View style={[s.switch, shareUsage && s.switchOn]}><View style={[s.knob, shareUsage && s.knobOn]} /></View>
+            <Toggle value={shareUsage} t={t} />
           </Pressable>
         </View>
 
@@ -88,14 +89,9 @@ const styles = (t) => StyleSheet.create({
   box: { backgroundColor: t.surface, borderWidth: 1, borderColor: t.line, borderRadius: 14, padding: 14, gap: 8 },
   rowTitle: { fontSize: 15, fontWeight: '700', color: t.ink },
   rowText: { fontSize: 12, color: t.muted, lineHeight: 18 },
-  tip: { fontSize: 13, color: t.ink, lineHeight: 20 },
   line: { height: 1, backgroundColor: t.line, marginVertical: 4 },
   switchRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   linkRow: { gap: 2, paddingVertical: 2 },
-  switch: { width: 46, height: 28, borderRadius: 14, backgroundColor: t.line, padding: 3 },
-  switchOn: { backgroundColor: t.accent },
-  knob: { width: 22, height: 22, borderRadius: 11, backgroundColor: '#FFF' },
-  knobOn: { transform: [{ translateX: 18 }] },
   primary: { backgroundColor: t.accent, borderRadius: 999, paddingVertical: 13, alignItems: 'center', marginTop: 4 },
   primaryText: { color: t.accentInk, fontWeight: '800', fontSize: 15 },
   pressed: { opacity: 0.6 },
