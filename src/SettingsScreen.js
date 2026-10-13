@@ -1,6 +1,6 @@
 // 設定 tab. The top page is a plain list; each item opens its own page, where the explanation lives.
 import { useRef, useState } from 'react';
-import { Alert, Animated, Easing, Linking, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
+import { Alert, Animated, Linking, PanResponder, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { PaywallModal } from './Paywall';
 import Toggle from './Toggle';
 import CardFace from './CardFace';
@@ -24,6 +24,7 @@ function SettingsPages({ page, go, ...props }) {
   const [paywall, setPaywall] = useState(null);
   const [dragging, setDragging] = useState(false);
   const [gridKey, setGridKey] = useState(0);
+  const scrollY = useRef(new Animated.Value(0)).current;
   const free = iapAvailable && !unlimited;
   const maxCount = free ? limits.freeNearbyLimit : limits.paidNearbyLimit;
   const count = Math.min(suggestCount || maxCount, maxCount);
@@ -165,7 +166,11 @@ function SettingsPages({ page, go, ...props }) {
 
   return (
     <View style={s.root}>
-      <ScrollView contentContainerStyle={s.body}>
+      <Animated.ScrollView
+        contentContainerStyle={s.body}
+        scrollEventThrottle={16}
+        onScroll={Animated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], { useNativeDriver: true })}
+      >
         <Text style={s.title}>設定</Text>
 
         <Text style={s.sec}>Poica</Text>
@@ -204,28 +209,70 @@ function SettingsPages({ page, go, ...props }) {
         <View style={[s.box, { marginTop: 22 }]}>
           <Row s={s} go={go} label="アプリ情報" to="about" last />
         </View>
-      </ScrollView>
+      </Animated.ScrollView>
+      <Animated.View pointerEvents="none" style={[s.bar, { opacity: scrollY.interpolate({ inputRange: [22, 38], outputRange: [0, 1], extrapolate: 'clamp' }) }]}>
+        <Text style={s.subTitle}>設定</Text>
+      </Animated.View>
       {paywallModal}
     </View>
   );
 }
 
-// Pages slide in from the right, and back to the list from the left.
+// iOS-style push: the page slides in over the list, which drifts left by a third and dims.
+// Swipe from the left edge to go back. Spring values match UINavigationController's feel.
+const SPRING = { stiffness: 1000, damping: 500, mass: 3, overshootClamping: true, restDisplacementThreshold: 0.01, restSpeedThreshold: 0.01, useNativeDriver: true };
+
 export default function SettingsScreen(props) {
   const t = useTheme();
   const { width } = useWindowDimensions();
-  const [page, setPage] = useState('main');
-  const x = useRef(new Animated.Value(0)).current;
-  const go = (to) => {
-    x.setValue((to === 'main' ? -0.3 : 1) * width);
-    setPage(to);
-    Animated.timing(x, { toValue: 0, duration: 280, easing: Easing.out(Easing.cubic), useNativeDriver: true }).start();
+  const [page, setPage] = useState(null); // the sub page on screen, kept while it slides away
+  const p = useRef(new Animated.Value(0)).current; // 0 = list, 1 = sub page
+  const st = useRef({});
+  st.current.width = width;
+
+  const back = (velocity = 0) => {
+    Animated.spring(p, { ...SPRING, toValue: 0, velocity }).start(({ finished }) => { if (finished) setPage(null); });
   };
+  const go = (to) => {
+    if (to === 'main') return back();
+    p.setValue(0);
+    setPage(to);
+    Animated.spring(p, { ...SPRING, toValue: 1 }).start();
+  };
+  st.current.back = back;
+
+  const edge = useRef(PanResponder.create({
+    onMoveShouldSetPanResponder: (_, g) => g.dx > 6 && Math.abs(g.dx) > Math.abs(g.dy) * 1.5,
+    onPanResponderTerminationRequest: () => false,
+    onPanResponderMove: (_, g) => p.setValue(1 - Math.max(0, Math.min(1, g.dx / st.current.width))),
+    onPanResponderRelease: (_, g) => {
+      const w = st.current.width;
+      if (g.dx > w / 2 || g.vx > 0.4) st.current.back(Math.max(0, g.vx) * 1000 / w * -1);
+      else Animated.spring(p, { ...SPRING, toValue: 1 }).start();
+    },
+    onPanResponderTerminate: () => Animated.spring(p, { ...SPRING, toValue: 1 }).start(),
+  })).current;
+
   return (
     <View style={{ flex: 1, backgroundColor: t.bg, overflow: 'hidden' }}>
-      <Animated.View style={{ flex: 1, transform: [{ translateX: x }] }}>
-        <SettingsPages {...props} page={page} go={go} />
+      <Animated.View
+        style={{ flex: 1, transform: [{ translateX: p.interpolate({ inputRange: [0, 1], outputRange: [0, -width * 0.3] }) }] }}
+        pointerEvents={page ? 'none' : 'auto'}
+      >
+        <SettingsPages {...props} page="main" go={go} />
+        <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, { backgroundColor: '#000', opacity: p.interpolate({ inputRange: [0, 1], outputRange: [0, 0.12] }) }]} />
       </Animated.View>
+      {page ? (
+        <Animated.View
+          style={[StyleSheet.absoluteFill, {
+            backgroundColor: t.bg, shadowColor: '#000', shadowOpacity: 0.18, shadowRadius: 10, shadowOffset: { width: -3, height: 0 },
+            transform: [{ translateX: p.interpolate({ inputRange: [0, 1], outputRange: [width, 0] }) }],
+          }]}
+        >
+          <SettingsPages {...props} page={page} go={go} />
+          <View style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 20 }} {...edge.panHandlers} />
+        </Animated.View>
+      ) : null}
     </View>
   );
 }
@@ -271,6 +318,7 @@ const styles = (t) => StyleSheet.create({
   pro: { backgroundColor: t.accent, borderRadius: 14, paddingVertical: 12, paddingHorizontal: 14, alignItems: 'center', gap: 3, marginVertical: 12 },
   proText: { color: t.accentInk, fontWeight: '900', fontSize: 17 },
   proSub: { color: t.accentInk, fontSize: 11, opacity: 0.72, textAlign: 'center' },
+  bar: { position: 'absolute', left: 0, right: 0, top: 0, height: 44, justifyContent: 'center', backgroundColor: t.bg, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: t.line },
   subHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 10 },
   back: { color: t.accent, fontSize: 16, fontWeight: '700', width: 56 },
   subTitle: { flex: 1, textAlign: 'center', color: t.ink, fontSize: 17, fontWeight: '800' },
