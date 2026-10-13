@@ -316,7 +316,7 @@ function Home() {
     setCardOrder(null);
     setSetting('cardOrder', null).catch(() => {});
     setReordering(null);
-    say('よく使う順に並べました');
+    say('自動で並べるようにしました');
   };
   // From the map: drop one card's learned places at a spot.
   const forgetPlacesOf = (cardId, places) => {

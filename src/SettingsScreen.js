@@ -59,14 +59,29 @@ function SettingsPages({ page, go, ...props }) {
   if (page === 'order') {
     return (
       <Sub s={s} go={go} title="並び替え" scroll={!dragging}>
-        <Text style={s.lead}>≡ を押したまま動かして並べ替えます。</Text>
+        <View style={s.box}>
+          {[[false, '自動', 'よく使うカードが上に来ます'], [true, '固定', '自分で決めた順のままです']].map(([fixed, label, sub], i) => (
+            <Pressable
+              key={label}
+              onPress={() => {
+                if (fixed === manualOrder) return;
+                if (fixed) onSaveOrder(ordered.map((c) => c.id)); else onAutoOrder();
+                setGridKey((k) => k + 1);
+              }}
+              style={[s.row, i === 0 && s.rowLine]}
+              accessibilityRole="radio"
+              accessibilityState={{ checked: manualOrder === fixed }}
+            >
+              <View style={{ flex: 1 }}>
+                <Text style={s.rowLabel}>{label}</Text>
+                <Text style={s.rowSub}>{sub}</Text>
+              </View>
+              {manualOrder === fixed ? <Text style={s.check}>✓</Text> : null}
+            </Pressable>
+          ))}
+        </View>
+        <Text style={[s.lead, { marginTop: 10 }]}>{manualOrder ? '≡ を押したまま動かして並べ替えます。' : '≡ を押したまま動かすと、その順で固定になります。'}</Text>
         <ReorderGrid key={gridKey} cards={ordered} allCards={cards} t={t} onChange={onSaveOrder} onDragging={setDragging} />
-        <Text style={s.lead}>{manualOrder ? 'いまは自分で決めた順です。' : 'いまはよく使う順です。'}</Text>
-        {manualOrder && (
-          <Pressable onPress={() => { onAutoOrder(); setGridKey((k) => k + 1); }} style={({ pressed }) => [s.secondary, pressed && s.pressed]} accessibilityRole="button">
-            <Text style={s.secondaryText}>よく使う順に戻す</Text>
-          </Pressable>
-        )}
       </Sub>
     );
   }
@@ -191,7 +206,7 @@ function SettingsPages({ page, go, ...props }) {
         <Text style={s.sec}>カード</Text>
         <View style={s.box}>
           <Row s={s} go={go} label="カードの編集" to="edit" />
-          <Row s={s} go={go} label="並び替え" value={manualOrder ? '自分で決めた順' : 'よく使う順'} to="order" last />
+          <Row s={s} go={go} label="並び替え" value={manualOrder ? '固定' : '自動'} to="order" last />
         </View>
 
         <Text style={s.sec}>近くのおすすめ</Text>
@@ -309,6 +324,7 @@ const styles = (t) => StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center', gap: 8, minHeight: 50, paddingVertical: 10 },
   rowLine: { borderBottomWidth: 1, borderBottomColor: t.line },
   rowLabel: { flex: 1, fontSize: 16, fontWeight: '600', color: t.ink },
+  rowSub: { fontSize: 12, color: t.muted, marginTop: 2 },
   rowValue: { fontSize: 15, color: t.muted },
   chev: { fontSize: 22, color: t.muted, marginLeft: 2, marginTop: -2 },
   check: { fontSize: 17, fontWeight: '900', color: t.accent },

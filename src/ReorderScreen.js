@@ -20,7 +20,7 @@ export default function ReorderScreen({ cards, t, onCancel, onSave, onAuto }) {
         <Text style={s.hint}>右上の ≡ を押したまま動かして並べ替えます。</Text>
         <ReorderGrid cards={cards} t={t} onChange={setIds} onDragging={setDragging} />
         <Pressable onPress={onAuto} style={({ pressed }) => [s.auto, pressed && { opacity: 0.6 }]} accessibilityRole="button">
-          <Text style={s.autoText}>よく使う順に戻す</Text>
+          <Text style={s.autoText}>自動（よく使う順）に戻す</Text>
         </Pressable>
       </ScrollView>
     </SafeAreaView>
