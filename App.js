@@ -308,9 +308,7 @@ function Home() {
   }[loc.state];
 
   let suggestEmpty;
-  if (loc.state === 'ok') suggestEmpty = anyPlaces || stores.length
-    ? 'この近くでおすすめできるカードはありません。'
-    : 'カードを店で使うと、その場所を覚えて次からここに出します。スギ薬局のような店のカードは、近くにその店があれば自動で出ます。';
+  if (loc.state === 'ok') suggestEmpty = 'カードを使った場所を記憶し、次回からその近くで優先的に表示します。近くにお店がある公式アプリのカードも優先的に表示します。';
   else if (loc.state === 'wait') suggestEmpty = '現在地を確認しています。';
   else suggestEmpty = '現在地が分からないため、おすすめを出せません。';
 
@@ -375,15 +373,15 @@ function Home() {
                   s={s}
                 />
               ))}
-              {hiddenSuggest > 0 && (
-                <Pressable onPress={() => setPaywall('suggest')} hitSlop={6} accessibilityRole="button">
-                  <Text style={s.more}>近くのおすすめをあと{hiddenSuggest}件見るには Poica 無制限</Text>
+              {free && (hiddenSuggest > 0 || suggest.length >= limits.freeNearbyLimit) && (
+                <Pressable onPress={() => setPaywall('suggest')} style={({ pressed }) => [s.moreBtn, pressed && { opacity: 0.6 }]} accessibilityRole="button">
+                  <Text style={s.moreBtnText}>さらに多く表示{hiddenSuggest > 0 ? `(あと${hiddenSuggest}件)` : ''}</Text>
                 </Pressable>
               )}
             </View>
           ) : hiddenSuggest > 0 ? (
-            <Pressable onPress={() => setPaywall('suggest')} style={s.empty} accessibilityRole="button">
-              <Text style={s.more}>近くのおすすめが{hiddenSuggest}件あります。見るには Poica 無制限</Text>
+            <Pressable onPress={() => setPaywall('suggest')} style={({ pressed }) => [s.moreBtn, pressed && { opacity: 0.6 }]} accessibilityRole="button">
+              <Text style={s.moreBtnText}>さらに多く表示(あと{hiddenSuggest}件)</Text>
             </Pressable>
           ) : (
             <View style={s.empty}><Text style={s.emptyText}>{suggestEmpty}</Text></View>
@@ -522,6 +520,8 @@ const styles = (t) => StyleSheet.create({
   firstPlusText: { color: t.accentInk, fontSize: 32, fontWeight: '800', lineHeight: 38 },
   firstTitle: { color: t.accentInk, fontSize: 20, fontWeight: '900' },
   firstText: { color: t.accentInk, fontSize: 13, lineHeight: 19, textAlign: 'center', opacity: 0.9 },
+  moreBtn: { alignSelf: 'center', borderWidth: 1, borderColor: t.accent, borderRadius: 999, paddingHorizontal: 18, paddingVertical: 9 },
+  moreBtnText: { color: t.accent, fontWeight: '800', fontSize: 14 },
   more: { color: t.accent, fontSize: 13, fontWeight: '700', textAlign: 'center', paddingVertical: 4 },
   foot: { fontSize: 12, color: t.muted, textAlign: 'center' },
   toast: { position: 'absolute', alignSelf: 'center', bottom: 110, backgroundColor: '#15211C', paddingHorizontal: 16, paddingVertical: 9, borderRadius: 999, maxWidth: '90%' },
