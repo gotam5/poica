@@ -38,7 +38,8 @@ export const PATTERNS = [
 // No logos: brands' marks can't be used without each company's permission.
 // mini: just the face, no text (design swatches).
 // children: shown under the name instead of the type badges (the barcode on the show screen).
-export default function CardFace({ card, palette, big, wide, chip, style, mini, children }) {
+// logoSlot: faintly marks where the logo goes (while the ロゴ画像 tab is open).
+export default function CardFace({ card, palette, big, wide, chip, style, mini, children, logoSlot }) {
   const [bg, c1, c2, c3] = palette;
   const img = bgImageUri(card);
   const pattern = card.pattern || 'bands';
@@ -52,17 +53,22 @@ export default function CardFace({ card, palette, big, wide, chip, style, mini, 
         <View style={[s.logoWrap, { width: logo, height: logo, marginTop: -logo / 2 }, children && s.logoTop, card.logoBg === 'white' && s.logoTile]} pointerEvents="none">
           <Image source={{ uri: img }} style={s.logo} resizeMode="contain" />
         </View>
+      ) : logoSlot && logo ? (
+        <View style={[s.logoWrap, s.slot, { width: logo, height: logo, marginTop: -logo / 2, borderColor: ink }]} pointerEvents="none">
+          <Text style={[s.slotText, { color: ink }]}>ロゴ</Text>
+        </View>
       ) : null}
+      {img && logoSlot && logo ? <View style={[s.logoWrap, s.slotRing, { width: logo + 8, height: logo + 8, right: 10, marginTop: -logo / 2 - 4, borderColor: ink }]} pointerEvents="none" /> : null}
       {mini ? null : (
         <>
           {chip != null ? (
             <View style={s.chip}><Text style={s.chipText} numberOfLines={1}>{chip}</Text></View>
           ) : null}
           <View style={s.nameRow}>
-            <Text style={[s.name, big && s.nameBig, dark && s.nameDark, { color: ink, paddingRight: img ? logo + 12 : 44 }]} numberOfLines={2}>{card.name || 'カード名'}</Text>
+            <Text style={[s.name, big && s.nameBig, dark && s.nameDark, { color: ink, paddingRight: img || logoSlot ? logo + 12 : 44 }]} numberOfLines={2}>{card.name || 'カード名'}</Text>
           </View>
           {children || <View>
-            <View style={[s.types, img && { paddingRight: logo + 12 }]}>
+            <View style={[s.types, (img || logoSlot) && { paddingRight: logo + 12 }]}>
               {cardTypes(card).map((ty) => (
                 <View key={ty} style={[s.type, { backgroundColor: TYPE_COLORS[ty].bg }]}><Text style={[s.typeText, { color: TYPE_COLORS[ty].fg }]}>{TYPE_LABEL[ty]}</Text></View>
               ))}
@@ -126,6 +132,9 @@ const s = StyleSheet.create({
   big: { minHeight: 140, paddingHorizontal: 16, paddingVertical: 14 },
   mini: { minHeight: 0, height: 44, padding: 0, borderRadius: 9 },
   logoWrap: { position: 'absolute', right: 14, top: '50%', borderRadius: 12, overflow: 'hidden' },
+  slot: { borderWidth: 1.5, borderStyle: 'dashed', opacity: 0.45, alignItems: 'center', justifyContent: 'center' },
+  slotRing: { borderWidth: 1.5, borderStyle: 'dashed', opacity: 0.45, borderRadius: 14, overflow: 'visible' },
+  slotText: { fontSize: 12, fontWeight: '800' },
   logoTop: { top: 14, marginTop: 0 },
   logoTile: { backgroundColor: '#FFF', padding: 6 },
   logo: { width: '100%', height: '100%' },

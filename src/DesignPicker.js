@@ -16,18 +16,19 @@ const SWATCHES = [
 const TABS = [['pattern', '模様'], ['color', '色'], ['image', 'ロゴ画像']];
 
 // The card preview, kept above the scrolling settings so it stays in sight while the design changes.
-export function DesignPreview({ d, allCards = [], t, big = true }) {
+export function DesignPreview({ d, allCards = [], t, big = true, logoSlot = false }) {
   const app = d.kind === 'app' && d.catalogId ? catalogApp(d.catalogId) : null;
   return (
     <View style={{ paddingHorizontal: 16, paddingTop: 4, paddingBottom: 10, backgroundColor: t.bg, borderBottomWidth: 1, borderBottomColor: t.line }}>
-      <CardFace card={{ ...d, name: d.name || app?.name || '' }} palette={cardPalette(d, allCards)} big={big} />
+      <CardFace card={{ ...d, name: d.name || app?.name || '' }} palette={cardPalette(d, allCards)} big={big} logoSlot={logoSlot} />
     </View>
   );
 }
 
-export default function DesignPicker({ d, set, allCards = [], canDesign, onLocked, t, big = true, noPreview = false }) {
+export default function DesignPicker({ d, set, allCards = [], canDesign, onLocked, t, big = true, noPreview = false, onTab }) {
   const s = styles(t);
-  const [tab, setTab] = useState('pattern');
+  const [tab, setTabState] = useState('pattern');
+  const setTab = (k) => { setTabState(k); if (onTab) onTab(k); };
   const [slot, setSlot] = useState(0);
   const app = d.kind === 'app' && d.catalogId ? catalogApp(d.catalogId) : null;
   const preview = { ...d, name: d.name || app?.name || '' };
@@ -68,7 +69,7 @@ export default function DesignPicker({ d, set, allCards = [], canDesign, onLocke
 
   return (
     <View style={{ gap: 14 }}>
-      {noPreview ? null : <CardFace card={preview} palette={palette} big={big} />}
+      {noPreview ? null : <CardFace card={preview} palette={palette} big={big} logoSlot={tab === 'image'} />}
 
       <View>
       <View style={locked ? s.dim : null} pointerEvents={locked ? 'none' : 'auto'} importantForAccessibility={locked ? 'no-hide-descendants' : 'auto'}>

@@ -21,6 +21,7 @@ export default function CustomFlow({ initial, allCards = [], canDesign, limits, 
   const [d, setD] = useState({ ...initial, kind: 'barcode', appMode: 'shortcut', catalogId: null, code: '', photo: null });
   const [result, setResult] = useState(null); // null | 'ok' | 'fail'
   const [paywall, setPaywall] = useState(null);
+  const [designTab, setDesignTab] = useState('pattern');
   const set = (patch) => setD((prev) => ({ ...prev, ...patch }));
   const cap = useCapture(set);
 
@@ -81,7 +82,7 @@ export default function CustomFlow({ initial, allCards = [], canDesign, limits, 
       <View style={s.progress}>{order.map((k, i) => <View key={k} style={[s.bar, i < stepNo && s.barOn]} />)}</View>
 
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        {step === 'design' && <DesignPreview d={d} allCards={allCards} t={t} />}
+        {step === 'design' && <DesignPreview d={d} allCards={allCards} t={t} logoSlot={designTab === 'image'} />}
         <ScrollView contentContainerStyle={[s.body, step === 'design' && { paddingTop: 12 }, step === 'done' && { flexGrow: 1, justifyContent: 'center' }]} keyboardShouldPersistTaps="handled">
           {step === 'kind' && (
             <>
@@ -149,7 +150,7 @@ export default function CustomFlow({ initial, allCards = [], canDesign, limits, 
           {step === 'design' && (
             <>
               <Text style={s.lead}>カードのデザインを選んでください</Text>
-              <DesignPicker d={d} set={set} allCards={allCards} canDesign t={t} noPreview />
+              <DesignPicker d={d} set={set} allCards={allCards} canDesign t={t} noPreview onTab={setDesignTab} />
             </>
           )}
 

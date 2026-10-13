@@ -18,6 +18,7 @@ export default function EditScreen({ initial, allCards = [], canDesign = true, l
   const [status, setStatus] = useState(null); // { text, error }
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [paywall, setPaywall] = useState(null);
+  const [designTab, setDesignTab] = useState('pattern');
   const isNew = !!initial.isNew;
   const custom = !!initial.custom; // came from 「自分でカードを作る」: listed apps are picked in the guided flow instead
   const set = (patch) => setD((prev) => ({ ...prev, ...patch }));
@@ -67,7 +68,7 @@ export default function EditScreen({ initial, allCards = [], canDesign = true, l
   const design = (
     <View style={s.field}>
       <Text style={locked ? s.bigLabel : s.label}>カードのデザイン</Text>
-      <DesignPicker d={d} set={set} allCards={allCards} canDesign={canDesign} onLocked={() => setPaywall('design')} t={t} big={locked} noPreview />
+      <DesignPicker d={d} set={set} allCards={allCards} canDesign={canDesign} onLocked={() => setPaywall('design')} t={t} big={locked} noPreview onTab={setDesignTab} />
     </View>
   );
 
@@ -82,7 +83,7 @@ export default function EditScreen({ initial, allCards = [], canDesign = true, l
         <Text style={s.title}>{custom ? '自分でカードを作る' : isNew ? 'カードを追加' : 'カードを編集'}</Text>
         <Pressable onPress={save} hitSlop={10} style={s.saveBtn} accessibilityRole="button"><Text style={s.saveText}>保存</Text></Pressable>
       </View>
-      <DesignPreview d={d} allCards={allCards} t={t} big={locked} />
+      <DesignPreview d={d} allCards={allCards} t={t} big={locked} logoSlot={designTab === 'image'} />
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <ScrollView contentContainerStyle={[s.body, { paddingTop: 14 }]} keyboardShouldPersistTaps="handled">
           {known && d.kind === 'barcode' && (

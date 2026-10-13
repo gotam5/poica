@@ -19,6 +19,7 @@ export default function AddFlow({ initial, allCards = [], canDesign, limits, onU
   const [installed, setInstalled] = useState([]);
   const [result, setResult] = useState(null); // null | 'ok' | 'fail'
   const [paywall, setPaywall] = useState(null);
+  const [designTab, setDesignTab] = useState('pattern');
   const set = (patch) => setD((prev) => ({ ...prev, ...patch }));
 
   useEffect(() => {
@@ -92,11 +93,23 @@ export default function AddFlow({ initial, allCards = [], canDesign, limits, onU
               const list = CATALOG
                 .filter((a) => !q || a.name.toLowerCase().includes(q) || a.keys.some((k) => k.toLowerCase().includes(q)))
                 .sort((a, b) => installed.includes(b.id) - installed.includes(a.id));
-              if (!list.length) return <Text style={s.hint}>見つかりません。下の「自分でカードを作る」から登録できます。</Text>;
+              const customRow = (
+                <Pressable onPress={onCustom} style={({ pressed }) => [s.custom, pressed && s.pressed]} accessibilityRole="button">
+                  <Text style={s.customIcon}>＋</Text>
+                  <View style={{ flex: 1 }}>
+                    <Text style={s.customTitle}>自分でカードを作る</Text>
+                    <Text style={s.customText}>バーコード・写真で登録する、一覧にないアプリ</Text>
+                  </View>
+                  <Text style={s.chev}>›</Text>
+                </Pressable>
+              );
+              if (!list.length) return <><Text style={s.hint}>見つかりません。「自分でカードを作る」から登録できます。</Text>{customRow}</>;
               // Apps already registered go to the bottom and can't be picked again (an app has only one account per phone).
               const added = new Set(allCards.filter((c) => c.kind === 'app' && c.catalogId).map((c) => c.catalogId));
               const fresh = list.filter((a) => !added.has(a.id));
               const done = list.filter((a) => added.has(a.id));
+              const onPhone = fresh.filter((a) => installed.includes(a.id));
+              const others = fresh.filter((a) => !installed.includes(a.id));
               const rows = (items, isAdded) => (
                 <View style={s.list}>
                   {items.map((a, i) => (
@@ -119,7 +132,10 @@ export default function AddFlow({ initial, allCards = [], canDesign, limits, onU
               );
               return (
                 <>
-                  {fresh.length > 0 ? rows(fresh, false) : <Text style={s.hint}>一覧のアプリはすべて追加済みです。</Text>}
+                  {/* 自分でカードを作る sits right under the apps already on this iPhone. */}
+                  {onPhone.length > 0 && rows(onPhone, false)}
+                  {customRow}
+                  {others.length > 0 ? rows(others, false) : !onPhone.length && <Text style={s.hint}>一覧のアプリはすべて追加済みです。</Text>}
                   {done.length > 0 && (
                     <>
                       <Text style={s.groupLabel}>追加済み</Text>
@@ -129,15 +145,6 @@ export default function AddFlow({ initial, allCards = [], canDesign, limits, onU
                 </>
               );
             })()}
-            <Text style={s.groupLabel}>一覧にないとき</Text>
-            <Pressable onPress={onCustom} style={({ pressed }) => [s.custom, pressed && s.pressed]} accessibilityRole="button">
-              <Text style={s.customIcon}>＋</Text>
-              <View style={{ flex: 1 }}>
-                <Text style={s.customTitle}>自分でカードを作る</Text>
-                <Text style={s.customText}>バーコード・写真で登録する、一覧にないアプリ</Text>
-              </View>
-              <Text style={s.chev}>›</Text>
-            </Pressable>
           </ScrollView>
         )}
 
@@ -185,11 +192,11 @@ export default function AddFlow({ initial, allCards = [], canDesign, limits, onU
           </ScrollView>
         )}
 
-        {step === 'design' && <DesignPreview d={d} allCards={allCards} t={t} />}
+        {step === 'design' && <DesignPreview d={d} allCards={allCards} t={t} logoSlot={designTab === 'image'} />}
         {step === 'design' && (
           <ScrollView contentContainerStyle={[s.body, { paddingTop: 12 }]}>
             <Text style={s.lead}>カードのデザインを選んでください</Text>
-            <DesignPicker d={d} set={set} allCards={allCards} canDesign t={t} noPreview />
+            <DesignPicker d={d} set={set} allCards={allCards} canDesign t={t} noPreview onTab={setDesignTab} />
             <Text style={s.hint}>あとからカードを長押しして変えることもできます。</Text>
           </ScrollView>
         )}
