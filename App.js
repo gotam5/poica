@@ -23,6 +23,8 @@ import { fetchNearbyStores, storeHasCard } from './src/nearbyStores';
 import { recordUse, usageSummary } from './src/usage';
 import { sendReportIfDue } from './src/report';
 import Svg, { Circle, Path } from 'react-native-svg';
+import smooth from './src/smooth';
+import Toast from './src/Toast';
 import { CARD_COLORS, KIND_LABEL, useTheme } from './src/theme';
 
 const HOME_ORDER = ['recent', 'suggest', 'list'];
@@ -196,6 +198,7 @@ function Home() {
         if (old && typeof old === 'string' && old !== card[key]) removePhoto(old);
       }
       await saveCard(card);
+      smooth();
       setCards((prev) => (prev.some((c) => c.id === card.id) ? prev.map((c) => (c.id === card.id ? card : c)) : [...prev, card]));
       if (!keepOpen) { setEditing(null); say('保存しました'); }
       return true;
@@ -207,6 +210,7 @@ function Home() {
 
   const removeCard = useCallback(async (card) => {
     try { await deleteCard(card); } catch {}
+    smooth();
     setCards((prev) => prev.filter((c) => c.id !== card.id));
     setEditing(null);
     say('削除しました');
@@ -269,13 +273,7 @@ function Home() {
   };
 
   const toggleSearch = () => {
-    // The bar fades in while the cards below glide down (and back up on close).
-    LayoutAnimation.configureNext({
-      duration: 340,
-      create: { type: LayoutAnimation.Types.easeInEaseOut, property: LayoutAnimation.Properties.opacity },
-      update: { type: LayoutAnimation.Types.spring, springDamping: 0.86 },
-      delete: { type: LayoutAnimation.Types.easeInEaseOut, property: LayoutAnimation.Properties.opacity, duration: 200 },
-    });
+    smooth(340); // the bar fades in while the cards below glide down (and back up on close)
     if (searching) setQuery('');
     setSearching(!searching);
   };
@@ -314,14 +312,16 @@ function Home() {
   });
   const listed = ordered(all);
   const saveOrder = (ids) => {
+    smooth();
     setCardOrder(ids);
     setSetting('cardOrder', ids).catch(() => {});
     setReordering(null);
   };
-  const changeSuggestPos = (v) => { setSuggestPos(v); setSetting('suggestPos', v).catch(() => {}); };
-  const changeHomeOrder = (v) => { setHomeOrder(v); setSetting('homeOrder', v).catch(() => {}); };
-  const changeSuggestCount = (v) => { setSuggestCount(v); setSetting('suggestCount', v).catch(() => {}); };
+  const changeSuggestPos = (v) => { smooth(); setSuggestPos(v); setSetting('suggestPos', v).catch(() => {}); };
+  const changeHomeOrder = (v) => { smooth(); setHomeOrder(v); setSetting('homeOrder', v).catch(() => {}); };
+  const changeSuggestCount = (v) => { smooth(); setSuggestCount(v); setSetting('suggestCount', v).catch(() => {}); };
   const autoOrder = () => {
+    smooth();
     setCardOrder(null);
     setSetting('cardOrder', null).catch(() => {});
     setReordering(null);
@@ -332,10 +332,12 @@ function Home() {
     const card = cards.find((c) => c.id === cardId);
     if (!card) return;
     const gone = new Set(places.map((p) => `${p.lat},${p.lng}`));
+    smooth();
     updateCard({ ...card, places: (card.places || []).filter((p) => !gone.has(`${p.lat},${p.lng}`)) });
     say('この場所の履歴を消しました');
   };
   const forgetAllPlaces = async () => {
+    smooth();
     const next = cards.map((c) => (c.places && c.places.length ? { ...c, places: [] } : c));
     setCards(next);
     for (const c of next) { try { await saveCard(c); } catch {} }
@@ -486,7 +488,7 @@ function Home() {
 
       <Toolbar t={t} active={tab} onChange={goTab} />
 
-      {toast && <View style={s.toast} pointerEvents="none"><Text style={s.toastText}>{toast}</Text></View>}
+      <Toast text={toast} style={s.toast} textStyle={s.toastText} />
 
       <Modal visible={!!shownCard} animationType="slide" presentationStyle="fullScreen" onRequestClose={() => setShowing(null)}>
         <SafeAreaProvider>

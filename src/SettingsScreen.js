@@ -1,8 +1,9 @@
 // 設定 tab. The top page is a plain list; each item opens its own page, where the explanation lives.
 import { useRef, useState } from 'react';
-import { Alert, Animated, LayoutAnimation, Linking, PanResponder, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
+import { Alert, Animated, Linking, PanResponder, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { PaywallModal } from './Paywall';
 import Toggle from './Toggle';
+import smooth from './smooth';
 import CardFace from './CardFace';
 import ReorderGrid from './ReorderGrid';
 import { cardPalette } from './appLink';
@@ -80,8 +81,12 @@ function SettingsPages({ page, go, ...props }) {
             </Pressable>
           ))}
         </View>
-        <Text style={[s.lead, { marginTop: 10 }]}>{manualOrder ? '≡ を押したまま動かして並べ替えます。' : '≡ を押したまま動かすと、その順で固定になります。'}</Text>
-        <ReorderGrid key={gridKey} cards={ordered} allCards={cards} t={t} onChange={onSaveOrder} onDragging={setDragging} />
+        {manualOrder && (
+          <View>
+            <Text style={[s.lead, { marginTop: 10, marginBottom: 8 }]}>≡ を押したまま動かして並べ替えます。</Text>
+            <ReorderGrid key={gridKey} cards={ordered} allCards={cards} t={t} onChange={onSaveOrder} onDragging={setDragging} />
+          </View>
+        )}
       </Sub>
     );
   }
@@ -90,7 +95,6 @@ function SettingsPages({ page, go, ...props }) {
     const move = (i, d) => {
       const next = [...homeOrder];
       [next[i], next[i + d]] = [next[i + d], next[i]];
-      LayoutAnimation.configureNext(LayoutAnimation.create(260, LayoutAnimation.Types.easeInEaseOut, LayoutAnimation.Properties.opacity));
       onHomeOrder(next);
     };
     return (
@@ -145,7 +149,7 @@ function SettingsPages({ page, go, ...props }) {
     return (
       <Sub s={s} go={go} title="近くのお店を調べる">
         <View style={s.box}>
-          <Pressable onPress={onToggleStoreLookup} style={s.switchRow} accessibilityRole="switch" accessibilityState={{ checked: storeLookup }}>
+          <Pressable onPress={() => { smooth(); onToggleStoreLookup(); }} style={s.switchRow} accessibilityRole="switch" accessibilityState={{ checked: storeLookup }}>
             <Text style={[s.rowLabel, { flex: 1 }]}>地図データで近くのお店を調べる</Text>
             <Toggle value={storeLookup} t={t} />
           </Pressable>
@@ -173,7 +177,7 @@ function SettingsPages({ page, go, ...props }) {
     return (
       <Sub s={s} go={go} title="利用データの送信">
         <View style={s.box}>
-          <Pressable onPress={onToggleShareUsage} style={s.switchRow} accessibilityRole="switch" accessibilityState={{ checked: shareUsage }}>
+          <Pressable onPress={() => { smooth(); onToggleShareUsage(); }} style={s.switchRow} accessibilityRole="switch" accessibilityState={{ checked: shareUsage }}>
             <Text style={[s.rowLabel, { flex: 1 }]}>利用データを送る</Text>
             <Toggle value={shareUsage} t={t} />
           </Pressable>
