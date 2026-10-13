@@ -43,7 +43,7 @@ export default function Paywall({ reason = 'cards', limits = DEFAULT_LIMITS, onC
         <View style={s.perks}>
           <Text style={s.perk}>✓ カードを何枚でも登録できます</Text>
           <Text style={s.perk}>✓ 近くのおすすめを{limits.paidNearbyLimit}件まで表示</Text>
-          <Text style={s.perk}>✓ カードのデザインを自由に(好きな画像も)</Text>
+          <Text style={s.perk}>✓ カードのデザインを自由に(ロゴ画像も)</Text>
         </View>
         <Text style={s.note}>{{
           suggest: `購入しなくても、近くのおすすめは${limits.freeNearbyLimit}件表示されます。`,

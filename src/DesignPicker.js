@@ -4,7 +4,7 @@
 import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
-import CardFace, { PATTERNS, SHADES, textHex } from './CardFace';
+import CardFace, { PATTERNS, textHex } from './CardFace';
 import { cardPalette, catalogApp } from './appLink';
 
 const SWATCHES = [
@@ -13,7 +13,7 @@ const SWATCHES = [
   '#15211C', '#FFFFFF',
 ];
 
-const TABS = [['pattern', '模様'], ['color', '色'], ['image', '画像']];
+const TABS = [['pattern', '模様'], ['color', '色'], ['image', 'ロゴ画像']];
 
 export default function DesignPicker({ d, set, allCards = [], canDesign, onLocked, t, big = true }) {
   const s = styles(t);
@@ -30,7 +30,7 @@ export default function DesignPicker({ d, set, allCards = [], canDesign, onLocke
         <CardFace card={preview} palette={palette} big={big} />
         <Pressable onPress={onLocked} style={({ pressed }) => [s.lock, pressed && s.pressed]} accessibilityRole="button">
           <Text style={s.lockTitle}>🔒 デザインを変えるには Poica 無制限</Text>
-          <Text style={s.lockText}>無料版は{app ? 'お店のイメージ色' : 'このデザイン'}で固定です。Poica 無制限なら、模様・配色・文字の色を選んだり、好きな画像をカードにできます。</Text>
+          <Text style={s.lockText}>無料版は{app ? 'お店のイメージ色' : 'このデザイン'}で固定です。Poica 無制限なら、模様・背景色・模様色・文字色を選んだり、ロゴなどの画像をカードに載せられます。</Text>
         </Pressable>
       </View>
     );
@@ -38,7 +38,7 @@ export default function DesignPicker({ d, set, allCards = [], canDesign, onLocke
 
   const pickImage = async () => {
     try {
-      const res = await ImagePicker.launchImageLibraryAsync({ mediaTypes: 'images', quality: 0.8, allowsEditing: true, aspect: [16, 10] });
+      const res = await ImagePicker.launchImageLibraryAsync({ mediaTypes: 'images', quality: 0.8, allowsEditing: true, aspect: [1, 1] });
       if (res.canceled || !res.assets?.length) return;
       set({ bgImage: { temp: res.assets[0].uri } });
     } catch {}
@@ -49,7 +49,7 @@ export default function DesignPicker({ d, set, allCards = [], canDesign, onLocke
     const next = [...palette];
     while (next.length <= i) next.push('#FFFFFF');
     next[i] = c;
-    set({ palette: next, color: next[0], bgImage: null });
+    set({ palette: next, color: next[0] });
   };
 
   const pattern = d.pattern || 'bands';
@@ -84,9 +84,9 @@ export default function DesignPicker({ d, set, allCards = [], canDesign, onLocke
       {tab === 'pattern' && (
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
           {PATTERNS.map((p) => {
-            const on = !d.bgImage && pattern === p.key;
+            const on = pattern === p.key;
             return (
-              <Pressable key={p.key} onPress={() => set({ pattern: p.key, bgImage: null })} style={s.patWrap} accessibilityRole="button" accessibilityLabel={p.label} accessibilityState={{ selected: on }}>
+              <Pressable key={p.key} onPress={() => set({ pattern: p.key })} style={s.patWrap} accessibilityRole="button" accessibilityLabel={p.label} accessibilityState={{ selected: on }}>
                 <View style={[s.patFrame, on && { borderColor: t.ink }]}>
                   <CardFace card={{ pattern: p.key }} palette={palette} mini style={{ width: 76 }} />
                 </View>
@@ -119,7 +119,7 @@ export default function DesignPicker({ d, set, allCards = [], canDesign, onLocke
             })}
           </View>
           {app && app.colors ? (
-            <Pressable onPress={() => set({ palette: null, color: app.colors[0], bgImage: null, textColor: null })} hitSlop={6} accessibilityRole="button">
+            <Pressable onPress={() => set({ palette: null, color: app.colors[0], textColor: null })} hitSlop={6} accessibilityRole="button">
               <Text style={s.reset}>{app.name}の色に戻す</Text>
             </Pressable>
           ) : null}
@@ -140,20 +140,20 @@ export default function DesignPicker({ d, set, allCards = [], canDesign, onLocke
           </View>
           {d.bgImage ? (
             <>
-              <Text style={s.small}>文字を読みやすくする暗さ</Text>
+              <Text style={s.small}>ロゴの後ろ</Text>
               <View style={s.row}>
-                {SHADES.map((x) => {
-                  const on = (d.shade || 'soft') === x.key;
+                {[['none', 'なし'], ['white', '白い台']].map(([k, l]) => {
+                  const on = (d.logoBg || 'none') === k;
                   return (
-                    <Pressable key={x.key} onPress={() => set({ shade: x.key })} style={[s.opt, on && s.optOn]} accessibilityRole="button" accessibilityState={{ selected: on }}>
-                      <Text style={[s.optText, on && s.optTextOn]}>{x.label}</Text>
+                    <Pressable key={k} onPress={() => set({ logoBg: k })} style={[s.opt, on && s.optOn]} accessibilityRole="button" accessibilityState={{ selected: on }}>
+                      <Text style={[s.optText, on && s.optTextOn]}>{l}</Text>
                     </Pressable>
                   );
                 })}
               </View>
             </>
           ) : (
-            <Text style={s.hint}>写真アプリから選んだ画像を、カードの背景にします。画像はこのiPhoneの中だけに保存されます。</Text>
+            <Text style={s.hint}>お店のロゴなどの画像を、カードの右側に正方形で載せます。選ぶときに正方形に切り取れます。画像はこのiPhoneの中だけに保存されます。</Text>
           )}
         </View>
       )}

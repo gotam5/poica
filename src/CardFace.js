@@ -4,7 +4,8 @@ import { TYPE_COLORS } from './theme';
 import { TYPE_LABEL, cardTypes } from './appLink';
 import { photoUri } from './storage';
 
-// card.bgImage: a saved file name, or { temp: uri } while editing (Poica 無制限 only).
+// card.bgImage: the logo picture, a saved file name, or { temp: uri } while editing (Poica 無制限 only).
+// It sits as a square on the right of the card, over the pattern; card.logoBg 'white' puts a white tile behind it.
 export function bgImageUri(card) {
   const b = card && card.bgImage;
   if (!b) return null;
@@ -32,11 +33,6 @@ export const PATTERNS = [
   { key: 'dots', label: 'ドット' },
   { key: 'circles', label: 'サークル' },
 ];
-export const SHADES = [
-  { key: 'none', label: 'なし', a: 0 },
-  { key: 'soft', label: '弱め', a: 0.28 },
-  { key: 'strong', label: '強め', a: 0.5 },
-];
 
 // Card face drawn from 2-4 colors: background, then the pattern's colors.
 // No logos: brands' marks can't be used without each company's permission.
@@ -47,27 +43,25 @@ export default function CardFace({ card, palette, big, wide, chip, style, mini }
   const pattern = card.pattern || 'bands';
   const ink = textHex(card);
   const dark = isDarkText(ink);
-  const shade = (SHADES.find((x) => x.key === (card.shade || 'soft')) || SHADES[1]).a;
+  const logo = mini ? 0 : big ? 84 : 64;
   return (
     <View style={[s.face, { backgroundColor: bg }, big && s.big, mini && s.mini, style]}>
-      {img ? (
-        <>
-          <Image source={{ uri: img }} style={StyleSheet.absoluteFill} resizeMode="cover" />
-          {shade > 0 && <View style={[StyleSheet.absoluteFill, { backgroundColor: dark ? `rgba(255,255,255,${shade})` : `rgba(0,0,0,${shade})` }]} />}
-        </>
-      ) : (
-        <PatternLayer pattern={pattern} bg={bg} c1={c1} c2={c2} c3={c3} />
-      )}
+      <PatternLayer pattern={pattern} bg={bg} c1={c1} c2={c2} c3={c3} />
+      {img && logo ? (
+        <View style={[s.logoWrap, { width: logo, height: logo, marginTop: -logo / 2 }, card.logoBg === 'white' && s.logoTile]} pointerEvents="none">
+          <Image source={{ uri: img }} style={s.logo} resizeMode="contain" />
+        </View>
+      ) : null}
       {mini ? null : (
         <>
           {chip != null ? (
             <View style={s.chip}><Text style={s.chipText} numberOfLines={1}>{chip}</Text></View>
           ) : null}
           <View style={s.nameRow}>
-            <Text style={[s.name, big && s.nameBig, dark && s.nameDark, { color: ink, paddingRight: 44 }]} numberOfLines={2}>{card.name || 'カード名'}</Text>
+            <Text style={[s.name, big && s.nameBig, dark && s.nameDark, { color: ink, paddingRight: img ? logo + 12 : 44 }]} numberOfLines={2}>{card.name || 'カード名'}</Text>
           </View>
           <View>
-            <View style={s.types}>
+            <View style={[s.types, img && { paddingRight: logo + 12 }]}>
               {cardTypes(card).map((ty) => (
                 <View key={ty} style={[s.type, { backgroundColor: TYPE_COLORS[ty].bg }]}><Text style={[s.typeText, { color: TYPE_COLORS[ty].fg }]}>{TYPE_LABEL[ty]}</Text></View>
               ))}
@@ -130,6 +124,9 @@ const s = StyleSheet.create({
   face: { borderRadius: 14, paddingVertical: 12, paddingHorizontal: 12, minHeight: 112, justifyContent: 'space-between', gap: 6, overflow: 'hidden' },
   big: { minHeight: 140, paddingHorizontal: 16, paddingVertical: 14 },
   mini: { minHeight: 0, height: 44, padding: 0, borderRadius: 9 },
+  logoWrap: { position: 'absolute', right: 14, top: '50%', borderRadius: 12, overflow: 'hidden' },
+  logoTile: { backgroundColor: '#FFF', padding: 6 },
+  logo: { width: '100%', height: '100%' },
   band: { position: 'absolute', right: 6, top: -60, width: 30, height: 260, transform: [{ rotate: '22deg' }] },
   thin: { position: 'absolute', right: 44, top: -60, width: 9, height: 260, transform: [{ rotate: '22deg' }] },
   stripe: { position: 'absolute', left: 0, right: 0, bottom: 0, height: 6 },
