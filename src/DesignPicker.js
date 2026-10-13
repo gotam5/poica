@@ -201,7 +201,7 @@ const styles = (t) => StyleSheet.create({
   btnText: { color: t.ink, fontWeight: '700', fontSize: 14 },
   dim: { opacity: 0.35 },
   watermark: { ...StyleSheet.absoluteFillObject, alignItems: 'center', justifyContent: 'center' },
-  wmBadge: { backgroundColor: t.accent, borderRadius: 18, paddingVertical: 14, paddingHorizontal: 22, alignItems: 'center', gap: 3, transform: [{ rotate: '-4deg' }], shadowColor: '#000', shadowOpacity: 0.2, shadowRadius: 8, shadowOffset: { width: 0, height: 3 } },
+  wmBadge: { backgroundColor: t.accent, borderRadius: 18, paddingVertical: 14, paddingHorizontal: 22, alignItems: 'center', gap: 3, shadowColor: '#000', shadowOpacity: 0.2, shadowRadius: 8, shadowOffset: { width: 0, height: 3 } },
   wmTitle: { color: t.accentInk, fontSize: 20, fontWeight: '900', letterSpacing: 1 },
   wmText: { color: t.accentInk, fontSize: 12, fontWeight: '700', opacity: 0.9 },
 });

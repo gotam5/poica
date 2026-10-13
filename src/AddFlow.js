@@ -190,7 +190,7 @@ export default function AddFlow({ initial, allCards = [], canDesign, limits, onU
           <ScrollView contentContainerStyle={[s.body, { paddingTop: 12 }]}>
             <Text style={s.lead}>カードのデザインを選んでください</Text>
             <DesignPicker d={d} set={set} allCards={allCards} canDesign t={t} noPreview />
-            <Text style={s.hint}>最初はお店のイメージ色になっています。あとからカードを長押しして変えることもできます。</Text>
+            <Text style={s.hint}>あとからカードを長押しして変えることもできます。</Text>
           </ScrollView>
         )}
 

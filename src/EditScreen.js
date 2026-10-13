@@ -68,7 +68,6 @@ export default function EditScreen({ initial, allCards = [], canDesign = true, l
     <View style={s.field}>
       <Text style={locked ? s.bigLabel : s.label}>カードのデザイン</Text>
       <DesignPicker d={d} set={set} allCards={allCards} canDesign={canDesign} onLocked={() => setPaywall('design')} t={t} big={locked} noPreview />
-      <Text style={s.hint}>公式アプリは、最初はそのお店のイメージ色になっています。</Text>
     </View>
   );
 
