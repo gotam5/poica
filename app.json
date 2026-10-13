@@ -44,7 +44,7 @@
     "android": {
       "package": "com.gotam5.poica",
       "adaptiveIcon": {
-        "backgroundColor": "#0A7552",
+        "backgroundColor": "#12A06E",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
@@ -66,7 +66,7 @@
           "isIosBackgroundLocationEnabled": false,
           "locationAlwaysAndWhenInUsePermission": false,
           "locationAlwaysPermission": false,
-          "motionUsagePermission": false
+          "motionUsagePermission": "Poicaはモーションセンサーを使いません。位置情報の機能に含まれるため、この説明が表示されます。"
         }
       ],
       [
