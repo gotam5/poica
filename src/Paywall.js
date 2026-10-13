@@ -40,15 +40,28 @@ export default function Paywall({ reason = 'cards', limits = DEFAULT_LIMITS, onC
       <View style={s.body}>
         <Text style={s.title}>{TITLE[reason] ?? `${FREE_LIMIT + 1}枚目からは\n`}Poica 無制限{reason === 'info' ? '' : 'で'}</Text>
         <Text style={s.text}>{price || '一度'}払うと、ずっと使えます。サブスクではありません。</Text>
-        <View style={s.perks}>
-          <Text style={s.perk}>✓ カードを何枚でも登録できます</Text>
-          <Text style={s.perk}>✓ 近くのおすすめを{limits.paidNearbyLimit}件まで表示</Text>
-          <Text style={s.perk}>✓ カードのデザインを自由に(ロゴ画像も)</Text>
+        <View style={s.table}>
+          <View style={[s.tr, s.trHead]}>
+            <Text style={[s.th, s.colLabel]} />
+            <Text style={[s.th, s.colFree]}>無料版</Text>
+            <Text style={[s.th, s.colPaid, { color: t.accent }]}>Poica 無制限</Text>
+          </View>
+          {[
+            ['カード', `${FREE_LIMIT}枚まで`, '何枚でも'],
+            ['近くのおすすめ', `${limits.freeNearbyLimit}件`, `${limits.paidNearbyLimit}件`],
+            ['デザイン', '固定', '自由に\n(ロゴ画像も)'],
+          ].map(([label, free, paid]) => (
+            <View key={label} style={s.tr}>
+              <Text style={[s.td, s.colLabel]}>{label}</Text>
+              <Text style={[s.td, s.colFree, { color: t.muted }]}>{free}</Text>
+              <Text style={[s.td, s.colPaid, s.tdPaid]}>{paid}</Text>
+            </View>
+          ))}
         </View>
         <Text style={s.note}>{{
           suggest: `購入しなくても、近くのおすすめは${limits.freeNearbyLimit}件表示されます。`,
           design: 'いまのデザインは、購入しなくてもそのまま使えます。',
-          info: `無料版はカード${FREE_LIMIT}枚まで、近くのおすすめ${limits.freeNearbyLimit}件です。`,
+          info: '購入前のカードや設定は、そのまま引き継がれます。',
         }[reason] ?? `いまある${FREE_LIMIT}枚は、購入しなくてもこれまでどおり使えます。`}</Text>
         {msg && <Text style={s.msg}>{msg}</Text>}
       </View>
@@ -85,8 +98,15 @@ const styles = (t) => StyleSheet.create({
   body: { flex: 1, justifyContent: 'center', paddingHorizontal: 24, gap: 16 },
   title: { fontSize: 28, fontWeight: '900', color: t.ink, textAlign: 'center', lineHeight: 38 },
   text: { fontSize: 16, color: t.ink, textAlign: 'center', lineHeight: 24 },
-  perks: { alignSelf: 'center', gap: 6, backgroundColor: t.surface, borderRadius: 14, paddingVertical: 12, paddingHorizontal: 18 },
-  perk: { fontSize: 15, fontWeight: '700', color: t.ink },
+  table: { backgroundColor: t.surface, borderRadius: 14, borderWidth: 1, borderColor: t.line, overflow: 'hidden' },
+  tr: { flexDirection: 'row', alignItems: 'center', paddingVertical: 12, paddingHorizontal: 12, borderTopWidth: 1, borderTopColor: t.line },
+  trHead: { borderTopWidth: 0, paddingVertical: 10 },
+  th: { fontSize: 13, fontWeight: '800', color: t.muted, textAlign: 'center' },
+  td: { fontSize: 15, fontWeight: '700', color: t.ink, textAlign: 'center' },
+  tdPaid: { color: t.accent, fontWeight: '900' },
+  colLabel: { flex: 1.1, textAlign: 'left' },
+  colFree: { flex: 1 },
+  colPaid: { flex: 1.2 },
   note: { fontSize: 13, color: t.muted, textAlign: 'center' },
   msg: { fontSize: 14, color: '#C2412D', textAlign: 'center' },
   foot: { paddingHorizontal: 20, paddingBottom: 12, gap: 6 },

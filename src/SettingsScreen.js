@@ -23,16 +23,18 @@ export default function SettingsScreen({ unlimited, iapAvailable, limits, cardCo
     <View style={s.root}>
       <ScrollView contentContainerStyle={s.body}>
         <Text style={s.title}>設定</Text>
-        <Text style={s.sec}>Poica 無制限</Text>
+        <Text style={s.sec}>Poica</Text>
         <View style={s.box}>
-          {unlimited || !iapAvailable ? (
-            <Text style={s.rowTitle}>✓ {unlimited ? '購入済みです。すべての機能が使えます' : 'すべての機能が使えます'}</Text>
+          {unlimited ? (
+            <Text style={s.rowTitle}>✓ Poica 無制限</Text>
+          ) : !iapAvailable ? (
+            <Text style={s.rowTitle}>✓ すべての機能が使えます</Text>
           ) : (
             <>
-              <Text style={s.rowTitle}>無料版を使っています</Text>
+              <Text style={s.rowTitle}>現在無料版</Text>
               <Text style={s.rowText}>カード{limits.freeCardLimit}枚まで(いま{cardCount}枚)・近くのおすすめ{limits.freeNearbyLimit}件・デザインは固定です。</Text>
               <Pressable onPress={() => setPaywall('info')} style={({ pressed }) => [s.primary, pressed && s.pressed]} accessibilityRole="button">
-                <Text style={s.primaryText}>Poica 無制限を見る</Text>
+                <Text style={s.primaryText}>Poica無制限ver.を購入する</Text>
               </Pressable>
             </>
           )}
