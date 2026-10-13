@@ -6,6 +6,7 @@ import Toggle from './Toggle';
 import smooth from './smooth';
 import CardFace from './CardFace';
 import ReorderGrid from './ReorderGrid';
+import ReorderList from './ReorderList';
 import { cardPalette } from './appLink';
 import { useTheme } from './theme';
 import appJson from '../app.json';
@@ -16,7 +17,7 @@ const HOME_LABEL = { recent: '前回使った', suggest: '近くのおすすめ'
 function SettingsPages({ page, go, ...props }) {
   const {
     unlimited, iapAvailable, limits, cards, ordered, manualOrder, onEditCard, onSaveOrder, onAutoOrder,
-    suggestPos, suggestCount, onSuggestPos, onSuggestCount, homeOrder, onHomeOrder,
+    suggestCount, onSuggestCount, homeOrder, onHomeOrder, homeHidden, onHomeHidden,
     placeCount, storeLookup, onToggleStoreLookup, onForgetPlaces, shareUsage, onToggleShareUsage,
     onUnlocked, privacyUrl, supportUrl,
   } = props;
@@ -92,54 +93,52 @@ function SettingsPages({ page, go, ...props }) {
   }
 
   if (page === 'home') {
-    const move = (i, d) => {
-      const next = [...homeOrder];
-      [next[i], next[i + d]] = [next[i + d], next[i]];
-      onHomeOrder(next);
+    const shownCount = homeOrder.filter((k) => !homeHidden.includes(k)).length;
+    const toggle = (k) => {
+      const hidden = homeHidden.includes(k);
+      if (!hidden && shownCount <= 1) return; // keep at least one section on ホーム
+      onHomeHidden(hidden ? homeHidden.filter((x) => x !== k) : [...homeHidden, k]);
     };
+    const suggestOn = !homeHidden.includes('suggest');
     return (
-      <Sub s={s} go={go} title="ホームの並び順">
+      <Sub s={s} go={go} title="ホームの並び" scroll={!dragging}>
         <View style={s.box}>
-          {homeOrder.map((k, i) => (
-            <View key={k} style={[s.row, i < homeOrder.length - 1 && s.rowLine]}>
-              <Text style={s.rowLabel}>{HOME_LABEL[k]}</Text>
-              <Pressable onPress={() => move(i, -1)} disabled={i === 0} hitSlop={6} style={({ pressed }) => [s.arrow, i === 0 && s.arrowOff, pressed && s.pressed]} accessibilityRole="button" accessibilityLabel={`${HOME_LABEL[k]}を上へ`}>
-                <Text style={s.arrowText}>↑</Text>
-              </Pressable>
-              <Pressable onPress={() => move(i, 1)} disabled={i === homeOrder.length - 1} hitSlop={6} style={({ pressed }) => [s.arrow, i === homeOrder.length - 1 && s.arrowOff, pressed && s.pressed]} accessibilityRole="button" accessibilityLabel={`${HOME_LABEL[k]}を下へ`}>
-                <Text style={s.arrowText}>↓</Text>
-              </Pressable>
+          <ReorderList
+            items={homeOrder}
+            t={t}
+            labelOf={(k) => HOME_LABEL[k]}
+            onChange={onHomeOrder}
+            onDragging={setDragging}
+            renderRow={(k) => {
+              const on = !homeHidden.includes(k);
+              return (
+                <Pressable onPress={() => toggle(k)} style={s.homeRow} accessibilityRole="switch" accessibilityState={{ checked: on }}>
+                  <Text style={[s.rowLabel, !on && { color: t.muted }]}>{HOME_LABEL[k]}</Text>
+                  <Toggle value={on} t={t} />
+                </Pressable>
+              );
+            }}
+          />
+        </View>
+        <Text style={s.lead}>≡ を押したまま動かすと順番を変えられます。スイッチで表示・非表示を切り替えます。</Text>
+
+        {suggestOn && (
+          <View>
+            <Text style={s.sec}>近くのおすすめの数</Text>
+            <View style={[s.box, { marginTop: 8 }]}>
+              {Array.from({ length: limits.paidNearbyLimit }, (_, i) => i + 1).map((n, i, arr) => {
+                const lockedN = free && n > limits.freeNearbyLimit;
+                return (
+                  <Pressable key={n} onPress={() => (lockedN ? setPaywall('suggest') : onSuggestCount(n))} style={[s.row, i < arr.length - 1 && s.rowLine]} accessibilityRole="radio" accessibilityState={{ checked: !lockedN && count === n }}>
+                    <Text style={[s.rowLabel, lockedN && { color: t.muted }]}>{n}件</Text>
+                    {lockedN ? <Text style={s.proTag}>PRO</Text> : count === n ? <Text style={s.check}>✓</Text> : null}
+                  </Pressable>
+                );
+              })}
             </View>
-          ))}
-        </View>
-        <Text style={s.lead}>ホーム画面に表示する順番です。</Text>
-      </Sub>
-    );
-  }
-
-  if (page === 'suggest') {
-    return (
-      <Sub s={s} go={go} title="おすすめの表示">
-        <View style={s.box}>
-          <Pressable onPress={() => onSuggestPos(suggestPos === 'off' ? 'afterRecent' : 'off')} style={s.switchRow} accessibilityRole="switch" accessibilityState={{ checked: suggestPos !== 'off' }}>
-            <Text style={[s.rowLabel, { flex: 1 }]}>近くのおすすめを表示する</Text>
-            <Toggle value={suggestPos !== 'off'} t={t} />
-          </Pressable>
-        </View>
-
-        <Text style={s.sec}>表示する数</Text>
-        <View style={s.box}>
-          {Array.from({ length: limits.paidNearbyLimit }, (_, i) => i + 1).map((n, i, arr) => {
-            const lockedN = free && n > limits.freeNearbyLimit;
-            return (
-              <Pressable key={n} onPress={() => (lockedN ? setPaywall('suggest') : onSuggestCount(n))} style={[s.row, i < arr.length - 1 && s.rowLine]} accessibilityRole="radio" accessibilityState={{ checked: !lockedN && count === n }}>
-                <Text style={[s.rowLabel, lockedN && { color: t.muted }]}>{n}件</Text>
-                {lockedN ? <Text style={s.proTag}>PRO</Text> : count === n ? <Text style={s.check}>✓</Text> : null}
-              </Pressable>
-            );
-          })}
-        </View>
-        {free && <Text style={s.lead}>PROなら{limits.paidNearbyLimit}件まで表示できます。</Text>}
+            {free && <Text style={[s.lead, { marginTop: 8 }]}>PROなら{limits.paidNearbyLimit}件まで表示できます。</Text>}
+          </View>
+        )}
         {paywallModal}
       </Sub>
     );
@@ -235,8 +234,7 @@ function SettingsPages({ page, go, ...props }) {
         <View style={s.box}>
           <Row s={s} go={go} label="カードの編集" to="edit" />
           <Row s={s} go={go} label="並び替え" value={manualOrder ? '固定' : '自動'} to="order" />
-          <Row s={s} go={go} label="ホームの並び順" to="home" />
-          <Row s={s} go={go} label="おすすめの表示" value={suggestPos === 'off' ? '表示しない' : `${count}件`} to="suggest" />
+          <Row s={s} go={go} label="ホームの並び" to="home" />
           <Row s={s} go={go} label="近くのお店を調べる" value={storeLookup ? 'オン' : 'オフ'} to="lookup" />
           <Row s={s} go={go} label="覚えた場所のリセット" value={`${placeCount}か所`} to="places" last />
         </View>
@@ -352,6 +350,7 @@ const styles = (t) => StyleSheet.create({
   arrow: { width: 34, height: 30, borderRadius: 8, borderWidth: 1, borderColor: t.accent, alignItems: 'center', justifyContent: 'center' },
   arrowOff: { borderColor: t.line, opacity: 0.4 },
   arrowText: { color: t.accent, fontSize: 16, fontWeight: '800' },
+  homeRow: { flex: 1, flexDirection: 'row', alignItems: 'center', height: '100%', paddingRight: 2 },
   rowSub: { fontSize: 12, color: t.muted, marginTop: 2 },
   rowValue: { fontSize: 15, color: t.muted },
   chev: { fontSize: 22, color: t.muted, marginLeft: 2, marginTop: -2 },

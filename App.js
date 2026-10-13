@@ -62,8 +62,8 @@ function Home() {
   const [usageAsked, setUsageAsked] = useState(true); // asked about sending usage data (first visit to 記録)
   const [cardOrder, setCardOrder] = useState(null); // ids in the order the user chose; null = most used first
   const [reordering, setReordering] = useState(null); // focused card id while the reorder screen is open
-  const [suggestPos, setSuggestPos] = useState('afterRecent'); // 'off' hides 近くのおすすめ; anything else shows it
   const [homeOrder, setHomeOrder] = useState(HOME_ORDER); // order of the blocks on ホーム
+  const [homeHidden, setHomeHidden] = useState([]); // blocks switched off on ホーム
   const [suggestCount, setSuggestCount] = useState(null); // null = as many as allowed
   const scrollRef = useRef(null);
 
@@ -79,7 +79,11 @@ function Home() {
     getSetting('storeLookup', true).then(setStoreLookup).catch(() => {});
     getSetting('shareUsage', false).then(setShareUsage).catch(() => {});
     getSetting('usageAsked', false).then(setUsageAsked).catch(() => {});
-    getSetting('suggestPos', 'afterRecent').then(setSuggestPos).catch(() => {});
+    getSetting('homeHidden', null).then(async (v) => {
+      if (Array.isArray(v)) return setHomeHidden(v.filter((k) => HOME_ORDER.includes(k)));
+      // Older versions had a separate 「おすすめを表示しない」.
+      if ((await getSetting('suggestPos', 'afterRecent')) === 'off') setHomeHidden(['suggest']);
+    }).catch(() => {});
     getSetting('homeOrder', null).then(async (v) => {
       if (Array.isArray(v) && v.length === HOME_ORDER.length && HOME_ORDER.every((k) => v.includes(k))) return setHomeOrder(v);
       // Older versions only had 「おすすめを一番上」.
@@ -317,8 +321,8 @@ function Home() {
     setSetting('cardOrder', ids).catch(() => {});
     setReordering(null);
   };
-  const changeSuggestPos = (v) => { smooth(); setSuggestPos(v); setSetting('suggestPos', v).catch(() => {}); };
   const changeHomeOrder = (v) => { smooth(); setHomeOrder(v); setSetting('homeOrder', v).catch(() => {}); };
+  const changeHomeHidden = (v) => { smooth(); setHomeHidden(v); setSetting('homeHidden', v).catch(() => {}); };
   const changeSuggestCount = (v) => { smooth(); setSuggestCount(v); setSetting('suggestCount', v).catch(() => {}); };
   const autoOrder = () => {
     smooth();
@@ -453,7 +457,7 @@ function Home() {
           unlimited={unlimited} iapAvailable={iapAvailable} limits={limits} placeCount={placeCount}
           cards={cards} ordered={ordered(cards)} manualOrder={!!cardOrder} onEditCard={(c) => setEditing({ ...c })}
           onSaveOrder={(ids) => { setCardOrder(ids); setSetting('cardOrder', ids).catch(() => {}); }} onAutoOrder={autoOrder}
-          suggestPos={suggestPos} homeOrder={homeOrder} onHomeOrder={changeHomeOrder} suggestCount={suggestCount} onSuggestPos={changeSuggestPos} onSuggestCount={changeSuggestCount}
+          homeOrder={homeOrder} onHomeOrder={changeHomeOrder} homeHidden={homeHidden} onHomeHidden={changeHomeHidden} suggestCount={suggestCount} onSuggestCount={changeSuggestCount}
           storeLookup={storeLookup} onToggleStoreLookup={toggleStoreLookup} onForgetPlaces={forgetAllPlaces}
           shareUsage={shareUsage} onToggleShareUsage={toggleShareUsage}
           onUnlocked={markUnlocked} privacyUrl={PRIVACY_URL} supportUrl={SUPPORT_URL}
@@ -480,8 +484,8 @@ function Home() {
           </View>
         )}
 
-        {homeOrder.map((k) => (
-          <Fragment key={k}>{k === 'recent' ? recentBlock : k === 'suggest' ? (suggestPos !== 'off' && suggestBlock) : listBlock}</Fragment>
+        {homeOrder.filter((k) => !homeHidden.includes(k)).map((k) => (
+          <Fragment key={k}>{k === 'recent' ? recentBlock : k === 'suggest' ? suggestBlock : listBlock}</Fragment>
         ))}
 
       </ScrollView>}
