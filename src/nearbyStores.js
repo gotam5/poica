@@ -24,15 +24,16 @@ function appsOf(tags) {
   return CHAINS.filter((x) => x.re.test(text)).map((x) => x.id);
 }
 
-export async function fetchNearbyStores(pos) {
+// radius: metres to search (the user's 近くの範囲), 250 when automatic.
+export async function fetchNearbyStores(pos, radius = RADIUS_M) {
   if (!pos || !ALL) return [];
   const lat = round(pos.lat);
   const lng = round(pos.lng);
-  const key = `${lat},${lng}`;
+  const key = `${lat},${lng},${radius}`;
   const hit = cache.get(key);
   if (hit && Date.now() - hit.t < CACHE_MS) return hit.stores;
 
-  const around = `(around:${RADIUS_M},${lat},${lng})`;
+  const around = `(around:${radius},${lat},${lng})`;
   const query = `[out:json][timeout:8];(nwr["name"~"${ALL}",i]${around};nwr["brand"~"${ALL}",i]${around};);out center tags 60;`;
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), 9000);

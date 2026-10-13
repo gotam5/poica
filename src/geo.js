@@ -22,8 +22,9 @@ export function nearestPlace(card, pos) {
   return best;
 }
 
-// How close counts as "this shop": widen it when the GPS fix is poor (indoors).
-export function nearRadius(pos) {
+// How close counts as "this shop". range: metres set by the user, or 'auto' to widen it when the GPS fix is poor (indoors).
+export function nearRadius(pos, range = 'auto') {
+  if (typeof range === 'number') return range;
   return Math.min(400, Math.max(150, (pos ? pos.acc : 0) * 1.5));
 }
 
@@ -61,8 +62,9 @@ export function usesNear(card, pos, r) {
   return card.places.reduce((sum, p) => (distance(pos, p) <= r ? sum + (p.n || 1) : sum), 0);
 }
 
-export function arrange(cards, pos, query, stores = [], storeHasCard = () => false, maxSuggest = 3) {
-  const r = nearRadius(pos);
+export function arrange(cards, pos, query, stores = [], storeHasCard = () => false, maxSuggest = 3, range = 'auto') {
+  const r = nearRadius(pos, range);
+  const storeR = typeof range === 'number' ? range : 300;
   const byId = new Map();
   for (const c of cards) {
     const d = nearestPlace(c, pos);
@@ -76,7 +78,7 @@ export function arrange(cards, pos, query, stores = [], storeHasCard = () => fal
         const d = distance(pos, st);
         if (!best || d < best.dist) best = { dist: d, store: st.name };
       }
-      if (!best || best.dist > 300) continue;
+      if (!best || best.dist > storeR) continue;
       const prev = byId.get(c.id);
       if (!prev) byId.set(c.id, { card: c, dist: best.dist, reason: 'store', store: best.store, here: 0 });
     }

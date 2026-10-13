@@ -64,6 +64,7 @@ function Home() {
   const [homeOrder, setHomeOrder] = useState(HOME_ORDER); // order of the blocks on ホーム
   const [homeHidden, setHomeHidden] = useState([]); // blocks switched off on ホーム
   const [suggestCount, setSuggestCount] = useState(null); // null = as many as allowed
+  const [nearRange, setNearRange] = useState('auto'); // metres that count as 近く, or 'auto'
   const scrollRef = useRef(null);
 
   const say = useCallback((text) => {
@@ -92,6 +93,7 @@ function Home() {
       if ((await getSetting('suggestPos', 'afterRecent')) === 'top') setHomeOrder(['suggest', 'list']);
     }).catch(() => {});
     getSetting('suggestCount', null).then(setSuggestCount).catch(() => {});
+    getSetting('nearRange', 'auto').then(setNearRange).catch(() => {});
     getSetting('cardOrder', null).then((v) => Array.isArray(v) && setCardOrder(v)).catch(() => {});
     // The purchase is remembered on the phone so the limit stays off offline; StoreKit is the source of truth when reachable.
     loadLimits().then(setLimits).then(() => refreshLimits()).then((l) => l && setLimits(l)).catch(() => {});
@@ -108,12 +110,12 @@ function Home() {
   useEffect(() => {
     if (!storeLookup || !posKey || !hasCatalogCard) { setStores([]); return; }
     let alive = true;
-    fetchNearbyStores(pos)
+    fetchNearbyStores(pos, typeof nearRange === 'number' ? nearRange : undefined)
       .then((list) => { if (alive) setStores(list); })
       .catch(() => { if (alive) setStores([]); });
     return () => { alive = false; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [storeLookup, posKey, hasCatalogCard]);
+  }, [storeLookup, posKey, hasCatalogCard, nearRange]);
 
   const toggleStoreLookup = () => {
     const next = !storeLookup;
@@ -122,19 +124,27 @@ function Home() {
   };
 
   // "While using the app" location: ask once, then re-read every time the app comes to the front.
+  // A re-check (tap, or back to the front) keeps the current position on screen until the new fix arrives, so nothing flickers.
+  const locating = useRef(false);
+  const hasPos = useRef(false);
   const locate = useCallback(async () => {
-    setLoc({ state: 'wait' });
+    if (locating.current) return;
+    locating.current = true;
+    if (!hasPos.current) setLoc({ state: 'wait' });
     try {
       let perm = await Location.getForegroundPermissionsAsync();
       if (perm.status !== 'granted' && perm.canAskAgain) perm = await Location.requestForegroundPermissionsAsync();
       if (perm.status !== 'granted') return setLoc({ state: 'denied' });
       const last = await Location.getLastKnownPositionAsync({ maxAge: 60000, requiredAccuracy: 200 });
-      if (last) setPos({ lat: last.coords.latitude, lng: last.coords.longitude, acc: last.coords.accuracy ?? 999, t: last.timestamp });
+      if (last && !hasPos.current) setPos({ lat: last.coords.latitude, lng: last.coords.longitude, acc: last.coords.accuracy ?? 999, t: last.timestamp });
       const p = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High });
       setPos({ lat: p.coords.latitude, lng: p.coords.longitude, acc: p.coords.accuracy ?? 999, t: Date.now() });
+      hasPos.current = true;
       setLoc({ state: 'ok' });
     } catch {
-      setLoc({ state: 'fail' });
+      if (!hasPos.current) setLoc({ state: 'fail' });
+    } finally {
+      locating.current = false;
     }
   }, []);
 
@@ -240,7 +250,7 @@ function Home() {
     return <View style={[s.root, { alignItems: 'center', justifyContent: 'center' }]}><ActivityIndicator color={t.accent} /></View>;
   }
 
-  const { suggest: allSuggest, all } = arrange(cards, pos, query, stores, storeHasCard, limits.paidNearbyLimit);
+  const { suggest: allSuggest, all } = arrange(cards, pos, query, stores, storeHasCard, limits.paidNearbyLimit, nearRange);
   // Free: only the top freeNearbyLimit recommendations (after the usage/distance sort); PRO shows paidNearbyLimit. The user can also choose fewer, or hide them.
   const free = iapAvailable && !unlimited;
   const canDesign = !free;
@@ -297,6 +307,7 @@ function Home() {
   };
   const changeHomeOrder = (v) => { smooth(); setHomeOrder(v); setSetting('homeOrder', v).catch(() => {}); };
   const changeHomeHidden = (v) => { smooth(); setHomeHidden(v); setSetting('homeHidden', v).catch(() => {}); };
+  const changeNearRange = (v) => { smooth(); setNearRange(v); setSetting('nearRange', v).catch(() => {}); };
   const changeSuggestCount = (v) => { smooth(); setSuggestCount(v); setSetting('suggestCount', v).catch(() => {}); };
   const autoOrder = () => {
     smooth();
@@ -419,7 +430,7 @@ function Home() {
           iapAvailable={iapAvailable} limits={limits} placeCount={placeCount}
           cards={cards} ordered={ordered(cards)} manualOrder={!!cardOrder} onEditCard={(c) => setEditing({ ...c })}
           onSaveOrder={(ids) => { setCardOrder(ids); setSetting('cardOrder', ids).catch(() => {}); }} onAutoOrder={autoOrder}
-          homeOrder={homeOrder} onHomeOrder={changeHomeOrder} homeHidden={homeHidden} onHomeHidden={changeHomeHidden} suggestCount={suggestCount} onSuggestCount={changeSuggestCount}
+          homeOrder={homeOrder} onHomeOrder={changeHomeOrder} homeHidden={homeHidden} onHomeHidden={changeHomeHidden} suggestCount={suggestCount} onSuggestCount={changeSuggestCount} nearRange={nearRange} onNearRange={changeNearRange}
           storeLookup={storeLookup} onToggleStoreLookup={toggleStoreLookup} onForgetPlaces={forgetAllPlaces}
           onUnlocked={markUnlocked} privacyUrl={PRIVACY_URL} supportUrl={SUPPORT_URL}
         />
