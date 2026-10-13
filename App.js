@@ -21,7 +21,6 @@ import { cardPalette, openCardApp } from './src/appLink';
 import CardFace from './src/CardFace';
 import { fetchNearbyStores, storeHasCard } from './src/nearbyStores';
 import { recordUse, usageSummary } from './src/usage';
-import { sendReportIfDue } from './src/report';
 import Svg, { Circle, Path } from 'react-native-svg';
 import smooth from './src/smooth';
 import Toast from './src/Toast';
@@ -58,8 +57,6 @@ function Home() {
   const [paywall, setPaywall] = useState(null); // null | 'cards' | 'suggest'
   const [limits, setLimits] = useState(DEFAULT_LIMITS);
   const [tab, setTab] = useState('home'); // home | map | stats | settings
-  const [shareUsage, setShareUsage] = useState(false);
-  const [usageAsked, setUsageAsked] = useState(true); // asked about sending usage data (first visit to 記録)
   const [cardOrder, setCardOrder] = useState(null); // ids in the order the user chose; null = most used first
   const [reordering, setReordering] = useState(null); // focused card id while the reorder screen is open
   const [homeOrder, setHomeOrder] = useState(HOME_ORDER); // order of the blocks on ホーム
@@ -77,8 +74,6 @@ function Home() {
     // セット was removed; old set cards stay hidden.
     loadCards().then((list) => setCards(list.filter((c) => c.kind !== 'set'))).catch(() => setCards([]));
     getSetting('storeLookup', true).then(setStoreLookup).catch(() => {});
-    getSetting('shareUsage', false).then(setShareUsage).catch(() => {});
-    getSetting('usageAsked', false).then(setUsageAsked).catch(() => {});
     getSetting('homeHidden', null).then(async (v) => {
       if (Array.isArray(v)) return setHomeHidden(v.filter((k) => HOME_ORDER.includes(k)));
       // Older versions had a separate 「おすすめを表示しない」.
@@ -111,21 +106,6 @@ function Home() {
     return () => { alive = false; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [storeLookup, posKey, hasCatalogCard]);
-
-  // The opt-in usage report goes out at most weekly, after config.json says where (see report.js).
-  const reportTried = useRef(false);
-  useEffect(() => {
-    if (!cards || !shareUsage || reportTried.current) return;
-    reportTried.current = true;
-    const id = setTimeout(() => sendReportIfDue(cards), 15000);
-    return () => clearTimeout(id);
-  }, [cards, shareUsage]);
-
-  const toggleShareUsage = () => {
-    const next = !shareUsage;
-    setShareUsage(next);
-    setSetting('shareUsage', next).catch(() => {});
-  };
 
   const toggleStoreLookup = () => {
     const next = !storeLookup;
@@ -261,21 +241,6 @@ function Home() {
   const anyPlaces = cards.some((c) => c.places && c.places.length);
   const placeCount = cards.reduce((n, c) => n + (c.places ? c.places.length : 0), 0);
 
-  // The first time 記録 opens, ask whether usage data may be sent (it stays off unless they agree).
-  const askUsage = () => {
-    setUsageAsked(true);
-    setSetting('usageAsked', true).catch(() => {});
-    const answer = (yes) => { setShareUsage(yes); setSetting('shareUsage', yes).catch(() => {}); };
-    Alert.alert(
-      '利用データの送信について',
-      'アプリの改善のために、どの種類のカードを何回開いたか・開けなかったかの集計を、週に1回まで送ってもいいですか？\n\nカードの名前・番号・写真・場所や、あなたやこのiPhoneを特定できる情報は送りません。あとから設定でいつでも変えられます。',
-      [
-        { text: '送らない', style: 'cancel', onPress: () => answer(false) },
-        { text: '送る', onPress: () => answer(true) },
-      ],
-    );
-  };
-
   const toggleSearch = () => {
     smooth(340); // the bar fades in while the cards below glide down (and back up on close)
     if (searching) setQuery('');
@@ -286,7 +251,6 @@ function Home() {
   const goTab = (next) => {
     if (next === 'home' && tab === 'home') scrollRef.current?.scrollTo({ y: 0, animated: true });
     setTab(next);
-    if (next === 'stats' && !usageAsked) askUsage();
   };
 
   // Long-press on a card: edit it, or reorder the list.
@@ -459,7 +423,6 @@ function Home() {
           onSaveOrder={(ids) => { setCardOrder(ids); setSetting('cardOrder', ids).catch(() => {}); }} onAutoOrder={autoOrder}
           homeOrder={homeOrder} onHomeOrder={changeHomeOrder} homeHidden={homeHidden} onHomeHidden={changeHomeHidden} suggestCount={suggestCount} onSuggestCount={changeSuggestCount}
           storeLookup={storeLookup} onToggleStoreLookup={toggleStoreLookup} onForgetPlaces={forgetAllPlaces}
-          shareUsage={shareUsage} onToggleShareUsage={toggleShareUsage}
           onUnlocked={markUnlocked} privacyUrl={PRIVACY_URL} supportUrl={SUPPORT_URL}
         />
       )}

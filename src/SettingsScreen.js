@@ -19,7 +19,7 @@ function SettingsPages({ page, go, ...props }) {
   const {
     unlimited, iapAvailable, limits, cards, ordered, manualOrder, onEditCard, onSaveOrder, onAutoOrder,
     suggestCount, onSuggestCount, homeOrder, onHomeOrder, homeHidden, onHomeHidden,
-    placeCount, storeLookup, onToggleStoreLookup, onForgetPlaces, shareUsage, onToggleShareUsage,
+    placeCount, storeLookup, onToggleStoreLookup, onForgetPlaces,
     onUnlocked, privacyUrl, supportUrl,
   } = props;
   const t = useTheme();
@@ -185,20 +185,6 @@ function SettingsPages({ page, go, ...props }) {
     );
   }
 
-  if (page === 'share') {
-    return (
-      <Sub s={s} go={go} title="利用データの送信">
-        <View style={s.box}>
-          <Pressable onPress={() => { smooth(); onToggleShareUsage(); }} style={s.switchRow} accessibilityRole="switch" accessibilityState={{ checked: shareUsage }}>
-            <Text style={[s.rowLabel, { flex: 1 }]}>利用データを送る</Text>
-            <Toggle value={shareUsage} t={t} />
-          </Pressable>
-        </View>
-        <Text style={s.lead}>アプリ改善のため、カードの種類ごとの利用回数の集計を週1回まで送ります。</Text>
-      </Sub>
-    );
-  }
-
   if (page === 'about') {
     return (
       <Sub s={s} go={go} title="アプリ情報">
@@ -253,11 +239,6 @@ function SettingsPages({ page, go, ...props }) {
           <Row s={s} go={go} label="ホームの並び" to="home" />
           <Row s={s} go={go} label="近くのお店を調べる" value={storeLookup ? 'オン' : 'オフ'} to="lookup" />
           <Row s={s} go={go} label="覚えた場所のリセット" value={`${placeCount}か所`} to="places" last />
-        </View>
-
-        <Text style={s.sec}>データ</Text>
-        <View style={s.box}>
-          <Row s={s} go={go} label="利用データの送信" value={shareUsage ? 'オン' : 'オフ'} to="share" last />
         </View>
 
         <View style={[s.box, { marginTop: 22 }]}>
