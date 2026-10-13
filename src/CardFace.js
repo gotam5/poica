@@ -4,7 +4,7 @@ import { TYPE_COLORS } from './theme';
 import { TYPE_LABEL, cardTypes } from './appLink';
 import { photoUri } from './storage';
 
-// card.bgImage: the logo picture, a saved file name, or { temp: uri } while editing (Poica 無制限 only).
+// card.bgImage: the logo picture, a saved file name, or { temp: uri } while editing (PRO only).
 // It sits as a square on the right of the card, over the pattern; card.logoBg 'white' puts a white tile behind it.
 export function bgImageUri(card) {
   const b = card && card.bgImage;
@@ -12,7 +12,7 @@ export function bgImageUri(card) {
   return typeof b === 'object' ? b.temp : photoUri(b);
 }
 
-// card.textColor: a hex color (Poica 無制限), or the older 'light' / 'dark'.
+// card.textColor: a hex color (PRO), or the older 'light' / 'dark'.
 export function textHex(card) {
   const c = card && card.textColor;
   if (c === 'dark') return '#15211C';
@@ -25,7 +25,7 @@ function isDarkText(hex) {
   return lum < 140;
 }
 
-// Card patterns. 'bands' is the original look; the others are for Poica 無制限.
+// Card patterns. 'bands' is the original look; the others are for PRO.
 export const PATTERNS = [
   { key: 'bands', label: '斜めライン' },
   { key: 'plain', label: '無地' },

@@ -12,7 +12,7 @@ import { useTheme } from './theme';
 
 // 「自分でカードを作る」, one step at a time:
 // 1. how (barcode/photo, or an app not in the list) → 2. name → 3. read the card / set up the shortcut
-// → 4. design (Poica 無制限 only) → done.
+// → 4. design (PRO only) → done.
 export default function CustomFlow({ initial, allCards = [], canDesign, limits, onUnlocked, onCancel, onSave }) {
   const t = useTheme();
   const s = styles(t);
@@ -161,7 +161,7 @@ export default function CustomFlow({ initial, allCards = [], canDesign, limits, 
               <Text style={[s.hint, { textAlign: 'center' }]}>ホームでこのカードを押すと、{isApp ? 'アプリが開きます' : 'レジで見せる画面が出ます'}。</Text>
               {!canDesign && (
                 <Pressable onPress={() => setPaywall('design')} hitSlop={6} accessibilityRole="button">
-                  <Text style={s.link}>カードのデザインを変えるには Poica 無制限</Text>
+                  <Text style={s.link}>カードのデザインを変えるには PRO</Text>
                 </Pressable>
               )}
             </>

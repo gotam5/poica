@@ -38,13 +38,13 @@ export default function Paywall({ reason = 'cards', limits = DEFAULT_LIMITS, onC
   return (
     <SafeAreaView style={s.root} edges={['top', 'bottom']}>
       <View style={s.body}>
-        <Text style={s.title}>{TITLE[reason] ?? `${FREE_LIMIT + 1}枚目からは\n`}Poica 無制限{reason === 'info' ? '' : 'で'}</Text>
+        <Text style={s.title}>{TITLE[reason] ?? `${FREE_LIMIT + 1}枚目からは\n`}PRO{reason === 'info' ? '' : 'で'}</Text>
         <Text style={s.text}>{price || '一度'}払うと、ずっと使えます。サブスクではありません。</Text>
         <View style={s.table}>
           <View style={[s.tr, s.trHead]}>
             <Text style={[s.th, s.colLabel]} />
             <Text style={[s.th, s.colFree]}>無料版</Text>
-            <Text style={[s.th, s.colPaid, { color: t.accent }]}>Poica 無制限</Text>
+            <Text style={[s.th, s.colPaid, { color: t.accent }]}>PRO</Text>
           </View>
           {[
             ['カード', `${FREE_LIMIT}枚まで`, '何枚でも'],

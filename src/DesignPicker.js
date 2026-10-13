@@ -1,5 +1,5 @@
 // Card design. Free: fixed to the shop's colors (or the card color).
-// Poica 無制限: pattern, background / pattern colors, text color, and the user's own picture,
+// PRO: pattern, background / pattern colors, text color, and the user's own picture,
 // shown one section at a time (模様 / 色 / 画像) so the screen stays calm.
 import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
@@ -33,18 +33,8 @@ export default function DesignPicker({ d, set, allCards = [], canDesign, onLocke
   const preview = { ...d, name: d.name || app?.name || '' };
   const palette = cardPalette(d, allCards);
 
-  if (!canDesign) {
-    // A design chosen while unlimited stays as it was; free users just can't change it.
-    return (
-      <View style={{ gap: 12 }}>
-        {noPreview ? null : <CardFace card={preview} palette={palette} big={big} />}
-        <Pressable onPress={onLocked} style={({ pressed }) => [s.lock, pressed && s.pressed]} accessibilityRole="button">
-          <Text style={s.lockTitle}>🔒 デザインを変えるには Poica 無制限</Text>
-          <Text style={s.lockText}>無料版は{app ? 'お店のイメージ色' : 'このデザイン'}で固定です。Poica 無制限なら、模様・背景色・模様色・文字色を選んだり、ロゴなどの画像をカードに載せられます。</Text>
-        </Pressable>
-      </View>
-    );
-  }
+  // Free: the PRO design tools are shown dimmed under a 「PROを購入する」 watermark; the current design stays as it is.
+  const locked = !canDesign;
 
   const pickImage = async () => {
     try {
@@ -80,6 +70,8 @@ export default function DesignPicker({ d, set, allCards = [], canDesign, onLocke
     <View style={{ gap: 14 }}>
       {noPreview ? null : <CardFace card={preview} palette={palette} big={big} />}
 
+      <View>
+      <View style={locked ? s.dim : null} pointerEvents={locked ? 'none' : 'auto'} importantForAccessibility={locked ? 'no-hide-descendants' : 'auto'}>
       <View style={s.tabs}>
         {TABS.map(([k, l]) => {
           const on = tab === k;
@@ -167,6 +159,16 @@ export default function DesignPicker({ d, set, allCards = [], canDesign, onLocke
           )}
         </View>
       )}
+      </View>
+      {locked && (
+        <Pressable onPress={onLocked} style={({ pressed }) => [s.watermark, pressed && s.pressed]} accessibilityRole="button" accessibilityLabel="PROを購入する">
+          <View style={s.wmBadge}>
+            <Text style={s.wmTitle}>PROを購入する</Text>
+            <Text style={s.wmText}>模様・色・ロゴ画像を自由に変えられます</Text>
+          </View>
+        </Pressable>
+      )}
+      </View>
     </View>
   );
 }
@@ -197,7 +199,9 @@ const styles = (t) => StyleSheet.create({
   optTextOn: { color: t.accentInk },
   btn: { borderWidth: 1, borderColor: t.line, backgroundColor: t.surface, borderRadius: 10, paddingVertical: 12, alignItems: 'center' },
   btnText: { color: t.ink, fontWeight: '700', fontSize: 14 },
-  lock: { backgroundColor: t.surface, borderWidth: 1, borderColor: t.accent, borderRadius: 14, padding: 14, gap: 4 },
-  lockTitle: { color: t.accent, fontSize: 15, fontWeight: '800' },
-  lockText: { color: t.muted, fontSize: 13, lineHeight: 19 },
+  dim: { opacity: 0.35 },
+  watermark: { ...StyleSheet.absoluteFillObject, alignItems: 'center', justifyContent: 'center' },
+  wmBadge: { backgroundColor: t.accent, borderRadius: 18, paddingVertical: 14, paddingHorizontal: 22, alignItems: 'center', gap: 3, transform: [{ rotate: '-4deg' }], shadowColor: '#000', shadowOpacity: 0.2, shadowRadius: 8, shadowOffset: { width: 0, height: 3 } },
+  wmTitle: { color: t.accentInk, fontSize: 20, fontWeight: '900', letterSpacing: 1 },
+  wmText: { color: t.accentInk, fontSize: 12, fontWeight: '700', opacity: 0.9 },
 });

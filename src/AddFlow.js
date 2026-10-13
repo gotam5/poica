@@ -8,7 +8,7 @@ import { PaywallModal } from './Paywall';
 import { CATALOG, TYPE_LABEL, cardPalette, installedCatalogIds, openCardApp } from './appLink';
 import { TYPE_COLORS, useTheme } from './theme';
 
-// Guided add: 1. pick the card (and try opening it) → 2. pick a design (Poica 無制限 only) → 3. done.
+// Guided add: 1. pick the card (and try opening it) → 2. pick a design (PRO only) → 3. done.
 // 「自分でカードを作る」 hands over to the step-by-step CustomFlow (barcode/photo, other apps).
 export default function AddFlow({ initial, allCards = [], canDesign, limits, onUnlocked, onCancel, onSave, onCustom }) {
   const t = useTheme();
@@ -202,7 +202,7 @@ export default function AddFlow({ initial, allCards = [], canDesign, limits, onU
             <Text style={[s.hint, { textAlign: 'center' }]}>ホームでこのカードを押すと、すぐに{app ? app.name : 'アプリ'}が開きます。</Text>
             {!canDesign && (
               <Pressable onPress={() => setPaywall('design')} hitSlop={6} accessibilityRole="button">
-                <Text style={s.link}>カードのデザインを変えるには Poica 無制限</Text>
+                <Text style={s.link}>カードのデザインを変えるには PRO</Text>
               </Pressable>
             )}
           </View>
