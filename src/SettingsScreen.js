@@ -2,6 +2,7 @@
 import { useRef, useState } from 'react';
 import { Alert, Animated, Linking, PanResponder, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { PaywallModal } from './Paywall';
+import { isCancel, restore } from './purchase';
 import Toggle from './Toggle';
 import smooth from './smooth';
 import CardFace from './CardFace';
@@ -26,6 +27,18 @@ function SettingsPages({ page, go, ...props }) {
   const [paywall, setPaywall] = useState(null);
   const [dragging, setDragging] = useState(false);
   const [gridKey, setGridKey] = useState(0);
+  const [restoring, setRestoring] = useState(false);
+  // For someone who bought PRO before (a new iPhone, or after reinstalling).
+  const doRestore = async () => {
+    setRestoring(true);
+    try {
+      if (await restore()) onUnlocked();
+      else Alert.alert('購入履歴が見つかりませんでした', 'PROを購入したときと同じ Apple アカウントでサインインしているか確かめてください。');
+    } catch (e) {
+      if (!isCancel(e)) Alert.alert('復元できませんでした', '通信状態を確かめて、もう一度試してください。');
+    }
+    setRestoring(false);
+  };
   const scrollY = useRef(new Animated.Value(0)).current;
   const free = iapAvailable && !unlimited;
   const maxCount = free ? limits.freeNearbyLimit : limits.paidNearbyLimit;
@@ -224,6 +237,9 @@ function SettingsPages({ page, go, ...props }) {
                 <Text style={s.proText}>PROを購入</Text>
                 <Text style={s.proSub}>カード枚数無制限・おすすめ表示数増加・カードデザイン編集</Text>
               </Pressable>
+              <Pressable onPress={doRestore} disabled={restoring} style={({ pressed }) => [s.restore, (pressed || restoring) && s.pressed]} accessibilityRole="button">
+                <Text style={s.restoreText}>{restoring ? '確認しています…' : '購入を復元'}</Text>
+              </Pressable>
             </>
           ) : (
             <View style={s.row}><Text style={s.rowLabel}>{unlimited ? 'PRO' : 'すべての機能が使えます'}</Text>{unlimited ? <Text style={s.check}>✓</Text> : null}</View>
@@ -351,6 +367,8 @@ const styles = (t) => StyleSheet.create({
   arrowOff: { borderColor: t.line, opacity: 0.4 },
   arrowText: { color: t.accent, fontSize: 16, fontWeight: '800' },
   homeRow: { flex: 1, flexDirection: 'row', alignItems: 'center', height: '100%', paddingRight: 2 },
+  restore: { alignSelf: 'center', paddingBottom: 12, paddingHorizontal: 12, marginTop: -4 },
+  restoreText: { color: t.accent, fontSize: 14, fontWeight: '700' },
   rowSub: { fontSize: 12, color: t.muted, marginTop: 2 },
   rowValue: { fontSize: 15, color: t.muted },
   chev: { fontSize: 22, color: t.muted, marginLeft: 2, marginTop: -2 },
