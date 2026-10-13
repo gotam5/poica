@@ -20,7 +20,7 @@ function SettingsPages({ page, go, ...props }) {
     unlimited, iapAvailable, limits, cards, ordered, manualOrder, onEditCard, onSaveOrder, onAutoOrder,
     suggestCount, onSuggestCount, homeOrder, onHomeOrder, homeHidden, onHomeHidden,
     placeCount, storeLookup, onToggleStoreLookup, onForgetPlaces,
-    onUnlocked, privacyUrl, supportUrl,
+    onUnlocked, privacyUrl, supportUrl, owned, previewFree, onPreviewFree,
   } = props;
   const t = useTheme();
   const s = styles(t);
@@ -28,6 +28,19 @@ function SettingsPages({ page, go, ...props }) {
   const [dragging, setDragging] = useState(false);
   const [gridKey, setGridKey] = useState(0);
   const [restoring, setRestoring] = useState(false);
+  const taps = useRef({ n: 0, at: 0 });
+  // Hidden test switch: tap バージョン 7 times to use the app as the free version while PRO is owned.
+  const tapVersion = () => {
+    const now = Date.now();
+    taps.current = { n: now - taps.current.at < 1500 ? taps.current.n + 1 : 1, at: now };
+    if (taps.current.n < 7 || !owned) return;
+    taps.current.n = 0;
+    Alert.alert(
+      previewFree ? 'PROに戻しますか？' : '無料版として試しますか？',
+      previewFree ? undefined : 'テスト用の切り替えです。購入は取り消されません。設定の「PROに戻す」でいつでも戻せます。',
+      [{ text: 'キャンセル', style: 'cancel' }, { text: previewFree ? 'PROに戻す' : '無料版にする', onPress: () => onPreviewFree(!previewFree) }],
+    );
+  };
   // For someone who bought PRO before (a new iPhone, or after reinstalling).
   const doRestore = async () => {
     setRestoring(true);
@@ -189,7 +202,7 @@ function SettingsPages({ page, go, ...props }) {
     return (
       <Sub s={s} go={go} title="アプリ情報">
         <View style={s.box}>
-          <View style={[s.row, s.rowLine]}><Text style={s.rowLabel}>バージョン</Text><Text style={s.rowValue}>{VERSION}</Text></View>
+          <Pressable onPress={tapVersion} style={[s.row, s.rowLine]}><Text style={s.rowLabel}>バージョン</Text><Text style={s.rowValue}>{VERSION}</Text></Pressable>
           <Row s={s} go={go} label="プライバシーポリシー" onPress={() => Linking.openURL(privacyUrl).catch(() => {})} />
           <Row s={s} go={go} label="お問い合わせ" onPress={() => Linking.openURL(supportUrl).catch(() => {})} last />
         </View>
@@ -223,6 +236,11 @@ function SettingsPages({ page, go, ...props }) {
                 <Text style={s.proText}>PROを購入</Text>
                 <Text style={s.proSub}>カード枚数無制限・おすすめ表示数増加・カードデザイン編集</Text>
               </Pressable>
+              {previewFree && (
+                <Pressable onPress={() => onPreviewFree(false)} style={({ pressed }) => [s.restore, pressed && s.pressed]} accessibilityRole="button">
+                  <Text style={s.restoreText}>テスト中：PROに戻す</Text>
+                </Pressable>
+              )}
               <Pressable onPress={doRestore} disabled={restoring} style={({ pressed }) => [s.restore, (pressed || restoring) && s.pressed]} accessibilityRole="button">
                 <Text style={s.restoreText}>{restoring ? '確認しています…' : '購入を復元'}</Text>
               </Pressable>

@@ -53,7 +53,9 @@ function Home() {
   const [stores, setStores] = useState([]);
   const [openFailed, setOpenFailed] = useState(false);
   const [storeLookup, setStoreLookup] = useState(true);
-  const [unlimited, setUnlimited] = useState(false);
+  const [owned, setUnlimited] = useState(false); // PRO bought
+  const [previewFree, setPreviewFree] = useState(false); // test switch: behave as the free version even when PRO is owned
+  const unlimited = owned && !previewFree;
   const [paywall, setPaywall] = useState(null); // null | 'cards' | 'suggest'
   const [limits, setLimits] = useState(DEFAULT_LIMITS);
   const [tab, setTab] = useState('home'); // home | map | stats | settings
@@ -89,6 +91,7 @@ function Home() {
     // The purchase is remembered on the phone so the limit stays off offline; StoreKit is the source of truth when reachable.
     loadLimits().then(setLimits).then(() => refreshLimits()).then((l) => l && setLimits(l)).catch(() => {});
     getSetting('unlimited', false).then((v) => v && setUnlimited(true)).catch(() => {});
+    getSetting('previewFree', false).then((v) => v && setPreviewFree(true)).catch(() => {});
     if (iapAvailable) {
       checkOwned().then((owned) => { if (owned) { setUnlimited(true); setSetting('unlimited', true).catch(() => {}); } }).catch(() => {});
     }
@@ -203,6 +206,8 @@ function Home() {
   const markUnlocked = () => {
     setUnlimited(true);
     setSetting('unlimited', true).catch(() => {});
+    setPreviewFree(false);
+    setSetting('previewFree', false).catch(() => {});
     say('購入ありがとうございます。PROになりました');
   };
 
@@ -418,7 +423,9 @@ function Home() {
       {tab === 'stats' && <StatsScreen cards={cards} t={t} onEdit={(c) => setEditing({ ...c })} />}
       {tab === 'settings' && (
         <SettingsScreen
-          unlimited={unlimited} iapAvailable={iapAvailable} limits={limits} placeCount={placeCount}
+          unlimited={unlimited} owned={owned} previewFree={previewFree}
+          onPreviewFree={(v) => { smooth(); setPreviewFree(v); setSetting('previewFree', v).catch(() => {}); say(v ? '無料版として表示しています' : 'PROに戻しました'); }}
+          iapAvailable={iapAvailable} limits={limits} placeCount={placeCount}
           cards={cards} ordered={ordered(cards)} manualOrder={!!cardOrder} onEditCard={(c) => setEditing({ ...c })}
           onSaveOrder={(ids) => { setCardOrder(ids); setSetting('cardOrder', ids).catch(() => {}); }} onAutoOrder={autoOrder}
           homeOrder={homeOrder} onHomeOrder={changeHomeOrder} homeHidden={homeHidden} onHomeHidden={changeHomeHidden} suggestCount={suggestCount} onSuggestCount={changeSuggestCount}
