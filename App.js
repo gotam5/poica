@@ -300,6 +300,14 @@ function Home() {
     setReordering(null);
     say('よく使う順に並べました');
   };
+  // From the map: drop one card's learned places at a spot.
+  const forgetPlacesOf = (cardId, places) => {
+    const card = cards.find((c) => c.id === cardId);
+    if (!card) return;
+    const gone = new Set(places.map((p) => `${p.lat},${p.lng}`));
+    updateCard({ ...card, places: (card.places || []).filter((p) => !gone.has(`${p.lat},${p.lng}`)) });
+    say('この場所の履歴を消しました');
+  };
   const forgetAllPlaces = async () => {
     const next = cards.map((c) => (c.places && c.places.length ? { ...c, places: [] } : c));
     setCards(next);
@@ -365,7 +373,7 @@ function Home() {
   return (
     <SafeAreaView style={s.root} edges={['top']}>
       <StatusBar style="auto" />
-      {tab === 'map' && <MapScreen cards={cards} pos={pos} t={t} />}
+      {tab === 'map' && <MapScreen cards={cards} pos={pos} t={t} onForgetPlaces={forgetPlacesOf} />}
       {tab === 'stats' && <StatsScreen cards={cards} t={t} onEdit={(c) => setEditing({ ...c })} />}
       {tab === 'settings' && (
         <SettingsScreen
