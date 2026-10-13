@@ -226,6 +226,10 @@ function Home() {
     color: CARD_COLORS[(cards?.length || 0) % CARD_COLORS.length], places: [], uses: 0, created: Date.now(),
   });
 
+  // The search bar hides again (and clears) whenever the user leaves the list: another tab, a card, an edit.
+  const away = tab !== 'home' || !!showing || !!editing || !!reordering;
+  useEffect(() => { if (away) { setSearching(false); setQuery(''); } }, [away]);
+
   if (cards === null) {
     return <View style={[s.root, { alignItems: 'center', justifyContent: 'center' }]}><ActivityIndicator color={t.accent} /></View>;
   }
@@ -256,9 +260,6 @@ function Home() {
     );
   };
 
-  // The search bar hides again (and clears) whenever the user leaves the list: another tab, a card, an edit.
-  const away = tab !== 'home' || !!showing || !!editing || !!reordering;
-  useEffect(() => { if (away) { setSearching(false); setQuery(''); } }, [away]);
   const toggleSearch = () => { if (searching) setQuery(''); setSearching(!searching); };
 
   // Tapping ホーム again while on Home scrolls back to the top.
