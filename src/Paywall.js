@@ -39,7 +39,7 @@ export default function Paywall({ reason = 'cards', limits = DEFAULT_LIMITS, onC
     <SafeAreaView style={s.root} edges={['top', 'bottom']}>
       <View style={s.body}>
         <Text style={s.title}>{TITLE[reason] ?? `${FREE_LIMIT + 1}枚目からは\n`}PRO{reason === 'info' ? '' : 'で'}</Text>
-        <Text style={s.text}>{price || '一度'}払うと、ずっと使えます。サブスクではありません。</Text>
+        <Text style={s.text}>{price || '一度'}払うだけで、ずっと使えます。</Text>
         <View style={s.table}>
           {[
             ['カード枚数', `${FREE_LIMIT}`, '無制限'],
@@ -62,6 +62,7 @@ export default function Paywall({ reason = 'cards', limits = DEFAULT_LIMITS, onC
         {msg && <Text style={s.msg}>{msg}</Text>}
       </View>
       <View style={s.foot}>
+        <Text style={s.once}>買い切りの購入です。サブスクリプションではないため、毎月の料金や自動更新はありません。</Text>
         <Pressable onPress={() => run('buy')} disabled={!!busy || !price} style={[s.buy, (!price || busy) && { opacity: 0.6 }]} accessibilityRole="button">
           {busy === 'buy' ? <ActivityIndicator color="#FFF" /> : <Text style={s.buyText}>{price ? `${price}で購入` : priceFailed ? '価格を読み込めませんでした' : '価格を読み込んでいます…'}</Text>}
         </Pressable>
@@ -101,6 +102,7 @@ const styles = (t) => StyleSheet.create({
   tdFree: { fontSize: 15, fontWeight: '700', color: t.muted, fontVariant: ['tabular-nums'] },
   arrow: { fontSize: 15, fontWeight: '800', color: t.muted },
   tdPaid: { minWidth: 76, textAlign: 'right', fontSize: 16, fontWeight: '900', color: t.accent, fontVariant: ['tabular-nums'] },
+  once: { fontSize: 13, color: t.ink, textAlign: 'center', lineHeight: 19, fontWeight: '700', marginBottom: 4 },
   note: { fontSize: 13, color: t.muted, textAlign: 'center' },
   msg: { fontSize: 14, color: '#C2412D', textAlign: 'center' },
   foot: { paddingHorizontal: 20, paddingBottom: 12, gap: 6 },
