@@ -13,19 +13,10 @@ export default function StatsScreen({ cards, t, onEdit }) {
   const countOf = (c) => (range === 'month' ? (c.useMonths && c.useMonths[month]) || 0 : c.uses || 0);
   const rows = [...cards].sort((a, b) => countOf(b) - countOf(a) || (b.lastUsed || 0) - (a.lastUsed || 0));
   const max = Math.max(1, ...rows.map(countOf));
-  const thisMonth = cards.reduce((n, c) => n + ((c.useMonths && c.useMonths[month]) || 0), 0);
-  const allTime = cards.reduce((n, c) => n + (c.uses || 0), 0);
-  const places = cards.reduce((n, c) => n + (c.places ? c.places.length : 0), 0);
 
   return (
     <ScrollView contentContainerStyle={s.wrap}>
       <Text style={s.title}>記録</Text>
-      <View style={s.tiles}>
-        <Tile s={s} value={thisMonth} label="今月使った回数" />
-        <Tile s={s} value={allTime} label="これまでの合計" />
-        <Tile s={s} value={places} label="覚えた場所" />
-      </View>
-
       <View style={s.seg}>
         {[['all', 'これまで'], ['month', '今月']].map(([k, l]) => (
           <Pressable key={k} onPress={() => setRange(k)} style={[s.segBtn, range === k && s.segOn]} accessibilityRole="button" accessibilityState={{ selected: range === k }}>
@@ -62,22 +53,9 @@ export default function StatsScreen({ cards, t, onEdit }) {
   );
 }
 
-function Tile({ s, value, label }) {
-  return (
-    <View style={s.tile}>
-      <Text style={s.tileValue}>{value}</Text>
-      <Text style={s.tileLabel}>{label}</Text>
-    </View>
-  );
-}
-
 const styles = (t) => StyleSheet.create({
   wrap: { paddingHorizontal: 16, paddingTop: 8, paddingBottom: 40, gap: 14 },
   title: { fontSize: 26, fontWeight: '900', color: t.ink },
-  tiles: { flexDirection: 'row', gap: 8 },
-  tile: { flex: 1, backgroundColor: t.surface, borderWidth: 1, borderColor: t.line, borderRadius: 14, paddingVertical: 12, paddingHorizontal: 10, gap: 2 },
-  tileValue: { color: t.ink, fontSize: 24, fontWeight: '900', fontVariant: ['tabular-nums'] },
-  tileLabel: { color: t.muted, fontSize: 11, fontWeight: '700' },
   seg: { flexDirection: 'row', backgroundColor: t.chip, borderRadius: 12, padding: 3, gap: 3 },
   segBtn: { flex: 1, paddingVertical: 8, borderRadius: 9, alignItems: 'center' },
   segOn: { backgroundColor: t.surface },
