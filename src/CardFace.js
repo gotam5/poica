@@ -1,5 +1,6 @@
 import { Image, StyleSheet, Text, View } from 'react-native';
-import Svg, { Circle, Defs, LinearGradient, Path, Pattern, Polygon, RadialGradient, Rect, Stop } from 'react-native-svg';
+import { useState } from 'react';
+import Svg, { Circle, Defs, G, LinearGradient, Path, Pattern, Polygon, RadialGradient, Rect, Stop } from 'react-native-svg';
 import { TYPE_COLORS } from './theme';
 import { TYPE_LABEL, cardTypes } from './appLink';
 import { photoUri } from './storage';
@@ -106,15 +107,29 @@ export default function CardFace({ card, palette, big, wide, chip, style, mini, 
 const W = 320;
 const H = 200;
 
+// Sized from the card's measured layout, not a viewBox, so the drawing always
+// reaches the card's right and bottom edges.
 function PatternLayer({ pattern, bg, c1, c2, c3 }) {
+  const [size, setSize] = useState(null);
   if (pattern === 'plain') return null;
   const a = c1 || '#FFFFFF';
   const b = c2 || a;
-  return (
-    <Svg style={StyleSheet.absoluteFill} width="100%" height="100%" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMaxYMax slice" pointerEvents="none">
-      {drawPattern(pattern, { bg, a, b, c: c3, c1, c2 })}
-    </Svg>
-  );
+  const onLayout = (e) => {
+    const { width, height } = e.nativeEvent.layout;
+    if (!size || size.w !== width || size.h !== height) setSize({ w: width, h: height });
+  };
+  let body = null;
+  if (size && size.w > 0 && size.h > 0) {
+    const k = Math.max(size.w / W, size.h / H);
+    body = (
+      <Svg width={size.w} height={size.h}>
+        <G transform={`translate(${size.w - W * k} ${size.h - H * k}) scale(${k})`}>
+          {drawPattern(pattern, { bg, a, b, c: c3, c1, c2 })}
+        </G>
+      </Svg>
+    );
+  }
+  return <View style={StyleSheet.absoluteFill} onLayout={onLayout} pointerEvents="none">{body}</View>;
 }
 
 // A slanted bar: centre x at the bottom, leaning right by 22° towards the top.
