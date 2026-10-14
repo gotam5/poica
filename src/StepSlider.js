@@ -46,11 +46,11 @@ export default function StepSlider({ value, min, max, step, onChange, onMove, on
 
   const x = xOf(live);
   return (
-    <View style={{ gap: 10, paddingVertical: compact ? 2 : 14 }}>
+    <View style={{ gap: compact ? 0 : 10, paddingVertical: compact ? 0 : 14 }}>
       {!compact && <Text style={{ color: t.ink, fontSize: 28, fontWeight: '900', textAlign: 'center', fontVariant: ['tabular-nums'] }}>{live}<Text style={{ fontSize: 15, color: t.muted }}>{unit}</Text></Text>}
       <View
         onLayout={(e) => setW(e.nativeEvent.layout.width)}
-        style={{ height: 40, justifyContent: 'center' }}
+        style={{ height: compact ? 34 : 40, justifyContent: 'center' }}
         accessible
         accessibilityRole="adjustable"
         accessibilityValue={{ text: `${live}${unit}` }}

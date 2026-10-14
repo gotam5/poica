@@ -111,7 +111,7 @@ export default function DesignPicker({ d, set, allCards = [], canDesign, onLocke
       )}
 
       {tab === 'color' && (
-        <View style={{ gap: 12 }}>
+        <View style={{ gap: 10 }}>
           <View style={s.slots}>
             {slots.map(([l, i]) => {
               const on = slotNow === i;
@@ -139,7 +139,7 @@ export default function DesignPicker({ d, set, allCards = [], canDesign, onLocke
                   })}
                 </View>
                 <View style={s.tune}>
-                  <View style={s.tuneHead}><Text style={s.small}>鮮やかさ</Text><View style={[s.tuneDot, { backgroundColor: valueOf(slotNow) }]} /></View>
+                  <Text style={s.small}>鮮やかさ</Text>
                   <StepSlider compact value={hsl.s} min={0} max={100} step={2} onMove={(v) => setHsl({ s: v })} onChange={(v) => setHsl({ s: v })} t={t}
                     colors={[hslToHex({ h: hsl.h, s: 0, l: hsl.l }), hslToHex({ h: hsl.h, s: 100, l: hsl.l })]} />
                   <Text style={s.small}>明るさ</Text>
@@ -158,10 +158,11 @@ export default function DesignPicker({ d, set, allCards = [], canDesign, onLocke
       )}
 
       {tab === 'image' && (
-        <View style={{ gap: 10 }}>
+        <View style={{ gap: 10, paddingTop: 12 }}>
           <View style={s.row}>
-            <Pressable onPress={pickImage} style={({ pressed }) => [s.btn, { flex: 1 }, pressed && s.pressed]} accessibilityRole="button">
-              <Text style={s.btnText}>{d.bgImage ? '画像を選び直す' : '画像を選ぶ'}</Text>
+            <Pressable onPress={pickImage} style={({ pressed }) => [s.imgBtn, { flex: 1 }, pressed && s.pressed]} accessibilityRole="button">
+              <Text style={s.imgBtnIcon}>🖼</Text>
+              <Text style={s.imgBtnText}>{d.bgImage ? 'ロゴ画像を選び直す' : 'ロゴ画像を選ぶ'}</Text>
             </Pressable>
             {d.bgImage ? (
               <Pressable onPress={() => set({ bgImage: null })} style={({ pressed }) => [s.btn, { flex: 1 }, pressed && s.pressed]} accessibilityRole="button">
@@ -216,15 +217,16 @@ const styles = (t) => StyleSheet.create({
   tabText: { color: t.muted, fontWeight: '700', fontSize: 14 },
   tabTextOn: { color: t.ink },
   slots: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  slot: { flexGrow: 1, flexBasis: '45%', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, borderWidth: 2, borderColor: t.line, backgroundColor: t.surface, borderRadius: 10, paddingVertical: 8 },
+  slot: { flexGrow: 1, flexBasis: '45%', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, borderWidth: 2, borderColor: t.line, backgroundColor: t.surface, borderRadius: 10, paddingVertical: 6 },
   slotDot: { width: 18, height: 18, borderRadius: 9, borderWidth: 1, borderColor: 'rgba(0,0,0,0.15)' },
   slotText: { color: t.muted, fontWeight: '700', fontSize: 13 },
   reset: { color: t.accent, fontSize: 13, fontWeight: '700', textDecorationLine: 'underline' },
-  swatches: { flexDirection: 'row', flexWrap: 'wrap', rowGap: 12, justifyContent: 'space-between' },
-  swatch: { width: '12%', aspectRatio: 1, borderRadius: 999, borderWidth: 1, borderColor: 'transparent' }, // 7 per row, big enough to tap
-  tune: { gap: 4, marginTop: 4 },
-  tuneHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  tuneDot: { width: 22, height: 22, borderRadius: 11, borderWidth: 1, borderColor: t.track },
+  swatches: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  swatch: { width: 32, height: 32, borderRadius: 16, borderWidth: 1, borderColor: 'transparent' },
+  tune: { gap: 0 },
+  imgBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: t.accent, borderRadius: 12, paddingVertical: 14 },
+  imgBtnIcon: { fontSize: 18 },
+  imgBtnText: { color: t.accentInk, fontWeight: '800', fontSize: 15 },
   opt: { flex: 1, borderWidth: 1, borderColor: t.line, backgroundColor: t.surface, borderRadius: 10, paddingVertical: 10, alignItems: 'center' },
   optOn: { backgroundColor: t.accent, borderColor: t.accent },
   optText: { color: t.ink, fontWeight: '700', fontSize: 14 },
