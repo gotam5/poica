@@ -101,11 +101,10 @@ export default function CardFace({ card, palette, big, wide, chip, style, mini, 
   );
 }
 
-// Patterns are drawn on a 320x200 card and scaled to cover the real card,
-// pinned to its lower-right corner (any extra is cut off at the top and left).
-// So a small swatch shows the same whole design as a full card.
+// Patterns are drawn on a card 320 units wide, scaled to the real card's width.
+// Shapes are placed from the lower-right corner, so taller or shorter cards keep
+// the same design at the same size. A small swatch shows the same whole design.
 const W = 320;
-const H = 200;
 
 // Sized from the card's measured layout, not a viewBox, so the drawing always
 // reaches the card's right and bottom edges.
@@ -120,11 +119,11 @@ function PatternLayer({ pattern, bg, c1, c2, c3 }) {
   };
   let body = null;
   if (size && size.w > 0 && size.h > 0) {
-    const k = Math.max(size.w / W, size.h / H);
+    const k = size.w / W;
     body = (
       <Svg width={size.w} height={size.h}>
-        <G transform={`translate(${size.w - W * k} ${size.h - H * k}) scale(${k})`}>
-          {drawPattern(pattern, { bg, a, b, c: c3, c1, c2 })}
+        <G transform={`scale(${k})`}>
+          {drawPattern(pattern, { bg, a, b, c: c3, c1, c2, H: size.h / k })}
         </G>
       </Svg>
     );
@@ -133,18 +132,18 @@ function PatternLayer({ pattern, bg, c1, c2, c3 }) {
 }
 
 // A slanted bar: centre x at the bottom, leaning right by 22° towards the top.
-function slant(x, width) {
+function slant(x, width, H) {
   const lean = H * 0.4;
   return `${x - width / 2},${H} ${x + width / 2},${H} ${x + lean + width / 2},0 ${x + lean - width / 2},0`;
 }
 
-function drawPattern(pattern, { bg, a, b, c, c1, c2 }) {
+function drawPattern(pattern, { bg, a, b, c, c1, c2, H }) {
   switch (pattern) {
     case 'bands':
       return (
         <>
-          {c1 && <Polygon points={slant(W - 70 - H * 0.2, 78)} fill={c1} />}
-          {c2 && <Polygon points={slant(W - 140 - H * 0.2, 22)} fill={c2} />}
+          {c1 && <Polygon points={slant(W - 70 - H * 0.2, 78, H)} fill={c1} />}
+          {c2 && <Polygon points={slant(W - 140 - H * 0.2, 22, H)} fill={c2} />}
           {c && <Rect x="0" y={H - 11} width={W} height="11" fill={c} />}
         </>
       );
@@ -167,11 +166,11 @@ function drawPattern(pattern, { bg, a, b, c, c1, c2 }) {
       );
     case 'split': {
       // Two facets cut along the same diagonal.
-      const k = (H * 0.95) / (W * 0.82);
-      const y2 = H * 0.42;
+      const k = 190 / (W * 0.82);
+      const y2 = H - 116;
       return (
         <>
-          <Polygon points={`${W},${H * 0.05} ${W},${H} ${W * 0.18},${H}`} fill={a} />
+          <Polygon points={`${W},${H - 190} ${W},${H} ${W * 0.18},${H}`} fill={a} />
           <Polygon points={`${W},${y2} ${W},${H} ${W - (H - y2) / k},${H}`} fill={b} />
         </>
       );
@@ -179,9 +178,9 @@ function drawPattern(pattern, { bg, a, b, c, c1, c2 }) {
     case 'circles':
       return (
         <>
-          <Circle cx={W * 0.95} cy={H * 0.45} r={W * 0.4} fill={a} fillOpacity="0.9" />
-          <Circle cx={W * 0.62} cy={H * 1.02} r={W * 0.3} fill={b} fillOpacity="0.9" />
-          <Circle cx={W * 0.62} cy={H * 1.02} r={W * 0.38} stroke={b} strokeOpacity="0.5" strokeWidth="4" fill="none" />
+          <Circle cx={W * 0.95} cy={H - 110} r={W * 0.4} fill={a} fillOpacity="0.9" />
+          <Circle cx={W * 0.62} cy={H + 4} r={W * 0.3} fill={b} fillOpacity="0.9" />
+          <Circle cx={W * 0.62} cy={H + 4} r={W * 0.38} stroke={b} strokeOpacity="0.5" strokeWidth="4" fill="none" />
         </>
       );
     case 'rings':
@@ -253,7 +252,7 @@ function drawPattern(pattern, { bg, a, b, c, c1, c2 }) {
         </>
       );
     case 'triangles':
-      return <>{lowPoly(a)}</>;
+      return <>{lowPoly(a, H)}</>;
     default:
       return null;
   }
@@ -261,7 +260,7 @@ function drawPattern(pattern, { bg, a, b, c, c1, c2 }) {
 
 // Low-poly facets over the right part of the card, fading out to the left.
 const JIT = [0.1, -0.3, 0.25, -0.15, 0.3, -0.25, 0.05, 0.2, -0.1, 0.15, -0.3, 0.25, 0.1, -0.2, 0.3, -0.05, 0.2, -0.25, 0.1, 0.05];
-function lowPoly(a) {
+function lowPoly(a, H) {
   const cols = 5;
   const rows = 3;
   const x0 = W * 0.22;
