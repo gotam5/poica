@@ -3,7 +3,7 @@
 import { getSetting, setSetting } from './storage';
 
 export const LIMITS_URL = 'https://gotam5.github.io/poica-site/config.json'; // placeholder until the site's host is decided
-export const DEFAULT_LIMITS = { freeCardLimit: 5, freeNearbyLimit: 1, paidNearbyLimit: 3 };
+export const DEFAULT_LIMITS = { freeCardLimit: 5, freeNearbyLimit: 1, paidNearbyLimit: 5 };
 const DAY = 24 * 60 * 60 * 1000;
 
 // Keep only sane whole numbers (0-10); anything else falls back to `base`.

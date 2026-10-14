@@ -60,7 +60,7 @@ function SettingsPages({ page, go, ...props }) {
   const scrollY = useRef(new Animated.Value(0)).current;
   const free = iapAvailable && !unlimited;
   const maxCount = free ? limits.freeNearbyLimit : limits.paidNearbyLimit;
-  const count = Math.min(suggestCount || maxCount, maxCount);
+  const count = Math.min(suggestCount || 3, maxCount); // 3 by default
   const nearRange = typeof nearRangeRaw === 'number' ? clampRange(nearRangeRaw) : 30;
 
   const forget = () => {

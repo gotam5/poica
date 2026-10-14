@@ -28,6 +28,7 @@ import Toast from './src/Toast';
 import { CARD_COLORS, KIND_LABEL, useTheme } from './src/theme';
 
 const HOME_ORDER = ['suggest', 'list'];
+const DEFAULT_SUGGEST = 3; // 近くのおすすめ shown until the user picks a number (PRO can go up to 5)
 
 const newId = () => Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
 
@@ -70,7 +71,7 @@ function Home() {
   const [reordering, setReordering] = useState(null); // focused card id while the reorder screen is open
   const [homeOrder, setHomeOrder] = useState(HOME_ORDER); // order of the blocks on ホーム
   const [homeHidden, setHomeHidden] = useState([]); // blocks switched off on ホーム
-  const [suggestCount, setSuggestCount] = useState(null); // null = as many as allowed
+  const [suggestCount, setSuggestCount] = useState(null); // null = the default, 3 (or fewer when the plan allows fewer)
   const [nearRange, setNearRange] = useState(30); // metres that count as 近く (10-100)
   const scrollRef = useRef(null);
 
@@ -262,7 +263,7 @@ function Home() {
   const free = iapAvailable && !unlimited;
   const canDesign = !free;
   const suggestCap = free ? limits.freeNearbyLimit : limits.paidNearbyLimit;
-  const suggest = allSuggest.slice(0, Math.min(suggestCount || suggestCap, suggestCap));
+  const suggest = allSuggest.slice(0, Math.min(suggestCount || DEFAULT_SUGGEST, suggestCap));
   const hiddenSuggest = free ? Math.max(0, allSuggest.length - limits.freeNearbyLimit) : 0;
   const shownCard = showing ? cards.find((c) => c.id === showing) : null;
   const anyPlaces = cards.some((c) => c.places && c.places.length);
