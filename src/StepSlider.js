@@ -14,7 +14,7 @@ export default function StepSlider({ value, min, max, step, onChange, onMove, on
   const gid = useRef(`g${Math.random().toString(36).slice(2, 8)}`).current;
   const move = useRef(onMove);
   move.current = onMove;
-  useEffect(() => { setLive(value); st.current.v = value; }, [value]);
+  useEffect(() => { if (!st.current.dragging) { setLive(value); st.current.v = value; } }, [value]);
   st.current.w = w;
 
   const snap = (x) => {
@@ -26,9 +26,12 @@ export default function StepSlider({ value, min, max, step, onChange, onMove, on
 
   const pan = useRef(PanResponder.create({
     onStartShouldSetPanResponder: () => true,
+    onStartShouldSetPanResponderCapture: () => true,
     onMoveShouldSetPanResponder: () => true,
+    onMoveShouldSetPanResponderCapture: () => true,
     onPanResponderTerminationRequest: () => false,
     onPanResponderGrant: (e) => {
+      st.current.dragging = true;
       if (onDragging) onDragging(true);
       st.current.startX = e.nativeEvent.locationX;
       const v = snap(st.current.startX);
@@ -40,8 +43,8 @@ export default function StepSlider({ value, min, max, step, onChange, onMove, on
       const v = snap(st.current.startX + g.dx);
       if (v !== st.current.v) { st.current.v = v; setLive(v); if (move.current) move.current(v); }
     },
-    onPanResponderRelease: () => { if (onDragging) onDragging(false); onChange(st.current.v); },
-    onPanResponderTerminate: () => { if (onDragging) onDragging(false); onChange(st.current.v); },
+    onPanResponderRelease: () => { st.current.dragging = false; if (onDragging) onDragging(false); onChange(st.current.v); },
+    onPanResponderTerminate: () => { st.current.dragging = false; if (onDragging) onDragging(false); onChange(st.current.v); },
   })).current;
 
   const x = xOf(live);

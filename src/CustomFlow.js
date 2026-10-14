@@ -22,6 +22,7 @@ export default function CustomFlow({ initial, allCards = [], canDesign, limits, 
   const [result, setResult] = useState(null); // null | 'ok' | 'fail'
   const [paywall, setPaywall] = useState(null);
   const [designTab, setDesignTab] = useState('pattern');
+  const [sliding, setSliding] = useState(false); // a color slider is being dragged: hold the page still
   const set = (patch) => setD((prev) => ({ ...prev, ...patch }));
   const cap = useCapture(set);
 
@@ -83,7 +84,7 @@ export default function CustomFlow({ initial, allCards = [], canDesign, limits, 
 
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         {step === 'design' && <DesignPreview d={d} allCards={allCards} t={t} logoSlot={designTab === 'image'} />}
-        <ScrollView contentContainerStyle={[s.body, step === 'design' && { paddingTop: 12 }, step === 'done' && { flexGrow: 1, justifyContent: 'center' }]} keyboardShouldPersistTaps="handled">
+        <ScrollView scrollEnabled={!sliding} contentContainerStyle={[s.body, step === 'design' && { paddingTop: 12 }, step === 'done' && { flexGrow: 1, justifyContent: 'center' }]} keyboardShouldPersistTaps="handled">
           {step === 'kind' && (
             <>
               <Text style={s.lead}>どうやって登録しますか？</Text>
@@ -150,7 +151,7 @@ export default function CustomFlow({ initial, allCards = [], canDesign, limits, 
           {step === 'design' && (
             <>
               <Text style={s.lead}>カードのデザインを選んでください</Text>
-              <DesignPicker d={d} set={set} allCards={allCards} canDesign t={t} noPreview onTab={setDesignTab} />
+              <DesignPicker d={d} set={set} allCards={allCards} canDesign t={t} noPreview onTab={setDesignTab} onDragging={setSliding} />
             </>
           )}
 

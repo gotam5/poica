@@ -20,6 +20,7 @@ export default function AddFlow({ initial, allCards = [], canDesign, limits, onU
   const [result, setResult] = useState(null); // null | 'ok' | 'fail'
   const [paywall, setPaywall] = useState(null);
   const [designTab, setDesignTab] = useState('pattern');
+  const [sliding, setSliding] = useState(false); // a color slider is being dragged: hold the page still
   const set = (patch) => setD((prev) => ({ ...prev, ...patch }));
 
   useEffect(() => {
@@ -194,9 +195,9 @@ export default function AddFlow({ initial, allCards = [], canDesign, limits, onU
 
         {step === 'design' && <DesignPreview d={d} allCards={allCards} t={t} logoSlot={designTab === 'image'} />}
         {step === 'design' && (
-          <ScrollView contentContainerStyle={[s.body, { paddingTop: 12 }]}>
+          <ScrollView scrollEnabled={!sliding} contentContainerStyle={[s.body, { paddingTop: 12 }]}>
             <Text style={s.lead}>カードのデザインを選んでください</Text>
-            <DesignPicker d={d} set={set} allCards={allCards} canDesign t={t} noPreview onTab={setDesignTab} />
+            <DesignPicker d={d} set={set} allCards={allCards} canDesign t={t} noPreview onTab={setDesignTab} onDragging={setSliding} />
             <Text style={s.hint}>あとからカードを長押しして変えることもできます。</Text>
           </ScrollView>
         )}

@@ -19,6 +19,7 @@ export default function EditScreen({ initial, allCards = [], canDesign = true, l
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [paywall, setPaywall] = useState(null);
   const [designTab, setDesignTab] = useState('pattern');
+  const [sliding, setSliding] = useState(false); // a color slider is being dragged: hold the page still
   const isNew = !!initial.isNew;
   const custom = !!initial.custom; // came from 「自分でカードを作る」: listed apps are picked in the guided flow instead
   const set = (patch) => setD((prev) => ({ ...prev, ...patch }));
@@ -70,7 +71,7 @@ export default function EditScreen({ initial, allCards = [], canDesign = true, l
   const design = (
     <View style={s.field}>
       <Text style={locked ? s.bigLabel : s.label}>カードのデザイン</Text>
-      <DesignPicker d={d} set={set} allCards={allCards} canDesign={canDesign} onLocked={() => setPaywall('design')} t={t} big={locked} noPreview onTab={setDesignTab} />
+      <DesignPicker d={d} set={set} allCards={allCards} canDesign={canDesign} onLocked={() => setPaywall('design')} t={t} big={locked} noPreview onTab={setDesignTab} onDragging={setSliding} />
     </View>
   );
 
@@ -87,7 +88,7 @@ export default function EditScreen({ initial, allCards = [], canDesign = true, l
       </View>
       <DesignPreview d={d} allCards={allCards} t={t} big={locked} logoSlot={designTab === 'image'} />
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <ScrollView contentContainerStyle={[s.body, { paddingTop: 14 }]} keyboardShouldPersistTaps="handled">
+        <ScrollView scrollEnabled={!sliding} contentContainerStyle={[s.body, { paddingTop: 14 }]} keyboardShouldPersistTaps="handled">
           {known && d.kind === 'barcode' && (
             <View style={s.warn}>
               <Text style={s.warnTitle}>{known.label}は{known.kind === 'dynamic' ? 'バーコードが時間で変わります' : 'スクショでの利用が禁止されています'}</Text>

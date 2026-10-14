@@ -1,10 +1,10 @@
 // Card design. Free: fixed to the shop's colors (or the card color).
 // PRO: pattern, background / pattern colors, text color, and the user's own picture,
 // shown one section at a time (模様 / 色 / 画像) so the screen stays calm.
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
-import CardFace, { PATTERNS, textHex } from './CardFace';
+import CardFace, { PATTERNS, TWO_COLOR_PATTERNS, textHex } from './CardFace';
 import StepSlider from './StepSlider';
 import { hexToHsl, hslToHex } from './color';
 import { cardPalette, catalogApp } from './appLink';
@@ -35,11 +35,12 @@ export function DesignPreview({ d, allCards = [], t, big = true, logoSlot = fals
   );
 }
 
-export default function DesignPicker({ d, set, allCards = [], canDesign, onLocked, t, big = true, noPreview = false, onTab }) {
+export default function DesignPicker({ d, set, allCards = [], canDesign, onLocked, t, big = true, noPreview = false, onTab, onDragging }) {
   const s = styles(t);
   const [tab, setTabState] = useState('pattern');
   const setTab = (k) => { setTabState(k); if (onTab) onTab(k); };
   const [slot, setSlot] = useState(0);
+  const [boxH, setBoxH] = useState(300);
   const app = d.kind === 'app' && d.catalogId ? catalogApp(d.catalogId) : null;
   const preview = { ...d, name: d.name || app?.name || '' };
   const palette = cardPalette(d, allCards);
@@ -66,7 +67,7 @@ export default function DesignPicker({ d, set, allCards = [], canDesign, onLocke
   const pattern = d.pattern || 'bands';
   // Color slots that the current pattern actually uses.
   // 'text' is the text color; numbers are palette positions.
-  const twoColors = pattern === 'bands' || pattern === 'circles';
+  const twoColors = TWO_COLOR_PATTERNS.includes(pattern);
   const slots = [
     ['背景色', 0],
     ...(pattern !== 'plain' ? [[twoColors ? '模様色1' : '模様色', 1]] : []),
@@ -76,6 +77,26 @@ export default function DesignPicker({ d, set, allCards = [], canDesign, onLocke
   const slotNow = slots.some(([, i]) => i === slot) ? slot : 0;
   const valueOf = (i) => (i === 'text' ? textHex(d) : palette[i] || '#FFFFFF');
   const pick = (c) => (slotNow === 'text' ? set({ textColor: c }) : setColor(slotNow, c));
+  // The sliders work on a kept hue/saturation/lightness, not one re-read from the hex each time:
+  // a gray or pure black/white hex has no hue, and re-reading it made the color jump (e.g. to red).
+  const tuned = useRef({ key: null, hex: null, hsl: null });
+  const current = valueOf(slotNow).toUpperCase();
+  if (tuned.current.key !== slotNow || tuned.current.hex !== current) {
+    tuned.current = { key: slotNow, hex: current, hsl: hexToHsl(current) };
+  }
+  const tune = (next) => {
+    const hsl = { ...tuned.current.hsl, ...next };
+    const hex = hslToHex(hsl);
+    tuned.current = { key: slotNow, hex, hsl };
+    pick(hex);
+  };
+  const pickBase = (b) => {
+    const hex = hslToHex(b.hsl);
+    // White and black keep the last hue, so raising 鮮やかさ from them doesn't jump to red.
+    const h = b.hsl.s === 0 && tuned.current.hsl ? tuned.current.hsl.h : b.hsl.h;
+    tuned.current = { key: slotNow, hex, hsl: { ...b.hsl, h } };
+    pick(hex);
+  };
 
   return (
     <View style={{ gap: 14 }}>
@@ -94,20 +115,22 @@ export default function DesignPicker({ d, set, allCards = [], canDesign, onLocke
         })}
       </View>
 
+      {/* The tallest tab sets the height for all of them, so the fields below never jump. */}
+      <View style={[s.patBox, { minHeight: boxH }]} onLayout={(e) => { const h = e.nativeEvent.layout.height; if (h > boxH) setBoxH(h); }}>
       {tab === 'pattern' && (
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
+        <View style={s.patGrid}>
           {PATTERNS.map((p) => {
             const on = pattern === p.key;
             return (
               <Pressable key={p.key} onPress={() => set({ pattern: p.key })} style={s.patWrap} accessibilityRole="button" accessibilityLabel={p.label} accessibilityState={{ selected: on }}>
                 <View style={[s.patFrame, on && { borderColor: t.ink }]}>
-                  <CardFace card={{ pattern: p.key }} palette={palette} mini style={{ width: 76 }} />
+                  <CardFace card={{ pattern: p.key }} palette={palette} mini />
                 </View>
                 <Text style={[s.small, on && { color: t.ink }]}>{p.label}</Text>
               </Pressable>
             );
           })}
-        </ScrollView>
+        </View>
       )}
 
       {tab === 'color' && (
@@ -124,9 +147,9 @@ export default function DesignPicker({ d, set, allCards = [], canDesign, onLocke
             })}
           </View>
           {(() => {
-            const hsl = hexToHsl(valueOf(slotNow));
+            const hsl = tuned.current.hsl;
             const base = baseOf(hsl);
-            const setHsl = (next) => pick(hslToHex({ ...hsl, ...next }));
+            const setHsl = tune;
             return (
               <>
                 <View style={s.swatches}>
@@ -134,16 +157,16 @@ export default function DesignPicker({ d, set, allCards = [], canDesign, onLocke
                     const c = hslToHex(b.hsl);
                     const on = base === b.key;
                     return (
-                      <Pressable key={b.key} onPress={() => pick(c)} style={[s.swatch, { backgroundColor: c }, b.key === 'white' && { borderColor: t.track }, on && { borderColor: t.ink, borderWidth: 3 }]} accessibilityRole="button" accessibilityLabel={b.key === 'white' ? '白' : b.key === 'black' ? '黒' : `色 ${b.hsl.h}`} accessibilityState={{ selected: on }} hitSlop={2} />
+                      <Pressable key={b.key} onPress={() => pickBase(b)} style={[s.swatch, { backgroundColor: c }, b.key === 'white' && { borderColor: t.track }, on && { borderColor: t.ink, borderWidth: 3 }]} accessibilityRole="button" accessibilityLabel={b.key === 'white' ? '白' : b.key === 'black' ? '黒' : `色 ${b.hsl.h}`} accessibilityState={{ selected: on }} hitSlop={2} />
                     );
                   })}
                 </View>
                 <View style={s.tune}>
                   <Text style={s.small}>鮮やかさ</Text>
-                  <StepSlider compact value={hsl.s} min={0} max={100} step={2} onMove={(v) => setHsl({ s: v })} onChange={(v) => setHsl({ s: v })} t={t}
+                  <StepSlider compact value={hsl.s} min={0} max={100} step={2} onMove={(v) => setHsl({ s: v })} onChange={(v) => setHsl({ s: v })} onDragging={onDragging} t={t}
                     colors={[hslToHex({ h: hsl.h, s: 0, l: hsl.l }), hslToHex({ h: hsl.h, s: 100, l: hsl.l })]} />
                   <Text style={s.small}>明るさ</Text>
-                  <StepSlider compact value={hsl.l} min={0} max={100} step={2} onMove={(v) => setHsl({ l: v })} onChange={(v) => setHsl({ l: v })} t={t}
+                  <StepSlider compact value={hsl.l} min={0} max={100} step={2} onMove={(v) => setHsl({ l: v })} onChange={(v) => setHsl({ l: v })} onDragging={onDragging} t={t}
                     colors={['#000000', hslToHex({ h: hsl.h, s: hsl.s, l: 50 }), '#FFFFFF']} />
                 </View>
               </>
@@ -158,14 +181,13 @@ export default function DesignPicker({ d, set, allCards = [], canDesign, onLocke
       )}
 
       {tab === 'image' && (
-        <View style={{ gap: 10, paddingTop: 12 }}>
+        <View style={{ gap: 12, paddingTop: 6 }}>
           <View style={s.row}>
-            <Pressable onPress={pickImage} style={({ pressed }) => [s.imgBtn, { flex: 1 }, pressed && s.pressed]} accessibilityRole="button">
-              <Text style={s.imgBtnIcon}>🖼</Text>
+            <Pressable onPress={pickImage} style={({ pressed }) => [s.imgBtn, pressed && s.pressed]} accessibilityRole="button">
               <Text style={s.imgBtnText}>{d.bgImage ? 'ロゴ画像を選び直す' : 'ロゴ画像を選ぶ'}</Text>
             </Pressable>
             {d.bgImage ? (
-              <Pressable onPress={() => set({ bgImage: null })} style={({ pressed }) => [s.btn, { flex: 1 }, pressed && s.pressed]} accessibilityRole="button">
+              <Pressable onPress={() => set({ bgImage: null })} style={({ pressed }) => [s.btn, s.btnPill, pressed && s.pressed]} accessibilityRole="button">
                 <Text style={s.btnText}>画像を外す</Text>
               </Pressable>
             ) : null}
@@ -184,11 +206,10 @@ export default function DesignPicker({ d, set, allCards = [], canDesign, onLocke
                 })}
               </View>
             </>
-          ) : (
-            <Text style={s.hint}>お店のロゴなどの画像を、カードの右側に正方形で載せます。選ぶときに正方形に切り取れます。画像はこのiPhoneの中だけに保存されます。</Text>
-          )}
+          ) : null}
         </View>
       )}
+      </View>
       </View>
       {locked && (
         <Pressable onPress={onLocked} style={({ pressed }) => [s.watermark, pressed && s.pressed]} accessibilityRole="button" accessibilityLabel="PROを購入する">
@@ -209,8 +230,10 @@ const styles = (t) => StyleSheet.create({
   hint: { color: t.muted, fontSize: 12, lineHeight: 18 },
   row: { flexDirection: 'row', gap: 8 },
   pressed: { opacity: 0.6 },
-  patWrap: { alignItems: 'center', gap: 4 },
-  patFrame: { borderWidth: 3, borderColor: 'transparent', borderRadius: 12 },
+  patGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', rowGap: 8 },
+  patWrap: { width: '23.5%', alignItems: 'center', gap: 3 },
+  patBox: { paddingTop: 12 },
+  patFrame: { alignSelf: 'stretch', borderWidth: 3, borderColor: 'transparent', borderRadius: 12 },
   tabs: { flexDirection: 'row', backgroundColor: t.track, borderRadius: 10, padding: 3 },
   tab: { flex: 1, paddingVertical: 8, borderRadius: 8, alignItems: 'center' },
   tabOn: { backgroundColor: t.surface },
@@ -224,14 +247,14 @@ const styles = (t) => StyleSheet.create({
   swatches: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   swatch: { width: 32, height: 32, borderRadius: 16, borderWidth: 1, borderColor: 'transparent' },
   tune: { gap: 0 },
-  imgBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: t.accent, borderRadius: 12, paddingVertical: 14 },
-  imgBtnIcon: { fontSize: 18 },
+  imgBtn: { alignSelf: 'flex-start', backgroundColor: t.accent, borderRadius: 999, paddingVertical: 12, paddingHorizontal: 22, shadowColor: t.accent, shadowOpacity: 0.3, shadowRadius: 8, shadowOffset: { width: 0, height: 3 } },
   imgBtnText: { color: t.accentInk, fontWeight: '800', fontSize: 15 },
   opt: { flex: 1, borderWidth: 1, borderColor: t.line, backgroundColor: t.surface, borderRadius: 10, paddingVertical: 10, alignItems: 'center' },
   optOn: { backgroundColor: t.accent, borderColor: t.accent },
   optText: { color: t.ink, fontWeight: '700', fontSize: 14 },
   optTextOn: { color: t.accentInk },
   btn: { borderWidth: 1, borderColor: t.line, backgroundColor: t.surface, borderRadius: 10, paddingVertical: 12, alignItems: 'center' },
+  btnPill: { borderRadius: 999, paddingHorizontal: 18 },
   btnText: { color: t.ink, fontWeight: '700', fontSize: 14 },
   dim: { opacity: 0.35 },
   watermark: { ...StyleSheet.absoluteFillObject, alignItems: 'center', justifyContent: 'center' },

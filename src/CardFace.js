@@ -1,5 +1,5 @@
 import { Image, StyleSheet, Text, View } from 'react-native';
-import Svg, { Circle, Defs, LinearGradient, Pattern, Rect, Stop } from 'react-native-svg';
+import Svg, { Circle, Defs, Line, LinearGradient, Path, Pattern, Polygon, Rect, Stop } from 'react-native-svg';
 import { TYPE_COLORS } from './theme';
 import { TYPE_LABEL, cardTypes } from './appLink';
 import { photoUri } from './storage';
@@ -32,7 +32,15 @@ export const PATTERNS = [
   { key: 'gradient', label: 'グラデーション' },
   { key: 'dots', label: 'ドット' },
   { key: 'circles', label: 'サークル' },
+  { key: 'stripes', label: 'ストライプ' },
+  { key: 'check', label: 'チェック' },
+  { key: 'grid', label: '方眼' },
+  { key: 'waves', label: 'ウェーブ' },
+  { key: 'split', label: 'ななめ' },
+  { key: 'rings', label: 'リング' },
 ];
+// Patterns drawn with two pattern colors (the rest use one).
+export const TWO_COLOR_PATTERNS = ['bands', 'circles', 'waves'];
 
 // Card face drawn from 2-4 colors: background, then the pattern's colors.
 // No logos: brands' marks can't be used without each company's permission.
@@ -104,6 +112,14 @@ function PatternLayer({ pattern, bg, c1, c2, c3 }) {
   }
   const a = c1 || '#FFFFFF';
   const b = c2 || a;
+  if (pattern === 'split') {
+    // The lower-right half in the pattern color, stretched to the card's shape.
+    return (
+      <Svg style={StyleSheet.absoluteFill} width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none" pointerEvents="none">
+        <Polygon points="100,18 100,100 30,100" fill={a} fillOpacity="0.85" />
+      </Svg>
+    );
+  }
   return (
     <Svg style={StyleSheet.absoluteFill} width="100%" height="100%" pointerEvents="none">
       {pattern === 'gradient' && (
@@ -131,6 +147,57 @@ function PatternLayer({ pattern, bg, c1, c2, c3 }) {
         <>
           <Circle cx="92%" cy="10%" r="70" fill={a} fillOpacity="0.85" />
           <Circle cx="78%" cy="105%" r="46" fill={b} fillOpacity="0.7" />
+        </>
+      )}
+      {pattern === 'stripes' && (
+        <>
+          <Defs>
+            <Pattern id="st" x="0" y="0" width="14" height="14" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+              <Rect x="0" y="0" width="5" height="14" fill={a} fillOpacity="0.5" />
+            </Pattern>
+          </Defs>
+          <Rect x="0" y="0" width="100%" height="100%" fill="url(#st)" />
+        </>
+      )}
+      {pattern === 'check' && (
+        <>
+          <Defs>
+            <Pattern id="ck" x="0" y="0" width="24" height="24" patternUnits="userSpaceOnUse">
+              <Rect x="0" y="0" width="12" height="12" fill={a} fillOpacity="0.35" />
+              <Rect x="12" y="12" width="12" height="12" fill={a} fillOpacity="0.35" />
+            </Pattern>
+          </Defs>
+          <Rect x="0" y="0" width="100%" height="100%" fill="url(#ck)" />
+        </>
+      )}
+      {pattern === 'grid' && (
+        <>
+          <Defs>
+            <Pattern id="gr" x="0" y="0" width="16" height="16" patternUnits="userSpaceOnUse">
+              <Line x1="0" y1="0" x2="16" y2="0" stroke={a} strokeOpacity="0.45" strokeWidth="1.5" />
+              <Line x1="0" y1="0" x2="0" y2="16" stroke={a} strokeOpacity="0.45" strokeWidth="1.5" />
+            </Pattern>
+          </Defs>
+          <Rect x="0" y="0" width="100%" height="100%" fill="url(#gr)" />
+        </>
+      )}
+      {pattern === 'waves' && (
+        <>
+          <Defs>
+            <Pattern id="wv" x="0" y="0" width="40" height="22" patternUnits="userSpaceOnUse">
+              <Path d="M0 11 Q10 3 20 11 T40 11" stroke={a} strokeOpacity="0.6" strokeWidth="3" fill="none" />
+              <Path d="M0 21 Q10 13 20 21 T40 21" stroke={b} strokeOpacity="0.45" strokeWidth="2" fill="none" />
+            </Pattern>
+          </Defs>
+          <Rect x="0" y="0" width="100%" height="100%" fill="url(#wv)" />
+        </>
+      )}
+      {pattern === 'rings' && (
+        <>
+          <Circle cx="100%" cy="100%" r="40" stroke={a} strokeOpacity="0.6" strokeWidth="6" fill="none" />
+          <Circle cx="100%" cy="100%" r="70" stroke={a} strokeOpacity="0.45" strokeWidth="6" fill="none" />
+          <Circle cx="100%" cy="100%" r="100" stroke={a} strokeOpacity="0.3" strokeWidth="6" fill="none" />
+          <Circle cx="100%" cy="100%" r="130" stroke={a} strokeOpacity="0.18" strokeWidth="6" fill="none" />
         </>
       )}
     </Svg>
