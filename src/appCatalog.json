@@ -514,27 +514,6 @@
       "popular": true
     },
     {
-      "id": "kura",
-      "name": "くら寿司",
-      "keys": [
-        "くら寿司",
-        "kura"
-      ],
-      "schemes": [
-        "kuraapp",
-        "fb1433224993637742"
-      ],
-      "types": [
-        "point"
-      ],
-      "colors": [
-        "#1A3A8B",
-        "#E60012"
-      ],
-      "stores": "くら寿司",
-      "popular": true
-    },
-    {
       "id": "kfc",
       "name": "ケンタッキー",
       "keys": [
@@ -1315,25 +1294,6 @@
       "stores": "オートバックス|AUTOBACS"
     },
     {
-      "id": "kaikatsu",
-      "name": "快活CLUB",
-      "keys": [
-        "快活club",
-        "快活"
-      ],
-      "schemes": [
-        "jpkaikatsuofficial"
-      ],
-      "types": [
-        "point"
-      ],
-      "colors": [
-        "#1A3A6B",
-        "#F2C14E"
-      ],
-      "stores": "快活CLUB"
-    },
-    {
       "id": "kanagawapay",
       "name": "かながわPay",
       "keys": [
@@ -1617,25 +1577,6 @@
       "stores": "ジャンカラ|ジャンボカラオケ"
     },
     {
-      "id": "jun",
-      "name": "JUN（ジュン）",
-      "keys": [
-        "ジュン",
-        "jun"
-      ],
-      "schemes": [
-        "yappli-86a55bec",
-        "jun-appjp"
-      ],
-      "types": [
-        "point"
-      ],
-      "colors": [
-        "#1A1A1A",
-        "#FFFFFF"
-      ]
-    },
-    {
       "id": "joshin",
       "name": "ジョーシン",
       "keys": [
@@ -1674,26 +1615,6 @@
         "#FFFFFF"
       ],
       "stores": "スイーツパラダイス"
-    },
-    {
-      "id": "univcoop",
-      "name": "大学生協",
-      "keys": [
-        "生協",
-        "大学生協"
-      ],
-      "schemes": [
-        "univ-coop"
-      ],
-      "types": [
-        "point",
-        "pay"
-      ],
-      "colors": [
-        "#00873C",
-        "#FFFFFF"
-      ],
-      "stores": "生協"
     },
     {
       "id": "toysrus",
@@ -1793,25 +1714,6 @@
         "#E85A1B",
         "#F2C14E"
       ]
-    },
-    {
-      "id": "hankyu-mens",
-      "name": "阪急メンズ",
-      "keys": [
-        "阪急メンズ"
-      ],
-      "schemes": [
-        "hankyu-dept.mens-tokyo-app",
-        "line3rdp.jp.co.hankyu-dept.mens-tokyo"
-      ],
-      "types": [
-        "point"
-      ],
-      "colors": [
-        "#1A1A1A",
-        "#C8A165"
-      ],
-      "stores": "阪急メンズ"
     },
     {
       "id": "hands",
@@ -1925,43 +1827,6 @@
         "#F2C14E"
       ],
       "stores": "ほっともっと"
-    },
-    {
-      "id": "paulandjoe",
-      "name": "ポール & ジョー ボーテ",
-      "keys": [
-        "ポール&ジョー",
-        "ポールアンドジョー"
-      ],
-      "schemes": [
-        "yappli-36781b5d",
-        "paulandjoe"
-      ],
-      "types": [
-        "point"
-      ],
-      "colors": [
-        "#1A1A1A",
-        "#E4C1C9"
-      ]
-    },
-    {
-      "id": "mitsukoshi-store",
-      "name": "三越STORE",
-      "keys": [
-        "三越store"
-      ],
-      "schemes": [
-        "yappli-e9cb5d75",
-        "mitsukoshistore"
-      ],
-      "types": [
-        "point"
-      ],
-      "colors": [
-        "#C8102E",
-        "#FFFFFF"
-      ]
     },
     {
       "id": "isetan",
@@ -2168,23 +2033,6 @@
       "stores": "IKEA|イケア"
     },
     {
-      "id": "jaf",
-      "name": "JAF会員証",
-      "keys": [
-        "jaf"
-      ],
-      "schemes": [
-        "jp.or.jaf.digitalmembershipcard"
-      ],
-      "types": [
-        "point"
-      ],
-      "colors": [
-        "#00589C",
-        "#F2C14E"
-      ]
-    },
-    {
       "id": "jins",
       "name": "JINS",
       "keys": [
@@ -2262,24 +2110,6 @@
       "stores": "NIKE|ナイキ"
     },
     {
-      "id": "onward",
-      "name": "ONWARD",
-      "keys": [
-        "onward",
-        "オンワード"
-      ],
-      "schemes": [
-        "onwardapp"
-      ],
-      "types": [
-        "point"
-      ],
-      "colors": [
-        "#1A1A1A",
-        "#FFFFFF"
-      ]
-    },
-    {
       "id": "orbis",
       "name": "ORBIS",
       "keys": [
@@ -2297,24 +2127,6 @@
         "#FFFFFF"
       ],
       "stores": "ORBIS|オルビス"
-    },
-    {
-      "id": "palcloset",
-      "name": "PAL CLOSET",
-      "keys": [
-        "pal closet",
-        "パル"
-      ],
-      "schemes": [
-        "palcloset"
-      ],
-      "types": [
-        "point"
-      ],
-      "colors": [
-        "#1A1A1A",
-        "#FFFFFF"
-      ]
     },
     {
       "id": "plaza",
@@ -2396,25 +2208,6 @@
       "stores": "マルエツ|カスミ"
     },
     {
-      "id": "seibuprince",
-      "name": "SEIBU PRINCE CLUB",
-      "keys": [
-        "seibu prince",
-        "西武",
-        "プリンス"
-      ],
-      "schemes": [
-        "seibuprinceclubapp"
-      ],
-      "types": [
-        "point"
-      ],
-      "colors": [
-        "#1A3A8B",
-        "#FFFFFF"
-      ]
-    },
-    {
       "id": "seims",
       "name": "ドラッグセイムス",
       "keys": [
@@ -2432,26 +2225,6 @@
         "#F2C14E"
       ],
       "stores": "セイムス"
-    },
-    {
-      "id": "sheltter",
-      "name": "SHEL'TTER PASS（バロック）",
-      "keys": [
-        "sheltter",
-        "バロック",
-        "moussy",
-        "sly"
-      ],
-      "schemes": [
-        "baroque-passport"
-      ],
-      "types": [
-        "point"
-      ],
-      "colors": [
-        "#1A1A1A",
-        "#FFFFFF"
-      ]
     },
     {
       "id": "ships",
@@ -2531,24 +2304,6 @@
         "#F5B800"
       ],
       "stores": "WEGO"
-    },
-    {
-      "id": "world",
-      "name": "WORLD（ワールド）",
-      "keys": [
-        "ワールド",
-        "world"
-      ],
-      "schemes": [
-        "customerapp.wos"
-      ],
-      "types": [
-        "point"
-      ],
-      "colors": [
-        "#1A1A1A",
-        "#FFFFFF"
-      ]
     },
     {
       "id": "dotst",
