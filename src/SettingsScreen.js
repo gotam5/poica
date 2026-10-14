@@ -13,13 +13,15 @@ import { useTheme } from './theme';
 import appJson from '../app.json';
 
 const VERSION = appJson.expo.version;
-const NEAR_RANGES = [['auto', '自動'], [100, '100m'], [200, '200m'], [300, '300m'], [500, '500m'], [1000, '1km']];
+// 100 m: below this GPS drift makes cards come and go. 500 m: beyond it the shop is no longer 「近く」.
+const NEAR_RANGES = [['auto', '自動'], [100, '100m'], [200, '200m'], [300, '300m'], [500, '500m']];
+export const clampRange = (m) => Math.min(500, Math.max(100, m));
 const HOME_LABEL = { suggest: '近くのおすすめ', list: 'カード一覧' };
 
 function SettingsPages({ page, go, ...props }) {
   const {
     unlimited, iapAvailable, limits, cards, ordered, manualOrder, onEditCard, onSaveOrder, onAutoOrder,
-    suggestCount, onSuggestCount, nearRange = 'auto', onNearRange, homeOrder, onHomeOrder, homeHidden, onHomeHidden,
+    suggestCount, onSuggestCount, nearRange: nearRangeRaw = 'auto', onNearRange, homeOrder, onHomeOrder, homeHidden, onHomeHidden,
     placeCount, storeLookup, onToggleStoreLookup, onForgetPlaces,
     onUnlocked, privacyUrl, supportUrl, owned, previewFree, onPreviewFree,
   } = props;
@@ -57,6 +59,7 @@ function SettingsPages({ page, go, ...props }) {
   const free = iapAvailable && !unlimited;
   const maxCount = free ? limits.freeNearbyLimit : limits.paidNearbyLimit;
   const count = Math.min(suggestCount || maxCount, maxCount);
+  const nearRange = typeof nearRangeRaw === 'number' ? clampRange(nearRangeRaw) : 'auto';
 
   const forget = () => {
     Alert.alert('覚えた場所をすべて消しますか？', undefined, [
@@ -166,21 +169,6 @@ function SettingsPages({ page, go, ...props }) {
             {free && <Text style={[s.lead, { marginTop: 8 }]}>PROなら{limits.paidNearbyLimit}件まで表示できます。</Text>}
           </View>
         )}
-
-        {suggestOn && (
-          <View>
-            <Text style={s.sec}>近くとみなす範囲</Text>
-            <View style={[s.box, { marginTop: 8 }]}>
-              {NEAR_RANGES.map(([v, label], i, arr) => (
-                <Pressable key={String(v)} onPress={() => onNearRange(v)} style={[s.row, i < arr.length - 1 && s.rowLine]} accessibilityRole="radio" accessibilityState={{ checked: nearRange === v }}>
-                  <Text style={s.rowLabel}>{label}</Text>
-                  {nearRange === v ? <Text style={s.check}>✓</Text> : null}
-                </Pressable>
-              ))}
-            </View>
-            <Text style={[s.lead, { marginTop: 8 }]}>現在地からこの距離までのお店やカードを使った場所を、近くのおすすめに出します。自動では、位置の精度に合わせて150〜400mで調整します。</Text>
-          </View>
-        )}
         {paywallModal}
       </Sub>
     );
@@ -196,6 +184,19 @@ function SettingsPages({ page, go, ...props }) {
           </Pressable>
         </View>
         <Text style={s.lead}>近くのお店を地図データ(OpenStreetMap)で調べ、そのお店のアプリのカードをおすすめに出します。調べるときは、おおまかな現在地を送ります。</Text>
+
+        <View>
+          <Text style={s.sec}>近くとみなす範囲</Text>
+          <View style={[s.box, { marginTop: 8 }]}>
+            {NEAR_RANGES.map(([v, label], i, arr) => (
+              <Pressable key={String(v)} onPress={() => onNearRange(v)} style={[s.row, i < arr.length - 1 && s.rowLine]} accessibilityRole="radio" accessibilityState={{ checked: nearRange === v }}>
+                <Text style={s.rowLabel}>{label}</Text>
+                {nearRange === v ? <Text style={s.check}>✓</Text> : null}
+              </Pressable>
+            ))}
+          </View>
+          <Text style={[s.lead, { marginTop: 8 }]}>現在地からこの距離までのお店やカードを使った場所を、近くのおすすめに出します。選べるのは100〜500mです。自動では、位置の精度に合わせて150〜400mで調整します。</Text>
+        </View>
       </Sub>
     );
   }

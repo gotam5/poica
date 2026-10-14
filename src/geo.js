@@ -24,7 +24,7 @@ export function nearestPlace(card, pos) {
 
 // How close counts as "this shop". range: metres set by the user, or 'auto' to widen it when the GPS fix is poor (indoors).
 export function nearRadius(pos, range = 'auto') {
-  if (typeof range === 'number') return range;
+  if (typeof range === 'number') return Math.min(500, Math.max(100, range)); // 100-500 m, as in 設定
   return Math.min(400, Math.max(150, (pos ? pos.acc : 0) * 1.5));
 }
 
@@ -64,7 +64,7 @@ export function usesNear(card, pos, r) {
 
 export function arrange(cards, pos, query, stores = [], storeHasCard = () => false, maxSuggest = 3, range = 'auto') {
   const r = nearRadius(pos, range);
-  const storeR = typeof range === 'number' ? range : 300;
+  const storeR = typeof range === 'number' ? r : 300;
   const byId = new Map();
   for (const c of cards) {
     const d = nearestPlace(c, pos);

@@ -110,7 +110,7 @@ function Home() {
   useEffect(() => {
     if (!storeLookup || !posKey || !hasCatalogCard) { setStores([]); return; }
     let alive = true;
-    fetchNearbyStores(pos, typeof nearRange === 'number' ? nearRange : undefined)
+    fetchNearbyStores(pos, typeof nearRange === 'number' ? Math.min(500, Math.max(100, nearRange)) : undefined)
       .then((list) => { if (alive) setStores(list); })
       .catch(() => { if (alive) setStores([]); });
     return () => { alive = false; };
