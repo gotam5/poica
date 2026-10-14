@@ -5,17 +5,23 @@ import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import CardFace, { PATTERNS, textHex } from './CardFace';
+import StepSlider from './StepSlider';
+import { hexToHsl, hslToHex } from './color';
 import { cardPalette, catalogApp } from './appLink';
 
-// Rows of 8: vivid, deep, standard, soft, then neutrals. Old colors are kept so saved cards still show as selected.
-const SWATCHES = [
-  '#FF1744', '#FF6D00', '#FFD600', '#00E676', '#00B8D4', '#2979FF', '#651FFF', '#F50057',
-  '#FF3D00', '#FFAB00', '#AEEA00', '#1DE9B6', '#00B0FF', '#3D5AFE', '#D500F9', '#FF4081',
-  '#C2412D', '#E76F51', '#B8740A', '#0A7552', '#1E9E6A', '#0F7F93', '#2F5BD3', '#7A3FC4',
-  '#8E1B1B', '#7A3E00', '#5C4B00', '#0B4D36', '#0B4F5C', '#1B2A6B', '#3E1F6B', '#C23C7A',
-  '#F25C54', '#FFD166', '#F2C14E', '#A8E6CF', '#9ED8F0', '#A9C4FF', '#C9B6FF', '#FF9FD2',
-  '#FFFFFF', '#E6E6E6', '#B0B7B4', '#6B7570', '#3D4A55', '#3D2B1F', '#15211C', '#000000',
+// 14 big swatches: 12 hues plus white and black. The sliders below tune 鮮やかさ (saturation) and 明るさ (lightness).
+const HUES = [0, 22, 45, 80, 130, 165, 190, 212, 235, 265, 295, 330];
+const BASES = [
+  ...HUES.map((h) => ({ key: `h${h}`, hsl: { h, s: 85, l: 52 } })),
+  { key: 'white', hsl: { h: 0, s: 0, l: 100 } },
+  { key: 'black', hsl: { h: 0, s: 0, l: 8 } },
 ];
+// Which swatch the current color comes from: grays go to white or black, the rest to the nearest hue.
+function baseOf({ h, s, l }) {
+  if (s < 8 || l < 4 || l > 97) return l >= 50 ? 'white' : 'black';
+  const near = HUES.reduce((best, x) => (Math.min(Math.abs(x - h), 360 - Math.abs(x - h)) < Math.min(Math.abs(best - h), 360 - Math.abs(best - h)) ? x : best), HUES[0]);
+  return `h${near}`;
+}
 
 const TABS = [['pattern', '模様'], ['color', '色'], ['image', 'ロゴ画像']];
 
@@ -117,14 +123,32 @@ export default function DesignPicker({ d, set, allCards = [], canDesign, onLocke
               );
             })}
           </View>
-          <View style={s.swatches}>
-            {SWATCHES.map((c) => {
-              const on = valueOf(slotNow).toUpperCase() === c;
-              return (
-                <Pressable key={c} onPress={() => pick(c)} style={[s.swatch, { backgroundColor: c }, (c === '#FFFFFF' || c === '#E6E6E6') && { borderColor: t.track }, on && { borderColor: t.ink, borderWidth: 3 }]} accessibilityRole="button" accessibilityLabel={c} accessibilityState={{ selected: on }} hitSlop={2} />
-              );
-            })}
-          </View>
+          {(() => {
+            const hsl = hexToHsl(valueOf(slotNow));
+            const base = baseOf(hsl);
+            const setHsl = (next) => pick(hslToHex({ ...hsl, ...next }));
+            return (
+              <>
+                <View style={s.swatches}>
+                  {BASES.map((b) => {
+                    const c = hslToHex(b.hsl);
+                    const on = base === b.key;
+                    return (
+                      <Pressable key={b.key} onPress={() => pick(c)} style={[s.swatch, { backgroundColor: c }, b.key === 'white' && { borderColor: t.track }, on && { borderColor: t.ink, borderWidth: 3 }]} accessibilityRole="button" accessibilityLabel={b.key === 'white' ? '白' : b.key === 'black' ? '黒' : `色 ${b.hsl.h}`} accessibilityState={{ selected: on }} hitSlop={2} />
+                    );
+                  })}
+                </View>
+                <View style={s.tune}>
+                  <View style={s.tuneHead}><Text style={s.small}>鮮やかさ</Text><View style={[s.tuneDot, { backgroundColor: valueOf(slotNow) }]} /></View>
+                  <StepSlider compact value={hsl.s} min={0} max={100} step={2} onMove={(v) => setHsl({ s: v })} onChange={(v) => setHsl({ s: v })} t={t}
+                    colors={[hslToHex({ h: hsl.h, s: 0, l: hsl.l }), hslToHex({ h: hsl.h, s: 100, l: hsl.l })]} />
+                  <Text style={s.small}>明るさ</Text>
+                  <StepSlider compact value={hsl.l} min={0} max={100} step={2} onMove={(v) => setHsl({ l: v })} onChange={(v) => setHsl({ l: v })} t={t}
+                    colors={['#000000', hslToHex({ h: hsl.h, s: hsl.s, l: 50 }), '#FFFFFF']} />
+                </View>
+              </>
+            );
+          })()}
           {app && app.colors ? (
             <Pressable onPress={() => set({ palette: null, color: app.colors[0], textColor: null })} hitSlop={6} accessibilityRole="button">
               <Text style={s.reset}>{app.name}の色に戻す</Text>
@@ -196,8 +220,11 @@ const styles = (t) => StyleSheet.create({
   slotDot: { width: 18, height: 18, borderRadius: 9, borderWidth: 1, borderColor: 'rgba(0,0,0,0.15)' },
   slotText: { color: t.muted, fontWeight: '700', fontSize: 13 },
   reset: { color: t.accent, fontSize: 13, fontWeight: '700', textDecorationLine: 'underline' },
-  swatches: { flexDirection: 'row', flexWrap: 'wrap', rowGap: 10, justifyContent: 'space-between' },
-  swatch: { width: '10.5%', aspectRatio: 1, borderRadius: 999, borderWidth: 1, borderColor: 'transparent' }, // 8 per row
+  swatches: { flexDirection: 'row', flexWrap: 'wrap', rowGap: 12, justifyContent: 'space-between' },
+  swatch: { width: '12%', aspectRatio: 1, borderRadius: 999, borderWidth: 1, borderColor: 'transparent' }, // 7 per row, big enough to tap
+  tune: { gap: 4, marginTop: 4 },
+  tuneHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  tuneDot: { width: 22, height: 22, borderRadius: 11, borderWidth: 1, borderColor: t.track },
   opt: { flex: 1, borderWidth: 1, borderColor: t.line, backgroundColor: t.surface, borderRadius: 10, paddingVertical: 10, alignItems: 'center' },
   optOn: { backgroundColor: t.accent, borderColor: t.accent },
   optText: { color: t.ink, fontWeight: '700', fontSize: 14 },
