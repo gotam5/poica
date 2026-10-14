@@ -4,6 +4,7 @@ import { Alert, Animated, Linking, PanResponder, Pressable, ScrollView, StyleShe
 import { PaywallModal } from './Paywall';
 import { isCancel, restore } from './purchase';
 import Toggle from './Toggle';
+import StepSlider from './StepSlider';
 import smooth from './smooth';
 import CardFace from './CardFace';
 import ReorderGrid from './ReorderGrid';
@@ -13,15 +14,13 @@ import { useTheme } from './theme';
 import appJson from '../app.json';
 
 const VERSION = appJson.expo.version;
-// 近くとみなす範囲: 10-100 m in 10 m steps, or automatic.
-const NEAR_STEPS = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100];
 export const clampRange = (m) => Math.min(100, Math.max(10, Math.round(m / 10) * 10));
 const HOME_LABEL = { suggest: '近くのおすすめ', list: 'カード一覧' };
 
 function SettingsPages({ page, go, ...props }) {
   const {
     unlimited, iapAvailable, limits, cards, ordered, manualOrder, onEditCard, onSaveOrder, onAutoOrder,
-    suggestCount, onSuggestCount, nearRange: nearRangeRaw = 'auto', onNearRange, homeOrder, onHomeOrder, homeHidden, onHomeHidden,
+    suggestCount, onSuggestCount, nearRange: nearRangeRaw = 30, onNearRange, homeOrder, onHomeOrder, homeHidden, onHomeHidden,
     placeCount, storeLookup, onToggleStoreLookup, onForgetPlaces,
     onUnlocked, privacyUrl, supportUrl, owned, previewFree, onPreviewFree,
   } = props;
@@ -59,7 +58,7 @@ function SettingsPages({ page, go, ...props }) {
   const free = iapAvailable && !unlimited;
   const maxCount = free ? limits.freeNearbyLimit : limits.paidNearbyLimit;
   const count = Math.min(suggestCount || maxCount, maxCount);
-  const nearRange = typeof nearRangeRaw === 'number' ? clampRange(nearRangeRaw) : 'auto';
+  const nearRange = typeof nearRangeRaw === 'number' ? clampRange(nearRangeRaw) : 30;
 
   const forget = () => {
     Alert.alert('覚えた場所をすべて消しますか？', undefined, [
@@ -176,7 +175,7 @@ function SettingsPages({ page, go, ...props }) {
 
   if (page === 'lookup') {
     return (
-      <Sub s={s} go={go} title="近くのお店を調べる">
+      <Sub s={s} go={go} title="近くのお店を調べる" scroll={!dragging}>
         <View style={s.box}>
           <Pressable onPress={() => { smooth(); onToggleStoreLookup(); }} style={s.switchRow} accessibilityRole="switch" accessibilityState={{ checked: storeLookup }}>
             <Text style={[s.rowLabel, { flex: 1 }]}>地図データで近くのお店を調べる</Text>
@@ -188,21 +187,9 @@ function SettingsPages({ page, go, ...props }) {
         <View>
           <Text style={s.sec}>近くとみなす範囲</Text>
           <View style={[s.box, { marginTop: 8 }]}>
-            <Pressable onPress={() => onNearRange(nearRange === 'auto' ? 50 : 'auto')} style={[s.switchRow, nearRange !== 'auto' && s.rowLine]} accessibilityRole="switch" accessibilityState={{ checked: nearRange === 'auto' }}>
-              <Text style={[s.rowLabel, { flex: 1 }]}>自動で調整する</Text>
-              <Toggle value={nearRange === 'auto'} t={t} />
-            </Pressable>
-            {nearRange !== 'auto' && (
-              <View style={s.steps}>
-                {NEAR_STEPS.map((m) => (
-                  <Pressable key={m} onPress={() => onNearRange(m)} style={[s.step, nearRange === m && s.stepOn]} accessibilityRole="radio" accessibilityState={{ checked: nearRange === m }}>
-                    <Text style={[s.stepText, nearRange === m && s.stepTextOn]}>{m}m</Text>
-                  </Pressable>
-                ))}
-              </View>
-            )}
+            <StepSlider value={nearRange} min={10} max={100} step={10} unit="m" onChange={onNearRange} onDragging={setDragging} t={t} />
           </View>
-          <Text style={[s.lead, { marginTop: 8 }]}>現在地からこの距離までのお店やカードを使った場所を、近くのおすすめに出します。自分で決めるときは10〜100mから選べます。屋内などで位置の精度が低いと、狭い範囲では出にくくなります。自動では、位置の精度に合わせて150〜400mで調整します。</Text>
+          <Text style={[s.lead, { marginTop: 8 }]}>現在地からこの距離までのお店やカードを使った場所を、近くのおすすめに出します。10〜100mの間で、10mきざみで選べます。屋内などで位置の精度が低いと、狭い範囲では出にくくなります。</Text>
         </View>
       </Sub>
     );
@@ -403,11 +390,6 @@ const styles = (t) => StyleSheet.create({
   chev: { fontSize: 22, color: t.muted, marginLeft: 2, marginTop: -2 },
   check: { fontSize: 17, fontWeight: '900', color: t.accent },
   proTag: { fontSize: 12, fontWeight: '900', color: t.accentInk, backgroundColor: t.accent, borderRadius: 6, paddingHorizontal: 7, paddingVertical: 2, overflow: 'hidden' },
-  steps: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, paddingVertical: 12 },
-  step: { width: '18%', flexGrow: 1, alignItems: 'center', paddingVertical: 9, borderRadius: 10, borderWidth: 1, borderColor: t.line },
-  stepOn: { backgroundColor: t.accent, borderColor: t.accent },
-  stepText: { color: t.ink, fontWeight: '700', fontSize: 14, fontVariant: ['tabular-nums'] },
-  stepTextOn: { color: t.accentInk },
   switchRow: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 56 },
   pressed: { opacity: 0.6 },
   pro: { backgroundColor: t.accent, borderRadius: 14, paddingVertical: 12, paddingHorizontal: 14, alignItems: 'center', gap: 3, marginVertical: 12 },

@@ -64,7 +64,7 @@ function Home() {
   const [homeOrder, setHomeOrder] = useState(HOME_ORDER); // order of the blocks on ホーム
   const [homeHidden, setHomeHidden] = useState([]); // blocks switched off on ホーム
   const [suggestCount, setSuggestCount] = useState(null); // null = as many as allowed
-  const [nearRange, setNearRange] = useState('auto'); // metres that count as 近く, or 'auto'
+  const [nearRange, setNearRange] = useState(30); // metres that count as 近く (10-100)
   const scrollRef = useRef(null);
 
   const say = useCallback((text) => {
@@ -93,7 +93,7 @@ function Home() {
       if ((await getSetting('suggestPos', 'afterRecent')) === 'top') setHomeOrder(['suggest', 'list']);
     }).catch(() => {});
     getSetting('suggestCount', null).then(setSuggestCount).catch(() => {});
-    getSetting('nearRange', 'auto').then(setNearRange).catch(() => {});
+    getSetting('nearRange', 30).then((v) => setNearRange(typeof v === 'number' ? Math.min(100, Math.max(10, Math.round(v / 10) * 10)) : 30)).catch(() => {});
     getSetting('cardOrder', null).then((v) => Array.isArray(v) && setCardOrder(v)).catch(() => {});
     // The purchase is remembered on the phone so the limit stays off offline; StoreKit is the source of truth when reachable.
     loadLimits().then(setLimits).then(() => refreshLimits()).then((l) => l && setLimits(l)).catch(() => {});
