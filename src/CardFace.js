@@ -55,7 +55,7 @@ export default function CardFace({ card, palette, big, wide, chip, style, mini, 
   const pattern = card.pattern || 'bands';
   const ink = textHex(card);
   const dark = isDarkText(ink);
-  const logo = mini ? 0 : children ? 52 : big ? 84 : 64;
+  const logo = mini ? 0 : children ? 52 : big ? 84 : 54;
   return (
     <View style={[s.face, { backgroundColor: bg }, big && s.big, mini && s.mini, style]}>
       <PatternLayer pattern={pattern} bg={bg} c1={c1} c2={c2} c3={c3} />
@@ -81,7 +81,7 @@ export default function CardFace({ card, palette, big, wide, chip, style, mini, 
             <View style={s.chip}><Text style={s.chipText} numberOfLines={1}>{chip}</Text></View>
           ) : null}
           <View style={[s.nameRow, !big && !wide && !children && s.nameRowLow]}>
-            <Text style={[s.name, big && s.nameBig, img && (big ? s.nameBigLogo : s.nameLogo), dark && s.nameDark, { color: ink, paddingRight: children ? 0 : img || logoSlot ? logo + 12 : 44 }]} numberOfLines={2}>{card.name || 'カード名'}</Text>
+            <Text style={[s.name, big && s.nameBig, img && !big && s.nameLogo, dark && s.nameDark, { color: ink, paddingRight: children ? 0 : img || logoSlot ? logo + 12 : 44 }]} numberOfLines={2}>{card.name || 'カード名'}</Text>
             {children && img ? (
               <View style={[s.logoBox, { width: logo, height: logo }, card.logoBg === 'white' && s.logoTile]}>
                 <Image source={{ uri: img }} style={s.logo} resizeMode="contain" />
@@ -321,9 +321,8 @@ const s = StyleSheet.create({
   name: { flex: 1, paddingRight: 8, color: '#FFF', fontSize: 22, fontWeight: '900', lineHeight: 27, ...shadow },
   nameDark: { color: '#15211C', textShadowColor: 'rgba(255,255,255,0.4)' },
   nameBig: { fontSize: 28, lineHeight: 34 },
-  // A logo takes width from the name, so the name is a bit smaller to stay on fewer lines.
+  // On small cards a logo takes width from the name, so the name is a bit smaller to stay on fewer lines.
   nameLogo: { fontSize: 18, lineHeight: 23 },
-  nameBigLogo: { fontSize: 23, lineHeight: 28 },
   types: { flexDirection: 'row', flexWrap: 'wrap', gap: 4, paddingRight: 40 },
   type: { borderRadius: 999, paddingHorizontal: 8, paddingVertical: 2 },
   typeText: { fontSize: 11, fontWeight: '800' },
