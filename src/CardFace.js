@@ -1,6 +1,6 @@
 import { Image, StyleSheet, Text, View } from 'react-native';
 import { useState } from 'react';
-import Svg, { Circle, Defs, G, LinearGradient, Path, Pattern, Polygon, RadialGradient, Rect, Stop } from 'react-native-svg';
+import Svg, { Circle, ClipPath, Defs, G, LinearGradient, Path, Pattern, Polygon, Rect, Stop } from 'react-native-svg';
 import { TYPE_COLORS } from './theme';
 import { TYPE_LABEL, cardTypes } from './appLink';
 import { photoUri } from './storage';
@@ -132,9 +132,24 @@ function PatternLayer({ pattern, bg, c1, c2, c3 }) {
 }
 
 // A slanted bar: centre x at the bottom, leaning right by 22° towards the top.
+// A slanted bar: centre x halfway up, leaning right towards the top.
 function slant(x, width, H) {
-  const lean = H * 0.4;
-  return `${x - width / 2},${H} ${x + width / 2},${H} ${x + lean + width / 2},0 ${x + lean - width / 2},0`;
+  const lean = 80;
+  const x0 = x - lean / 2;
+  return `${x0 - width / 2},${H} ${x0 + width / 2},${H} ${x0 + lean + width / 2},0 ${x0 + lean - width / 2},0`;
+}
+
+// Everything stays in the right part of the card, at most about half of it,
+// so the card name on the left keeps a plain background.
+// RIGHT is the region right of a diagonal: 62% across at the top, 46% at the bottom.
+function rightClip(H) {
+  return (
+    <Defs>
+      <ClipPath id="rc">
+        <Polygon points={`${W * 0.62},0 ${W},0 ${W},${H} ${W * 0.46},${H}`} />
+      </ClipPath>
+    </Defs>
+  );
 }
 
 function drawPattern(pattern, { bg, a, b, c, c1, c2, H }) {
@@ -142,113 +157,114 @@ function drawPattern(pattern, { bg, a, b, c, c1, c2, H }) {
     case 'bands':
       return (
         <>
-          {c1 && <Polygon points={slant(W - 70 - H * 0.2, 78, H)} fill={c1} />}
-          {c2 && <Polygon points={slant(W - 140 - H * 0.2, 22, H)} fill={c2} />}
-          {c && <Rect x="0" y={H - 11} width={W} height="11" fill={c} />}
+          {c1 && <Polygon points={slant(W - 52, 46, H)} fill={c1} />}
+          {c2 && <Polygon points={slant(W - 100, 13, H)} fill={c2} />}
+          {c && <Rect x="0" y={H - 8} width={W} height="8" fill={c} />}
         </>
       );
     case 'gradient':
+      // Fades in from the middle of the card to the right edge.
       return (
         <>
           <Defs>
-            <LinearGradient id="g" x1="0" y1="0" x2="1" y2="1">
-              <Stop offset="0" stopColor={bg} />
-              <Stop offset="1" stopColor={a} />
+            <LinearGradient id="g" x1="0" y1="0" x2="1" y2="0">
+              <Stop offset="0" stopColor={a} stopOpacity="0" />
+              <Stop offset="0.25" stopColor={a} stopOpacity="0.15" />
+              <Stop offset="1" stopColor={a} stopOpacity="1" />
             </LinearGradient>
-            <RadialGradient id="gs" cx="20%" cy="0%" r="70%">
-              <Stop offset="0" stopColor="#FFFFFF" stopOpacity="0.16" />
-              <Stop offset="1" stopColor="#FFFFFF" stopOpacity="0" />
-            </RadialGradient>
           </Defs>
-          <Rect x="0" y="0" width={W} height={H} fill="url(#g)" />
-          <Rect x="0" y="0" width={W} height={H} fill="url(#gs)" />
+          <Rect x={W * 0.45} y="0" width={W * 0.55} height={H} fill="url(#g)" />
         </>
       );
-    case 'split': {
-      // Two facets cut along the same diagonal.
-      const k = 190 / (W * 0.82);
-      const y2 = H - 116;
+    case 'split':
+      // Two facets cut along parallel diagonals.
       return (
         <>
-          <Polygon points={`${W},${H - 190} ${W},${H} ${W * 0.18},${H}`} fill={a} />
-          <Polygon points={`${W},${y2} ${W},${H} ${W - (H - y2) / k},${H}`} fill={b} />
+          <Polygon points={`${W},${H - 150} ${W},${H} ${W * 0.52},${H}`} fill={a} />
+          <Polygon points={`${W},${H - 84} ${W},${H} ${W * 0.73},${H}`} fill={b} />
         </>
       );
-    }
     case 'circles':
       return (
         <>
-          <Circle cx={W * 0.95} cy={H - 110} r={W * 0.4} fill={a} fillOpacity="0.9" />
-          <Circle cx={W * 0.62} cy={H + 4} r={W * 0.3} fill={b} fillOpacity="0.9" />
-          <Circle cx={W * 0.62} cy={H + 4} r={W * 0.38} stroke={b} strokeOpacity="0.5" strokeWidth="4" fill="none" />
+          <Circle cx={W * 0.97} cy={H - 92} r={W * 0.2} fill={a} fillOpacity="0.9" />
+          <Circle cx={W * 0.77} cy={H + 6} r={W * 0.15} fill={b} fillOpacity="0.9" />
+          <Circle cx={W * 0.77} cy={H + 6} r={W * 0.21} stroke={b} strokeOpacity="0.5" strokeWidth="2.5" fill="none" />
         </>
       );
     case 'rings':
       return (
         <>
-          {[0.22, 0.42, 0.62, 0.82, 1.02].map((r, i) => (
-            <Circle key={r} cx={W} cy={H} r={W * r} stroke={a} strokeOpacity={0.8 - i * 0.13} strokeWidth="16" fill="none" />
+          {[0.08, 0.16, 0.24, 0.32, 0.4, 0.48].map((r, i) => (
+            <Circle key={r} cx={W} cy={H} r={W * r} stroke={a} strokeOpacity={0.85 - i * 0.12} strokeWidth="7" fill="none" />
           ))}
         </>
       );
     case 'waves': {
-      const y = H - 120;
+      // Layered waves rising from the lower right.
+      const x0 = W * 0.5;
       return (
         <>
-          <Path d={`M0 ${y + 20} C${W * 0.25} ${y - 18} ${W * 0.45} ${y + 44} ${W * 0.7} ${y + 14} S${W} ${y - 4} ${W} ${y - 4} V${H} H0 Z`} fill={a} fillOpacity="0.75" />
-          <Path d={`M0 ${y + 62} C${W * 0.3} ${y + 30} ${W * 0.55} ${y + 86} ${W * 0.8} ${y + 52} S${W} ${y + 40} ${W} ${y + 40} V${H} H0 Z`} fill={b} fillOpacity="0.9" />
+          <Path d={`M${x0} ${H} C${W * 0.62} ${H - 10} ${W * 0.7} ${H - 70} ${W * 0.82} ${H - 74} S${W} ${H - 104} ${W} ${H - 104} V${H} Z`} fill={a} fillOpacity="0.75" />
+          <Path d={`M${W * 0.6} ${H} C${W * 0.7} ${H - 8} ${W * 0.76} ${H - 40} ${W * 0.86} ${H - 42} S${W} ${H - 62} ${W} ${H - 62} V${H} Z`} fill={b} fillOpacity="0.9" />
         </>
       );
     }
     case 'sunburst': {
-      // Rays fanning out from the lower-right corner.
-      const n = 14;
-      const R = W * 2;
+      // Fine rays fanning out from the lower-right corner.
+      const n = 22;
+      const R = W * 0.5;
       const rays = [];
       for (let i = 0; i < n; i += 2) {
         const t0 = Math.PI + (i / n) * (Math.PI / 2);
         const t1 = Math.PI + ((i + 1) / n) * (Math.PI / 2);
-        rays.push(<Polygon key={i} points={`${W},${H} ${W + R * Math.cos(t0)},${H + R * Math.sin(t0)} ${W + R * Math.cos(t1)},${H + R * Math.sin(t1)}`} fill={a} fillOpacity="0.3" />);
+        rays.push(<Polygon key={i} points={`${W},${H} ${W + R * Math.cos(t0)},${H + R * Math.sin(t0)} ${W + R * Math.cos(t1)},${H + R * Math.sin(t1)}`} fill={a} fillOpacity="0.45" />);
       }
       return <>{rays}</>;
     }
     case 'dots': {
-      // Halftone: dots grow towards the lower right.
-      const step = 18;
+      // Halftone: small dots growing towards the right edge.
+      const step = 11;
+      const x0 = W * 0.5;
       const dots = [];
       for (let y = step / 2; y < H; y += step) {
-        for (let x = step / 2; x < W; x += step) {
-          const t = (x / W) * 0.6 + (y / H) * 0.4;
-          if (t < 0.15) continue;
-          dots.push(<Circle key={`${x}-${y}`} cx={x} cy={y} r={((t - 0.15) / 0.85) * 8 + 0.6} fill={a} fillOpacity="0.65" />);
+        for (let x = x0 + step / 2; x < W; x += step) {
+          const t = (x - x0) / (W - x0);
+          dots.push(<Circle key={`${x}-${y}`} cx={x} cy={y} r={t * 3.8 + 0.4} fill={a} fillOpacity="0.7" />);
         }
       }
       return <>{dots}</>;
     }
     case 'stripes':
-      // Regimental stripes: a wide band and a thin one, repeating on the diagonal.
+      // Fine regimental stripes in the right part of the card.
       return (
         <>
+          {rightClip(H)}
           <Defs>
-            <Pattern id="st" x="0" y="0" width="76" height="76" patternUnits="userSpaceOnUse" patternTransform="rotate(-35)">
-              <Rect x="0" y="0" width="76" height="22" fill={a} fillOpacity="0.75" />
-              <Rect x="0" y="38" width="76" height="5" fill={b} fillOpacity="0.8" />
+            <Pattern id="st" x="0" y="0" width="30" height="30" patternUnits="userSpaceOnUse" patternTransform="rotate(-35)">
+              <Rect x="0" y="0" width="30" height="9" fill={a} fillOpacity="0.8" />
+              <Rect x="0" y="15" width="30" height="2.5" fill={b} fillOpacity="0.85" />
             </Pattern>
           </Defs>
-          <Rect x="0" y="0" width={W} height={H} fill="url(#st)" />
+          <G clipPath="url(#rc)">
+            <Rect x="0" y="0" width={W} height={H} fill="url(#st)" />
+          </G>
         </>
       );
     case 'check':
-      // Gingham: see-through bands across and down, darker where they cross.
+      // Fine gingham in the right part of the card.
       return (
         <>
+          {rightClip(H)}
           <Defs>
-            <Pattern id="ck" x="0" y="0" width="56" height="56" patternUnits="userSpaceOnUse">
-              <Rect x="0" y="0" width="56" height="28" fill={a} fillOpacity="0.32" />
-              <Rect x="0" y="0" width="28" height="56" fill={a} fillOpacity="0.32" />
+            <Pattern id="ck" x="0" y="0" width="22" height="22" patternUnits="userSpaceOnUse">
+              <Rect x="0" y="0" width="22" height="11" fill={a} fillOpacity="0.4" />
+              <Rect x="0" y="0" width="11" height="22" fill={a} fillOpacity="0.4" />
             </Pattern>
           </Defs>
-          <Rect x="0" y="0" width={W} height={H} fill="url(#ck)" />
+          <G clipPath="url(#rc)">
+            <Rect x="0" y="0" width={W} height={H} fill="url(#ck)" />
+          </G>
         </>
       );
     case 'triangles':
@@ -258,29 +274,31 @@ function drawPattern(pattern, { bg, a, b, c, c1, c2, H }) {
   }
 }
 
-// Low-poly facets over the right part of the card, fading out to the left.
+// Fine low-poly facets over the right part of the card, fading out to the left.
 const JIT = [0.1, -0.3, 0.25, -0.15, 0.3, -0.25, 0.05, 0.2, -0.1, 0.15, -0.3, 0.25, 0.1, -0.2, 0.3, -0.05, 0.2, -0.25, 0.1, 0.05];
 function lowPoly(a, H) {
-  const cols = 5;
-  const rows = 3;
-  const x0 = W * 0.22;
+  const cols = 6;
+  const x0 = W * 0.52;
   const cw = (W - x0) / (cols - 1);
+  const rows = Math.max(3, Math.round(H / cw) + 1);
   const rh = H / (rows - 1);
   const pt = (i, j) => {
-    const edgeX = i === cols - 1;
+    const edgeX = i === 0 || i === cols - 1;
     const edgeY = j === 0 || j === rows - 1;
-    const jx = edgeX ? 0 : JIT[(i * 3 + j) % JIT.length] * cw * 0.5;
+    const jx = edgeX ? 0 : JIT[(i * 3 + j) % JIT.length] * cw * 0.6;
     const jy = edgeY ? 0 : JIT[(i * 7 + j * 2 + 5) % JIT.length] * rh * 0.6;
     return [x0 + i * cw + jx, j * rh + jy];
   };
+  const q = (u) => u.map((v) => `${v[0]},${v[1]}`).join(' ');
   const tris = [];
   for (let i = 0; i < cols - 1; i++) {
     for (let j = 0; j < rows - 1; j++) {
       const p = [pt(i, j), pt(i + 1, j), pt(i + 1, j + 1), pt(i, j + 1)];
-      const base = 0.12 + (i / (cols - 2)) * 0.55;
-      const q = (u) => u.map((v) => `${v[0]},${v[1]}`).join(' ');
-      tris.push(<Polygon key={`${i}-${j}-a`} points={q([p[0], p[1], p[2]])} fill={a} fillOpacity={base + ((i + j) % 2) * 0.15} />);
-      tris.push(<Polygon key={`${i}-${j}-b`} points={q([p[0], p[2], p[3]])} fill={a} fillOpacity={base + ((i + j + 1) % 2) * 0.15} />);
+      const base = 0.03 + (i / (cols - 2)) * 0.62;
+      const flip = (i + j) % 2;
+      const [t1, t2] = flip ? [[p[0], p[1], p[3]], [p[1], p[2], p[3]]] : [[p[0], p[1], p[2]], [p[0], p[2], p[3]]];
+      tris.push(<Polygon key={`${i}-${j}-a`} points={q(t1)} fill={a} fillOpacity={base + (j % 2) * (i ? 0.12 : 0.05)} />);
+      tris.push(<Polygon key={`${i}-${j}-b`} points={q(t2)} fill={a} fillOpacity={base + ((j + 1) % 2) * (i ? 0.12 : 0.05)} />);
     }
   }
   return tris;
