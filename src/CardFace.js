@@ -70,7 +70,7 @@ export default function CardFace({ card, palette, big, wide, chip, style, mini, 
           {chip != null ? (
             <View style={s.chip}><Text style={s.chipText} numberOfLines={1}>{chip}</Text></View>
           ) : null}
-          <View style={s.nameRow}>
+          <View style={[s.nameRow, !big && !wide && !children && s.nameRowLow]}>
             <Text style={[s.name, big && s.nameBig, dark && s.nameDark, { color: ink, paddingRight: children ? 0 : img || logoSlot ? logo + 12 : 44 }]} numberOfLines={2}>{card.name || 'カード名'}</Text>
             {children && img ? (
               <View style={[s.logoBox, { width: logo, height: logo }, card.logoBg === 'white' && s.logoTile]}>
@@ -152,6 +152,7 @@ const s = StyleSheet.create({
   band: { position: 'absolute', right: 6, top: -60, width: 30, height: 260, transform: [{ rotate: '22deg' }] },
   thin: { position: 'absolute', right: 44, top: -60, width: 9, height: 260, transform: [{ rotate: '22deg' }] },
   stripe: { position: 'absolute', left: 0, right: 0, bottom: 0, height: 6 },
+  nameRowLow: { paddingTop: 8 }, // small tiles in the card list: name a little lower
   nameRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
   name: { flex: 1, paddingRight: 8, color: '#FFF', fontSize: 18, fontWeight: '900', lineHeight: 23, ...shadow },
   nameDark: { color: '#15211C', textShadowColor: 'rgba(255,255,255,0.4)' },
