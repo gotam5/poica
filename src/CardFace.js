@@ -154,9 +154,9 @@ const s = StyleSheet.create({
   stripe: { position: 'absolute', left: 0, right: 0, bottom: 0, height: 6 },
   nameRowLow: { paddingTop: 8 }, // small tiles in the card list: name a little lower
   nameRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
-  name: { flex: 1, paddingRight: 8, color: '#FFF', fontSize: 20, fontWeight: '900', lineHeight: 25, ...shadow },
+  name: { flex: 1, paddingRight: 8, color: '#FFF', fontSize: 22, fontWeight: '900', lineHeight: 27, ...shadow },
   nameDark: { color: '#15211C', textShadowColor: 'rgba(255,255,255,0.4)' },
-  nameBig: { fontSize: 26, lineHeight: 32 },
+  nameBig: { fontSize: 28, lineHeight: 34 },
   types: { flexDirection: 'row', flexWrap: 'wrap', gap: 4, paddingRight: 40 },
   type: { borderRadius: 999, paddingHorizontal: 8, paddingVertical: 2 },
   typeText: { fontSize: 11, fontWeight: '800' },
