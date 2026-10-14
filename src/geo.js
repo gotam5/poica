@@ -24,7 +24,7 @@ export function nearestPlace(card, pos) {
 
 // How close counts as "this shop". range: metres set by the user, or 'auto' to widen it when the GPS fix is poor (indoors).
 export function nearRadius(pos, range = 'auto') {
-  if (typeof range === 'number') return Math.min(500, Math.max(100, range)); // 100-500 m, as in 設定
+  if (typeof range === 'number') return Math.min(100, Math.max(10, range)); // 10-100 m, as in 設定
   return Math.min(400, Math.max(150, (pos ? pos.acc : 0) * 1.5));
 }
 

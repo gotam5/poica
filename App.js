@@ -110,12 +110,12 @@ function Home() {
   useEffect(() => {
     if (!storeLookup || !posKey || !hasCatalogCard) { setStores([]); return; }
     let alive = true;
-    fetchNearbyStores(pos, typeof nearRange === 'number' ? Math.min(500, Math.max(100, nearRange)) : undefined)
+    fetchNearbyStores(pos)
       .then((list) => { if (alive) setStores(list); })
       .catch(() => { if (alive) setStores([]); });
     return () => { alive = false; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [storeLookup, posKey, hasCatalogCard, nearRange]);
+  }, [storeLookup, posKey, hasCatalogCard]);
 
   const toggleStoreLookup = () => {
     const next = !storeLookup;

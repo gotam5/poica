@@ -13,9 +13,9 @@ import { useTheme } from './theme';
 import appJson from '../app.json';
 
 const VERSION = appJson.expo.version;
-// 100 m: below this GPS drift makes cards come and go. 500 m: beyond it the shop is no longer 「近く」.
-const NEAR_RANGES = [['auto', '自動'], [100, '100m'], [200, '200m'], [300, '300m'], [500, '500m']];
-export const clampRange = (m) => Math.min(500, Math.max(100, m));
+// 近くとみなす範囲: 10-100 m in 10 m steps, or automatic.
+const NEAR_STEPS = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100];
+export const clampRange = (m) => Math.min(100, Math.max(10, Math.round(m / 10) * 10));
 const HOME_LABEL = { suggest: '近くのおすすめ', list: 'カード一覧' };
 
 function SettingsPages({ page, go, ...props }) {
@@ -188,14 +188,21 @@ function SettingsPages({ page, go, ...props }) {
         <View>
           <Text style={s.sec}>近くとみなす範囲</Text>
           <View style={[s.box, { marginTop: 8 }]}>
-            {NEAR_RANGES.map(([v, label], i, arr) => (
-              <Pressable key={String(v)} onPress={() => onNearRange(v)} style={[s.row, i < arr.length - 1 && s.rowLine]} accessibilityRole="radio" accessibilityState={{ checked: nearRange === v }}>
-                <Text style={s.rowLabel}>{label}</Text>
-                {nearRange === v ? <Text style={s.check}>✓</Text> : null}
-              </Pressable>
-            ))}
+            <Pressable onPress={() => onNearRange(nearRange === 'auto' ? 50 : 'auto')} style={[s.switchRow, nearRange !== 'auto' && s.rowLine]} accessibilityRole="switch" accessibilityState={{ checked: nearRange === 'auto' }}>
+              <Text style={[s.rowLabel, { flex: 1 }]}>自動で調整する</Text>
+              <Toggle value={nearRange === 'auto'} t={t} />
+            </Pressable>
+            {nearRange !== 'auto' && (
+              <View style={s.steps}>
+                {NEAR_STEPS.map((m) => (
+                  <Pressable key={m} onPress={() => onNearRange(m)} style={[s.step, nearRange === m && s.stepOn]} accessibilityRole="radio" accessibilityState={{ checked: nearRange === m }}>
+                    <Text style={[s.stepText, nearRange === m && s.stepTextOn]}>{m}m</Text>
+                  </Pressable>
+                ))}
+              </View>
+            )}
           </View>
-          <Text style={[s.lead, { marginTop: 8 }]}>現在地からこの距離までのお店やカードを使った場所を、近くのおすすめに出します。選べるのは100〜500mです。自動では、位置の精度に合わせて150〜400mで調整します。</Text>
+          <Text style={[s.lead, { marginTop: 8 }]}>現在地からこの距離までのお店やカードを使った場所を、近くのおすすめに出します。自分で決めるときは10〜100mから選べます。屋内などで位置の精度が低いと、狭い範囲では出にくくなります。自動では、位置の精度に合わせて150〜400mで調整します。</Text>
         </View>
       </Sub>
     );
@@ -396,6 +403,11 @@ const styles = (t) => StyleSheet.create({
   chev: { fontSize: 22, color: t.muted, marginLeft: 2, marginTop: -2 },
   check: { fontSize: 17, fontWeight: '900', color: t.accent },
   proTag: { fontSize: 12, fontWeight: '900', color: t.accentInk, backgroundColor: t.accent, borderRadius: 6, paddingHorizontal: 7, paddingVertical: 2, overflow: 'hidden' },
+  steps: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, paddingVertical: 12 },
+  step: { width: '18%', flexGrow: 1, alignItems: 'center', paddingVertical: 9, borderRadius: 10, borderWidth: 1, borderColor: t.line },
+  stepOn: { backgroundColor: t.accent, borderColor: t.accent },
+  stepText: { color: t.ink, fontWeight: '700', fontSize: 14, fontVariant: ['tabular-nums'] },
+  stepTextOn: { color: t.accentInk },
   switchRow: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 56 },
   pressed: { opacity: 0.6 },
   pro: { backgroundColor: t.accent, borderRadius: 14, paddingVertical: 12, paddingHorizontal: 14, alignItems: 'center', gap: 3, marginVertical: 12 },
