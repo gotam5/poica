@@ -49,7 +49,7 @@ export default function CardFace({ card, palette, big, wide, chip, style, mini, 
   return (
     <View style={[s.face, { backgroundColor: bg }, big && s.big, mini && s.mini, style]}>
       <PatternLayer pattern={pattern} bg={bg} c1={c1} c2={c2} c3={c3} />
-      {logo && (img || logoSlot) ? (
+      {logo && (img || logoSlot) && !children ? (
         // A full-height column so the logo always sits in the vertical middle of the card.
         <View style={s.logoCol} pointerEvents="none">
           <View style={[{ width: logo + 8, height: logo + 8, alignItems: 'center', justifyContent: 'center' }, img && logoSlot && [s.slotRing, { borderColor: ink.length === 7 ? `${ink}73` : ink }]]}>
@@ -71,7 +71,12 @@ export default function CardFace({ card, palette, big, wide, chip, style, mini, 
             <View style={s.chip}><Text style={s.chipText} numberOfLines={1}>{chip}</Text></View>
           ) : null}
           <View style={s.nameRow}>
-            <Text style={[s.name, big && s.nameBig, dark && s.nameDark, { color: ink, paddingRight: img || logoSlot ? logo + 12 : 44 }]} numberOfLines={2}>{card.name || 'カード名'}</Text>
+            <Text style={[s.name, big && s.nameBig, dark && s.nameDark, { color: ink, paddingRight: children ? 0 : img || logoSlot ? logo + 12 : 44 }]} numberOfLines={2}>{card.name || 'カード名'}</Text>
+            {children && img ? (
+              <View style={[s.logoBox, { width: logo, height: logo }, card.logoBg === 'white' && s.logoTile]}>
+                <Image source={{ uri: img }} style={s.logo} resizeMode="contain" />
+              </View>
+            ) : null}
           </View>
           {children || <View>
             <View style={[s.types, (img || logoSlot) && { paddingRight: logo + 12 }]}>

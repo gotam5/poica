@@ -64,6 +64,8 @@ export default function EditScreen({ initial, allCards = [], canDesign = true, l
   // Cards made from the official-app list can't change the app or how it opens; editing is about the design.
   // (A card switched to a shortcut after failing to open still shows its shortcut name.)
   const locked = !isNew && initial.kind === 'app' && !!initial.catalogId;
+  // Editing a saved barcode/photo card: design first, and the code is changed through one 「バーコードを変更」 button.
+  const editingCode = !isNew && !custom && initial.kind !== 'app';
   const lockedApp = locked ? catalogApp(initial.catalogId) : null;
   const design = (
     <View style={s.field}>
@@ -96,7 +98,7 @@ export default function EditScreen({ initial, allCards = [], canDesign = true, l
             </View>
           )}
 
-          {locked && design}
+          {(locked || editingCode) && design}
           {locked && (
             <View style={s.appInfo}>
               <Text style={s.label}>公式アプリ</Text>
@@ -105,7 +107,7 @@ export default function EditScreen({ initial, allCards = [], canDesign = true, l
             </View>
           )}
 
-          {!locked && <View style={s.field}>
+          {!locked && !editingCode && <View style={s.field}>
             <Text style={s.label}>登録のしかた</Text>
             <View style={s.seg}>
               {(custom ? ['barcode', 'app'] : ['app', 'barcode']).map((k) => (
@@ -127,7 +129,7 @@ export default function EditScreen({ initial, allCards = [], canDesign = true, l
           {status && <Text style={[s.status, status.error && s.statusErr]}>{status.text}</Text>}
 
           {d.kind === 'barcode' && (
-            <CaptureSection d={d} set={set} cap={cap} t={t} width={width} onToApp={() => toApp({ code: '' })} />
+            <CaptureSection d={d} set={set} cap={cap} t={t} width={width} onToApp={() => toApp({ code: '' })} compact={editingCode} />
           )}
 
           {d.kind === 'app' && (
@@ -238,7 +240,7 @@ export default function EditScreen({ initial, allCards = [], canDesign = true, l
             </>
           )}
 
-          {!locked && design}
+          {!locked && !editingCode && design}
 
           {!isNew && (confirmDelete ? (
             <View style={s.confirm}>

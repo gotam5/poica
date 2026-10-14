@@ -97,7 +97,7 @@ export function normalizeAppUrl(raw) {
   return `https://${v}`;
 }
 
-export const TYPE_LABEL = { point: 'ポイントカード', pay: '支払い' };
+export const TYPE_LABEL = { point: 'ポイント', pay: '支払い' };
 
 // Which home sections a card belongs to: 'point', or 'pay' (both when the app does both).
 export function cardTypes(card) {

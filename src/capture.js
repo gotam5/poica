@@ -1,7 +1,7 @@
 // Reading a card into Poica: barcode from a screenshot or the camera, and an optional photo of the card.
 // Shared by the step-by-step 「自分でカードを作る」 flow and the card editor.
 import { useState } from 'react';
-import { ActivityIndicator, Image, Modal, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import { ActionSheetIOS, ActivityIndicator, Alert, Image, Modal, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { ImageManipulator, SaveFormat } from 'expo-image-manipulator';
 import { scanFromURLAsync } from 'expo-camera';
@@ -91,21 +91,46 @@ export function useCapture(set) {
 
 // What the barcode step shows: read buttons, the read code, and an optional photo.
 // onToApp: offered when the barcode turns out to change over time.
-export function CaptureSection({ d, set, cap, t, width, onToApp, showPhoto = true }) {
+// compact: editing a saved card. The current code comes first, with one 「バーコードを変更」 button that asks screenshot or camera.
+export function CaptureSection({ d, set, cap, t, width, onToApp, showPhoto = true, compact = false }) {
   const s = styles(t);
   const photoSource = d.photo ? { uri: typeof d.photo === 'object' ? d.photo.temp : photoUri(d.photo) } : null;
   const code = (d.code || '').trim();
+  const changeCode = () => {
+    const pick = (i) => { if (i === 0) cap.readScreenshot(false); else if (i === 1) cap.setScanning(true); };
+    if (Platform.OS === 'ios') {
+      ActionSheetIOS.showActionSheetWithOptions({ options: ['スクショから読む', 'カメラで読む', 'キャンセル'], cancelButtonIndex: 2 }, pick);
+    } else {
+      Alert.alert(code ? 'バーコードを変更' : 'バーコードを登録', undefined, [
+        { text: 'スクショから読む', onPress: () => pick(0) },
+        { text: 'カメラで読む', onPress: () => pick(1) },
+        { text: 'キャンセル', style: 'cancel' },
+      ]);
+    }
+  };
   return (
     <View style={{ gap: 14 }}>
-      <View style={s.row}>
+      {compact && <Text style={s.label}>バーコード</Text>}
+      {compact && code ? (
+        <View style={s.preview}>
+          <BarcodeView code={code} format={d.format} width={width - 56} height={90} />
+          <Text style={s.num} selectable>{code}</Text>
+        </View>
+      ) : null}
+      {compact && (
+        <Pressable onPress={changeCode} disabled={cap.reading} style={({ pressed }) => [s.primary, pressed && s.pressed]} accessibilityRole="button">
+          <Text style={s.primaryText}>{code ? 'バーコードを変更' : 'バーコードを登録'}</Text>
+        </Pressable>
+      )}
+      {!compact && <View style={s.row}>
         <Pressable onPress={() => cap.readScreenshot(false)} disabled={cap.reading} style={({ pressed }) => [s.primary, { flex: 1 }, pressed && s.pressed]} accessibilityRole="button">
           <Text style={s.primaryText}>スクショから読む</Text>
         </Pressable>
         <Pressable onPress={() => cap.setScanning(true)} disabled={cap.reading} style={({ pressed }) => [s.secondary, { flex: 1 }, pressed && s.pressed]} accessibilityRole="button">
           <Text style={s.secondaryText}>カメラで読む</Text>
         </Pressable>
-      </View>
-      <Text style={s.hint}>公式アプリの会員証画面をスクショして選ぶと、バーコードを読み取ります。プラスチックのカードはカメラで読めます。</Text>
+      </View>}
+      {!compact && <Text style={s.hint}>公式アプリの会員証画面をスクショして選ぶと、バーコードを読み取ります。プラスチックのカードはカメラで読めます。</Text>}
 
       {cap.reading && (
         <View style={[s.row, { alignItems: 'center' }]}><ActivityIndicator color={t.accent} /><Text style={s.hint}>スクショを読み取っています…</Text></View>
@@ -117,7 +142,7 @@ export function CaptureSection({ d, set, cap, t, width, onToApp, showPhoto = tru
         </Pressable>
       )}
 
-      {code ? (
+      {code && !compact ? (
         <View style={s.preview}>
           <BarcodeView code={code} format={d.format} width={width - 56} height={90} />
           <Text style={s.num} selectable>{code}</Text>
@@ -131,7 +156,7 @@ export function CaptureSection({ d, set, cap, t, width, onToApp, showPhoto = tru
           </Pressable>
         </View>
       ) : null}
-      {code ? (
+      {code && !compact ? (
         <Pressable onPress={() => { set({ code: '' }); cap.setStatus(null); }} style={[s.secondary, { alignSelf: 'flex-start' }]} accessibilityRole="button">
           <Text style={s.secondaryText}>バーコードを外す</Text>
         </Pressable>
