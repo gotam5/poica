@@ -16,6 +16,7 @@ export default function AddFlow({ initial, allCards = [], canDesign, limits, onU
   const [step, setStep] = useState('pick'); // pick | try | design | done
   const [d, setD] = useState(initial);
   const [query, setQuery] = useState('');
+  const [more, setMore] = useState(false); // 「さらに表示」 opened
   const [installed, setInstalled] = useState([]);
   const [result, setResult] = useState(null); // null | 'ok' | 'fail'
   const [paywall, setPaywall] = useState(null);
@@ -88,12 +89,9 @@ export default function AddFlow({ initial, allCards = [], canDesign, limits, onU
         {step === 'pick' && (
           <ScrollView contentContainerStyle={s.body} keyboardShouldPersistTaps="handled">
             <Text style={s.lead}>登録するカードを選んでください</Text>
-            <TextInput style={s.input} value={query} onChangeText={setQuery} placeholder="お店・アプリの名前で探す" placeholderTextColor={t.muted} autoCorrect={false} clearButtonMode="while-editing" />
             {(() => {
               const q = query.trim().toLowerCase();
-              const list = CATALOG
-                .filter((a) => !q || a.name.toLowerCase().includes(q) || a.keys.some((k) => k.toLowerCase().includes(q)))
-                .sort((a, b) => installed.includes(b.id) - installed.includes(a.id));
+              const match = (a) => !q || a.name.toLowerCase().includes(q) || a.keys.some((k) => k.toLowerCase().includes(q));
               const customRow = (
                 <Pressable onPress={onCustom} style={({ pressed }) => [s.custom, pressed && s.pressed]} accessibilityRole="button">
                   <Text style={s.customIcon}>＋</Text>
@@ -104,13 +102,15 @@ export default function AddFlow({ initial, allCards = [], canDesign, limits, onU
                   <Text style={s.chev}>›</Text>
                 </Pressable>
               );
-              if (!list.length) return <><Text style={s.hint}>見つかりません。「自分でカードを作る」から登録できます。</Text>{customRow}</>;
               // Apps already registered go to the bottom and can't be picked again (an app has only one account per phone).
               const added = new Set(allCards.filter((c) => c.kind === 'app' && c.catalogId).map((c) => c.catalogId));
-              const fresh = list.filter((a) => !added.has(a.id));
-              const done = list.filter((a) => added.has(a.id));
+              const fresh = CATALOG.filter((a) => !added.has(a.id));
+              const done = CATALOG.filter((a) => added.has(a.id));
               const onPhone = fresh.filter((a) => installed.includes(a.id));
-              const others = fresh.filter((a) => !installed.includes(a.id));
+              const popular = fresh.filter((a) => a.popular && !installed.includes(a.id));
+              const rest = fresh.filter((a) => !a.popular && !installed.includes(a.id));
+              // While searching, everything not added yet is searched, not just the rest.
+              const found = q ? fresh.filter(match) : rest;
               const rows = (items, isAdded) => (
                 <View style={s.list}>
                   {items.map((a, i) => (
@@ -136,7 +136,27 @@ export default function AddFlow({ initial, allCards = [], canDesign, limits, onU
                   {/* 自分でカードを作る sits right under the apps already on this iPhone. */}
                   {onPhone.length > 0 && rows(onPhone, false)}
                   {customRow}
-                  {others.length > 0 ? rows(others, false) : !onPhone.length && <Text style={s.hint}>一覧のアプリはすべて追加済みです。</Text>}
+                  {popular.length > 0 && (
+                    <>
+                      <Text style={s.groupLabel}>よく使われるアプリ</Text>
+                      {rows(popular, false)}
+                    </>
+                  )}
+                  {/* The rest (and the search) open from 「さらに表示」 so the list starts short. */}
+                  {!more ? (
+                    rest.length > 0 && (
+                      <Pressable onPress={() => setMore(true)} style={({ pressed }) => [s.moreBtn, pressed && s.pressed]} accessibilityRole="button">
+                        <Text style={s.moreText}>さらに表示（ほか{rest.length}件・検索）</Text>
+                      </Pressable>
+                    )
+                  ) : (
+                    <>
+                      <Text style={s.groupLabel}>ほかのアプリ</Text>
+                      <TextInput style={s.input} value={query} onChangeText={setQuery} placeholder="お店・アプリの名前で探す" placeholderTextColor={t.muted} autoCorrect={false} clearButtonMode="while-editing" />
+                      {found.length > 0 ? rows(found, false) : <Text style={s.hint}>見つかりません。「自分でカードを作る」から登録できます。</Text>}
+                    </>
+                  )}
+                  {!fresh.length && <Text style={s.hint}>一覧のアプリはすべて追加済みです。</Text>}
                   {done.length > 0 && (
                     <>
                       <Text style={s.groupLabel}>追加済み</Text>
@@ -269,6 +289,8 @@ const styles = (t) => StyleSheet.create({
   itemNameAdded: { color: t.muted },
   addedMark: { color: t.muted, fontSize: 12, fontWeight: '700' },
   groupLabel: { color: t.muted, fontSize: 13, fontWeight: '700', marginTop: 8 },
+  moreBtn: { alignSelf: 'center', borderWidth: 1, borderColor: t.line, backgroundColor: t.surface, borderRadius: 999, paddingVertical: 11, paddingHorizontal: 20 },
+  moreText: { color: t.accent, fontSize: 15, fontWeight: '700' },
   installed: { color: t.muted, fontSize: 11 },
   chev: { color: t.muted, fontSize: 24, fontWeight: '300' },
   pressed: { opacity: 0.6 },

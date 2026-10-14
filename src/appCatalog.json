@@ -1,5 +1,5 @@
 {
-  "_note": "URL schemes collected from the personal memo site urlschemesiphone.information.jp (2026-10). Not verified on a device yet; Poica tries each scheme in order and falls back if the app does not answer. 'stores' is the shop-name pattern used to suggest the card near that chain's shops; apps usable everywhere (common points, payments) have none. 'types' says whether the app works as a point card ('point'), a payment app ('pay'), or both. 'colors' is a 2-4 color image palette for the card face (first is the background, light enough contrast for white text); approximations, no logos. 'openWith: shortcut' marks apps that misbehave when opened by URL (Vポイント jumps to Safari when already running), so the add flow sets them up with a Shortcut.",
+  "_note": "URL schemes collected from the personal memo site urlschemesiphone.information.jp (2026-10). Not verified on a device yet; Poica tries each scheme in order and falls back if the app does not answer. 'stores' is the shop-name pattern used to suggest the card near that chain's shops; apps usable everywhere (common points, payments) have none. 'types' says whether the app works as a point card ('point'), a payment app ('pay'), or both. 'colors' is a 2-4 color image palette for the card face (first is the background, light enough contrast for white text); approximations, no logos. 'openWith: shortcut' marks apps that misbehave when opened by URL (Vポイント jumps to Safari when already running), so the add flow sets them up with a Shortcut. 'popular' marks the apps shown up front in the add flow; the rest open from 「さらに表示」. Popular apps come first so their schemes fit iOS's 50-scheme LSApplicationQueriesSchemes limit.",
   "apps": [
     {
       "id": "rakuten-pointcard",
@@ -18,7 +18,8 @@
         "#BF0000",
         "#FFFFFF",
         "#E8A317"
-      ]
+      ],
+      "popular": true
     },
     {
       "id": "rakuten-pay",
@@ -37,7 +38,8 @@
       "colors": [
         "#BF0000",
         "#FFFFFF"
-      ]
+      ],
+      "popular": true
     },
     {
       "id": "paypay",
@@ -55,7 +57,8 @@
       "colors": [
         "#D9001B",
         "#FFFFFF"
-      ]
+      ],
+      "popular": true
     },
     {
       "id": "ponta",
@@ -74,7 +77,8 @@
         "#F39800",
         "#FFFFFF",
         "#6B3A1E"
-      ]
+      ],
+      "popular": true
     },
     {
       "id": "lawson",
@@ -95,29 +99,8 @@
         "#0068B7",
         "#FFFFFF",
         "#9FD3F0"
-      ]
-    },
-    {
-      "id": "ponta-pass",
-      "name": "Pontaパス",
-      "keys": [
-        "pontaパス",
-        "ポンタパス",
-        "auスマートパス",
-        "スマートパス"
       ],
-      "schemes": [
-        "smps-app"
-      ],
-      "stores": "ローソン|LAWSON",
-      "types": [
-        "point"
-      ],
-      "colors": [
-        "#EB6100",
-        "#FFFFFF",
-        "#FFC20E"
-      ]
+      "popular": true
     },
     {
       "id": "dpoint",
@@ -134,7 +117,8 @@
       "colors": [
         "#CC0033",
         "#FFFFFF"
-      ]
+      ],
+      "popular": true
     },
     {
       "id": "dpay",
@@ -153,7 +137,8 @@
         "#CC0033",
         "#FFFFFF",
         "#333333"
-      ]
+      ],
+      "popular": true
     },
     {
       "id": "aupay",
@@ -173,7 +158,8 @@
       "colors": [
         "#D94A04",
         "#FFFFFF"
-      ]
+      ],
+      "popular": true
     },
     {
       "id": "vpoint",
@@ -199,7 +185,666 @@
         "#FFD100",
         "#FFFFFF"
       ],
-      "openWith": "shortcut"
+      "openWith": "shortcut",
+      "popular": true
+    },
+    {
+      "id": "waon",
+      "name": "WAON",
+      "keys": [
+        "waon",
+        "ワオン"
+      ],
+      "schemes": [
+        "waonservice"
+      ],
+      "types": [
+        "pay"
+      ],
+      "colors": [
+        "#B5006E",
+        "#FFD900"
+      ],
+      "popular": true
+    },
+    {
+      "id": "aeon",
+      "name": "イオンお買物",
+      "keys": [
+        "イオン",
+        "aeon"
+      ],
+      "schemes": [
+        "aeon-app"
+      ],
+      "stores": "イオン|AEON|マックスバリュ",
+      "types": [
+        "point",
+        "pay"
+      ],
+      "colors": [
+        "#9E1A82",
+        "#FFFFFF"
+      ],
+      "popular": true
+    },
+    {
+      "id": "seven",
+      "name": "セブン‐イレブン",
+      "keys": [
+        "セブン",
+        "seven"
+      ],
+      "schemes": [
+        "sejapp"
+      ],
+      "stores": "セブン-イレブン|セブンイレブン|セブン‐イレブン|7-Eleven",
+      "types": [
+        "point"
+      ],
+      "colors": [
+        "#00795C",
+        "#F58220",
+        "#E60012",
+        "#FFFFFF"
+      ],
+      "popular": true
+    },
+    {
+      "id": "famipay",
+      "name": "ファミペイ",
+      "keys": [
+        "ファミペイ",
+        "ファミリーマート",
+        "ファミマ"
+      ],
+      "schemes": [
+        "familymart-app"
+      ],
+      "stores": "ファミリーマート|FamilyMart",
+      "types": [
+        "point",
+        "pay"
+      ],
+      "colors": [
+        "#0060AE",
+        "#00A73C",
+        "#FFFFFF"
+      ],
+      "popular": true
+    },
+    {
+      "id": "sugi",
+      "name": "スギ薬局",
+      "keys": [
+        "スギ"
+      ],
+      "schemes": [
+        "passmartsugi"
+      ],
+      "stores": "スギ薬局|スギドラッグ",
+      "types": [
+        "point"
+      ],
+      "colors": [
+        "#0B6FB8",
+        "#8CC63F",
+        "#FFFFFF"
+      ],
+      "popular": true
+    },
+    {
+      "id": "matsukiyo",
+      "name": "マツキヨココカラ",
+      "keys": [
+        "マツキヨ",
+        "ココカラ",
+        "マツモトキヨシ"
+      ],
+      "schemes": [
+        "matsukiyococokara",
+        "matsukiyo-private"
+      ],
+      "stores": "マツモトキヨシ|ココカラファイン",
+      "types": [
+        "point"
+      ],
+      "colors": [
+        "#004EA2",
+        "#FFE100",
+        "#FFFFFF"
+      ],
+      "popular": true
+    },
+    {
+      "id": "welcia",
+      "name": "ウエルシア",
+      "keys": [
+        "ウエルシア",
+        "welcia"
+      ],
+      "schemes": [
+        "welciaapp",
+        "welciaapps"
+      ],
+      "stores": "ウエルシア|ハックドラッグ",
+      "types": [
+        "point"
+      ],
+      "colors": [
+        "#D7000F",
+        "#FFFFFF",
+        "#0069B3"
+      ],
+      "popular": true
+    },
+    {
+      "id": "tsuruha",
+      "name": "ツルハドラッグ",
+      "keys": [
+        "ツルハ"
+      ],
+      "schemes": [
+        "jp.co.tsuruhahd.tsuruhadrug"
+      ],
+      "stores": "ツルハ",
+      "types": [
+        "point"
+      ],
+      "colors": [
+        "#0A7A3E",
+        "#FFFFFF"
+      ],
+      "popular": true
+    },
+    {
+      "id": "starbucks",
+      "name": "スターバックス",
+      "keys": [
+        "スタバ",
+        "スターバックス",
+        "starbucks"
+      ],
+      "schemes": [
+        "starbucksjapan"
+      ],
+      "stores": "スターバックス|Starbucks",
+      "types": [
+        "point",
+        "pay"
+      ],
+      "colors": [
+        "#00704A",
+        "#1E3932",
+        "#FFFFFF"
+      ],
+      "popular": true
+    },
+    {
+      "id": "mcdonalds",
+      "name": "マクドナルド",
+      "keys": [
+        "マクドナルド",
+        "マック",
+        "mcdonald"
+      ],
+      "schemes": [
+        "mcdonaldsjp"
+      ],
+      "stores": "マクドナルド|McDonald",
+      "types": [
+        "point"
+      ],
+      "colors": [
+        "#DA291C",
+        "#FFC72C",
+        "#27251F"
+      ],
+      "popular": true
+    },
+    {
+      "id": "yodobashi-gpc",
+      "name": "ヨドバシ ゴールドポイントカード",
+      "keys": [
+        "ヨドバシ",
+        "ゴールドポイント"
+      ],
+      "schemes": [
+        "gpc"
+      ],
+      "stores": "ヨドバシ",
+      "types": [
+        "point"
+      ],
+      "colors": [
+        "#B00020",
+        "#D4AF37",
+        "#FFFFFF"
+      ],
+      "popular": true
+    },
+    {
+      "id": "daiso",
+      "name": "DAISO",
+      "keys": [
+        "ダイソー",
+        "daiso"
+      ],
+      "schemes": [
+        "com.daisojapan"
+      ],
+      "stores": "ダイソー|DAISO",
+      "types": [
+        "point"
+      ],
+      "colors": [
+        "#E4007F",
+        "#FFFFFF"
+      ],
+      "popular": true
+    },
+    {
+      "id": "idemitsu",
+      "name": "出光 Drive On",
+      "keys": [
+        "出光",
+        "drive on",
+        "driveon",
+        "アポロステーション",
+        "昭和シェル"
+      ],
+      "schemes": [
+        "driveon"
+      ],
+      "types": [
+        "point",
+        "pay"
+      ],
+      "colors": [
+        "#C8102E",
+        "#F2C14E"
+      ],
+      "stores": "出光|アポロステーション|昭和シェル",
+      "popular": true
+    },
+    {
+      "id": "cainz",
+      "name": "カインズ",
+      "keys": [
+        "カインズ",
+        "cainz"
+      ],
+      "schemes": [
+        "com.cainz.cainz"
+      ],
+      "types": [
+        "point",
+        "pay"
+      ],
+      "colors": [
+        "#0E7C3A",
+        "#FFFFFF"
+      ],
+      "stores": "カインズ|CAINZ",
+      "popular": true
+    },
+    {
+      "id": "gusto",
+      "name": "すかいらーく（ガスト）",
+      "keys": [
+        "ガスト",
+        "すかいらーく",
+        "バーミヤン",
+        "ジョナサン",
+        "夢庵",
+        "しゃぶ葉"
+      ],
+      "schemes": [
+        "jp.co.skylark.app.gusto",
+        "sklgusto"
+      ],
+      "types": [
+        "point"
+      ],
+      "colors": [
+        "#E60012",
+        "#F2C14E"
+      ],
+      "stores": "ガスト|バーミヤン|ジョナサン|夢庵|しゃぶ葉|むさしの森",
+      "popular": true
+    },
+    {
+      "id": "kura",
+      "name": "くら寿司",
+      "keys": [
+        "くら寿司",
+        "kura"
+      ],
+      "schemes": [
+        "kuraapp",
+        "fb1433224993637742"
+      ],
+      "types": [
+        "point"
+      ],
+      "colors": [
+        "#1A3A8B",
+        "#E60012"
+      ],
+      "stores": "くら寿司",
+      "popular": true
+    },
+    {
+      "id": "kfc",
+      "name": "ケンタッキー",
+      "keys": [
+        "ケンタッキー",
+        "kfc"
+      ],
+      "schemes": [
+        "kfcjapan"
+      ],
+      "types": [
+        "point"
+      ],
+      "colors": [
+        "#A3080C",
+        "#FFFFFF"
+      ],
+      "stores": "ケンタッキー|KFC",
+      "popular": true
+    },
+    {
+      "id": "komeda",
+      "name": "コメダ珈琲店",
+      "keys": [
+        "コメダ",
+        "komeda"
+      ],
+      "schemes": [
+        "komeda-ua"
+      ],
+      "types": [
+        "point",
+        "pay"
+      ],
+      "colors": [
+        "#7A1E1E",
+        "#C8A165"
+      ],
+      "stores": "コメダ",
+      "popular": true
+    },
+    {
+      "id": "shimamura",
+      "name": "しまむら",
+      "keys": [
+        "しまむら",
+        "shimamura"
+      ],
+      "schemes": [
+        "shimamura-app"
+      ],
+      "types": [
+        "point"
+      ],
+      "colors": [
+        "#E60012",
+        "#FFFFFF"
+      ],
+      "stores": "しまむら",
+      "popular": true
+    },
+    {
+      "id": "gu",
+      "name": "GU",
+      "keys": [
+        "gu",
+        "ジーユー"
+      ],
+      "schemes": [
+        "mixiapp-20120301",
+        "gu-japan"
+      ],
+      "types": [
+        "point"
+      ],
+      "colors": [
+        "#002E73",
+        "#FFFFFF"
+      ],
+      "stores": "GU|ジーユー",
+      "popular": true
+    },
+    {
+      "id": "sukiya",
+      "name": "すき家",
+      "keys": [
+        "すき家",
+        "sukiya"
+      ],
+      "schemes": [
+        "moap"
+      ],
+      "types": [
+        "point"
+      ],
+      "colors": [
+        "#E60012",
+        "#F2C14E"
+      ],
+      "stores": "すき家",
+      "popular": true
+    },
+    {
+      "id": "nitori",
+      "name": "ニトリ",
+      "keys": [
+        "ニトリ",
+        "nitori"
+      ],
+      "schemes": [
+        "jp.co.nitori"
+      ],
+      "types": [
+        "point",
+        "pay"
+      ],
+      "colors": [
+        "#00703C",
+        "#FFFFFF"
+      ],
+      "stores": "ニトリ|デコホーム",
+      "popular": true
+    },
+    {
+      "id": "hamazushi",
+      "name": "はま寿司",
+      "keys": [
+        "はま寿司"
+      ],
+      "schemes": [
+        "hamazushi"
+      ],
+      "types": [
+        "point"
+      ],
+      "colors": [
+        "#E60012",
+        "#1A3A8B"
+      ],
+      "stores": "はま寿司",
+      "popular": true
+    },
+    {
+      "id": "mercari",
+      "name": "メルカリ（メルペイ）",
+      "keys": [
+        "メルカリ",
+        "メルペイ",
+        "mercari"
+      ],
+      "schemes": [
+        "mercari",
+        "fb466308336793848"
+      ],
+      "types": [
+        "pay"
+      ],
+      "colors": [
+        "#FF0211",
+        "#FFFFFF"
+      ],
+      "popular": true
+    },
+    {
+      "id": "eneos",
+      "name": "ENEOS",
+      "keys": [
+        "eneos",
+        "エネオス"
+      ],
+      "schemes": [
+        "com.eneos.ssapp"
+      ],
+      "types": [
+        "point",
+        "pay"
+      ],
+      "colors": [
+        "#F39800",
+        "#E60012"
+      ],
+      "stores": "ENEOS|エネオス",
+      "popular": true
+    },
+    {
+      "id": "majica",
+      "name": "majica（ドン・キホーテ）",
+      "keys": [
+        "majica",
+        "ドンキ",
+        "ドン・キホーテ",
+        "ドンキホーテ",
+        "アピタ",
+        "ピアゴ"
+      ],
+      "schemes": [
+        "majicaapp"
+      ],
+      "types": [
+        "point",
+        "pay"
+      ],
+      "colors": [
+        "#E60012",
+        "#F5B800"
+      ],
+      "stores": "ドン・キホーテ|ドンキ|MEGAドン・キホーテ|アピタ|ピアゴ|ユニー",
+      "popular": true
+    },
+    {
+      "id": "muji",
+      "name": "無印良品",
+      "keys": [
+        "無印",
+        "muji"
+      ],
+      "schemes": [
+        "mujipassport",
+        "fb625355624155562"
+      ],
+      "types": [
+        "point"
+      ],
+      "colors": [
+        "#7F0019",
+        "#FFFFFF"
+      ],
+      "stores": "無印良品|MUJI",
+      "popular": true
+    },
+    {
+      "id": "tsutaya",
+      "name": "TSUTAYA",
+      "keys": [
+        "tsutaya",
+        "ツタヤ"
+      ],
+      "schemes": [
+        "tsutayaapp"
+      ],
+      "types": [
+        "point"
+      ],
+      "colors": [
+        "#1A3A8B",
+        "#F5B800"
+      ],
+      "stores": "TSUTAYA|蔦屋",
+      "popular": true
+    },
+    {
+      "id": "uniqlo",
+      "name": "ユニクロ",
+      "keys": [
+        "ユニクロ",
+        "uniqlo"
+      ],
+      "schemes": [
+        "uniqloapp"
+      ],
+      "types": [
+        "point"
+      ],
+      "colors": [
+        "#E60012",
+        "#FFFFFF"
+      ],
+      "stores": "ユニクロ|UNIQLO",
+      "popular": true
+    },
+    {
+      "id": "yamada",
+      "name": "ヤマダデンキ",
+      "keys": [
+        "ヤマダ",
+        "yamada"
+      ],
+      "schemes": [
+        "ymd"
+      ],
+      "types": [
+        "point"
+      ],
+      "colors": [
+        "#E60012",
+        "#FFFFFF"
+      ],
+      "stores": "ヤマダデンキ|ヤマダ電機|テックランド|LABI",
+      "popular": true
+    },
+    {
+      "id": "ponta-pass",
+      "name": "Pontaパス",
+      "keys": [
+        "pontaパス",
+        "ポンタパス",
+        "auスマートパス",
+        "スマートパス"
+      ],
+      "schemes": [
+        "smps-app"
+      ],
+      "stores": "ローソン|LAWSON",
+      "types": [
+        "point"
+      ],
+      "colors": [
+        "#EB6100",
+        "#FFFFFF",
+        "#FFC20E"
+      ]
     },
     {
       "id": "vpoint-pay",
@@ -224,24 +869,6 @@
       ]
     },
     {
-      "id": "waon",
-      "name": "WAON",
-      "keys": [
-        "waon",
-        "ワオン"
-      ],
-      "schemes": [
-        "waonservice"
-      ],
-      "types": [
-        "pay"
-      ],
-      "colors": [
-        "#B5006E",
-        "#FFD900"
-      ]
-    },
-    {
       "id": "aeon-wallet",
       "name": "AEON WALLET",
       "keys": [
@@ -262,69 +889,6 @@
       ]
     },
     {
-      "id": "aeon",
-      "name": "イオンお買物",
-      "keys": [
-        "イオン",
-        "aeon"
-      ],
-      "schemes": [
-        "aeon-app"
-      ],
-      "stores": "イオン|AEON|マックスバリュ",
-      "types": [
-        "point",
-        "pay"
-      ],
-      "colors": [
-        "#9E1A82",
-        "#FFFFFF"
-      ]
-    },
-    {
-      "id": "seven",
-      "name": "セブン‐イレブン",
-      "keys": [
-        "セブン",
-        "seven"
-      ],
-      "schemes": [
-        "sejapp"
-      ],
-      "stores": "セブン-イレブン|セブンイレブン|セブン‐イレブン|7-Eleven",
-      "types": [
-        "point"
-      ],
-      "colors": [
-        "#00795C",
-        "#F58220",
-        "#E60012",
-        "#FFFFFF"
-      ]
-    },
-    {
-      "id": "famipay",
-      "name": "ファミペイ",
-      "keys": [
-        "ファミペイ",
-        "ファミリーマート",
-        "ファミマ"
-      ],
-      "schemes": [
-        "familymart-app"
-      ],
-      "stores": "ファミリーマート|FamilyMart",
-      "types": [
-        "point",
-        "pay"
-      ],
-      "colors": [
-        "#0060AE",
-        "#00A73C",
-        "#FFFFFF"
-      ]
-    },
-    {
       "id": "ministop",
       "name": "ミニストップ",
       "keys": [
@@ -340,86 +904,6 @@
       "colors": [
         "#003F8E",
         "#FFD100",
-        "#FFFFFF"
-      ]
-    },
-    {
-      "id": "sugi",
-      "name": "スギ薬局",
-      "keys": [
-        "スギ"
-      ],
-      "schemes": [
-        "passmartsugi"
-      ],
-      "stores": "スギ薬局|スギドラッグ",
-      "types": [
-        "point"
-      ],
-      "colors": [
-        "#0B6FB8",
-        "#8CC63F",
-        "#FFFFFF"
-      ]
-    },
-    {
-      "id": "matsukiyo",
-      "name": "マツキヨココカラ",
-      "keys": [
-        "マツキヨ",
-        "ココカラ",
-        "マツモトキヨシ"
-      ],
-      "schemes": [
-        "matsukiyococokara",
-        "matsukiyo-private"
-      ],
-      "stores": "マツモトキヨシ|ココカラファイン",
-      "types": [
-        "point"
-      ],
-      "colors": [
-        "#004EA2",
-        "#FFE100",
-        "#FFFFFF"
-      ]
-    },
-    {
-      "id": "welcia",
-      "name": "ウエルシア",
-      "keys": [
-        "ウエルシア",
-        "welcia"
-      ],
-      "schemes": [
-        "welciaapp",
-        "welciaapps"
-      ],
-      "stores": "ウエルシア|ハックドラッグ",
-      "types": [
-        "point"
-      ],
-      "colors": [
-        "#D7000F",
-        "#FFFFFF",
-        "#0069B3"
-      ]
-    },
-    {
-      "id": "tsuruha",
-      "name": "ツルハドラッグ",
-      "keys": [
-        "ツルハ"
-      ],
-      "schemes": [
-        "jp.co.tsuruhahd.tsuruhadrug"
-      ],
-      "stores": "ツルハ",
-      "types": [
-        "point"
-      ],
-      "colors": [
-        "#0A7A3E",
         "#FFFFFF"
       ]
     },
@@ -443,28 +927,6 @@
       ]
     },
     {
-      "id": "starbucks",
-      "name": "スターバックス",
-      "keys": [
-        "スタバ",
-        "スターバックス",
-        "starbucks"
-      ],
-      "schemes": [
-        "starbucksjapan"
-      ],
-      "stores": "スターバックス|Starbucks",
-      "types": [
-        "point",
-        "pay"
-      ],
-      "colors": [
-        "#00704A",
-        "#1E3932",
-        "#FFFFFF"
-      ]
-    },
-    {
       "id": "tullys",
       "name": "タリーズ",
       "keys": [
@@ -482,47 +944,6 @@
       "colors": [
         "#3B1F14",
         "#C8A27A",
-        "#FFFFFF"
-      ]
-    },
-    {
-      "id": "mcdonalds",
-      "name": "マクドナルド",
-      "keys": [
-        "マクドナルド",
-        "マック",
-        "mcdonald"
-      ],
-      "schemes": [
-        "mcdonaldsjp"
-      ],
-      "stores": "マクドナルド|McDonald",
-      "types": [
-        "point"
-      ],
-      "colors": [
-        "#DA291C",
-        "#FFC72C",
-        "#27251F"
-      ]
-    },
-    {
-      "id": "yodobashi-gpc",
-      "name": "ヨドバシ ゴールドポイントカード",
-      "keys": [
-        "ヨドバシ",
-        "ゴールドポイント"
-      ],
-      "schemes": [
-        "gpc"
-      ],
-      "stores": "ヨドバシ",
-      "types": [
-        "point"
-      ],
-      "colors": [
-        "#B00020",
-        "#D4AF37",
         "#FFFFFF"
       ]
     },
@@ -583,25 +1004,6 @@
       "colors": [
         "#C8102E",
         "#003A70",
-        "#FFFFFF"
-      ]
-    },
-    {
-      "id": "daiso",
-      "name": "DAISO",
-      "keys": [
-        "ダイソー",
-        "daiso"
-      ],
-      "schemes": [
-        "com.daisojapan"
-      ],
-      "stores": "ダイソー|DAISO",
-      "types": [
-        "point"
-      ],
-      "colors": [
-        "#E4007F",
         "#FFFFFF"
       ]
     },
@@ -721,6 +1123,1454 @@
         "#003C7D",
         "#FFFFFF"
       ]
+    },
+    {
+      "id": "aeonmall",
+      "name": "イオンモール",
+      "keys": [
+        "イオンモール",
+        "aeonmall"
+      ],
+      "schemes": [
+        "aeonmallapp"
+      ],
+      "types": [
+        "point"
+      ],
+      "colors": [
+        "#B5006B",
+        "#FFFFFF"
+      ],
+      "stores": "イオンモール"
+    },
+    {
+      "id": "aeontown",
+      "name": "イオンタウン",
+      "keys": [
+        "イオンタウン"
+      ],
+      "schemes": [
+        "line3rdp.jp.co.aeontown.shopping",
+        "com.googleusercontent.apps.913743324974-spin4no4nvande39d609b9g93dno1ovs"
+      ],
+      "types": [
+        "point"
+      ],
+      "colors": [
+        "#B5006B",
+        "#F2C14E"
+      ],
+      "stores": "イオンタウン"
+    },
+    {
+      "id": "ikinari",
+      "name": "いきなり!ステーキ",
+      "keys": [
+        "いきなりステーキ",
+        "いきなり!ステーキ"
+      ],
+      "schemes": [
+        "jp.co.pepperfs.app"
+      ],
+      "types": [
+        "point"
+      ],
+      "colors": [
+        "#8B1A1A",
+        "#F2C14E"
+      ],
+      "stores": "いきなり!ステーキ|いきなりステーキ"
+    },
+    {
+      "id": "ichiran",
+      "name": "一蘭",
+      "keys": [
+        "一蘭",
+        "ichiran"
+      ],
+      "schemes": [
+        "jp.co.ichiran.app"
+      ],
+      "types": [
+        "point"
+      ],
+      "colors": [
+        "#9E1B1B",
+        "#1A1A1A"
+      ],
+      "stores": "一蘭"
+    },
+    {
+      "id": "genki",
+      "name": "元気寿司・魚べい",
+      "keys": [
+        "元気寿司",
+        "魚べい",
+        "千両"
+      ],
+      "schemes": [
+        "genkisushi"
+      ],
+      "types": [
+        "point"
+      ],
+      "colors": [
+        "#E85A1B",
+        "#FFFFFF"
+      ],
+      "stores": "元気寿司|魚べい|千両"
+    },
+    {
+      "id": "utahiro",
+      "name": "カラオケ歌広場",
+      "keys": [
+        "歌広場",
+        "ウタヒロ"
+      ],
+      "schemes": [
+        "utahiro"
+      ],
+      "types": [
+        "point"
+      ],
+      "colors": [
+        "#E4007F",
+        "#F2C14E"
+      ],
+      "stores": "歌広場"
+    },
+    {
+      "id": "edion",
+      "name": "エディオン",
+      "keys": [
+        "エディオン",
+        "edion"
+      ],
+      "schemes": [
+        "edionapp"
+      ],
+      "types": [
+        "point"
+      ],
+      "colors": [
+        "#E60012",
+        "#FFFFFF"
+      ],
+      "stores": "エディオン|EDION"
+    },
+    {
+      "id": "oitapay",
+      "name": "おおいたPay",
+      "keys": [
+        "おおいたpay"
+      ],
+      "schemes": [
+        "oita-city-moneyeasy"
+      ],
+      "types": [
+        "pay"
+      ],
+      "colors": [
+        "#2E7D32",
+        "#F2C14E"
+      ]
+    },
+    {
+      "id": "ootoya",
+      "name": "大戸屋",
+      "keys": [
+        "大戸屋"
+      ],
+      "schemes": [
+        "yappli-750bcbf7",
+        "ootoyaapp"
+      ],
+      "types": [
+        "point"
+      ],
+      "colors": [
+        "#3C2A1E",
+        "#C8A165"
+      ],
+      "stores": "大戸屋"
+    },
+    {
+      "id": "autobacs",
+      "name": "オートバックス",
+      "keys": [
+        "オートバックス",
+        "autobacs"
+      ],
+      "schemes": [
+        "autobacs",
+        "com.autobacs.iphone.autobacsapp"
+      ],
+      "types": [
+        "point"
+      ],
+      "colors": [
+        "#F39800",
+        "#1A1A1A"
+      ],
+      "stores": "オートバックス|AUTOBACS"
+    },
+    {
+      "id": "kaikatsu",
+      "name": "快活CLUB",
+      "keys": [
+        "快活club",
+        "快活"
+      ],
+      "schemes": [
+        "jpkaikatsuofficial"
+      ],
+      "types": [
+        "point"
+      ],
+      "colors": [
+        "#1A3A6B",
+        "#F2C14E"
+      ],
+      "stores": "快活CLUB"
+    },
+    {
+      "id": "kanagawapay",
+      "name": "かながわPay",
+      "keys": [
+        "かながわpay"
+      ],
+      "schemes": [
+        "kanagawapay-pro"
+      ],
+      "types": [
+        "pay"
+      ],
+      "colors": [
+        "#00589C",
+        "#F2C14E"
+      ]
+    },
+    {
+      "id": "veloce",
+      "name": "カフェ・ベローチェ",
+      "keys": [
+        "ベローチェ",
+        "veloce"
+      ],
+      "schemes": [
+        "com.chatnoircompany.app.velocenew"
+      ],
+      "types": [
+        "point"
+      ],
+      "colors": [
+        "#4A2C1D",
+        "#C8A165"
+      ],
+      "stores": "ベローチェ"
+    },
+    {
+      "id": "banban",
+      "name": "カラオケBanBan",
+      "keys": [
+        "banban",
+        "バンバン"
+      ],
+      "schemes": [
+        "com.karaoke-banban.app"
+      ],
+      "types": [
+        "point"
+      ],
+      "colors": [
+        "#E4007F",
+        "#00A0E9"
+      ],
+      "stores": "BanBan|バンバン"
+    },
+    {
+      "id": "manekineko",
+      "name": "カラオケまねきねこ",
+      "keys": [
+        "まねきねこ"
+      ],
+      "schemes": [
+        "manekinekoapp"
+      ],
+      "types": [
+        "point"
+      ],
+      "colors": [
+        "#E85298",
+        "#FFFFFF"
+      ],
+      "stores": "まねきねこ"
+    },
+    {
+      "id": "kaldi",
+      "name": "カルディコーヒーファーム",
+      "keys": [
+        "カルディ",
+        "kaldi"
+      ],
+      "schemes": [
+        "kaldi-value-wallet"
+      ],
+      "types": [
+        "point"
+      ],
+      "colors": [
+        "#6B3E26",
+        "#C8A165"
+      ],
+      "stores": "カルディ|KALDI"
+    },
+    {
+      "id": "cawachi",
+      "name": "カワチ薬品",
+      "keys": [
+        "カワチ"
+      ],
+      "schemes": [
+        "cawachiapp"
+      ],
+      "types": [
+        "point"
+      ],
+      "colors": [
+        "#E60012",
+        "#FFFFFF"
+      ],
+      "stores": "カワチ"
+    },
+    {
+      "id": "ohsho",
+      "name": "餃子の王将",
+      "keys": [
+        "王将",
+        "ohsho"
+      ],
+      "schemes": [
+        "gyoza",
+        "fb164461123649096"
+      ],
+      "types": [
+        "point"
+      ],
+      "colors": [
+        "#C8102E",
+        "#F2C14E"
+      ],
+      "stores": "餃子の王将|王将"
+    },
+    {
+      "id": "kinnokura",
+      "name": "金の蔵",
+      "keys": [
+        "金の蔵"
+      ],
+      "schemes": [
+        "kinnokura",
+        "kinnokura-api"
+      ],
+      "types": [
+        "point"
+      ],
+      "colors": [
+        "#1A1A1A",
+        "#C8A165"
+      ],
+      "stores": "金の蔵"
+    },
+    {
+      "id": "ksdenki",
+      "name": "ケーズデンキ",
+      "keys": [
+        "ケーズデンキ",
+        "ksdenki"
+      ],
+      "schemes": [
+        "com.locationvalue.ksdenki"
+      ],
+      "types": [
+        "point"
+      ],
+      "colors": [
+        "#E60012",
+        "#1A3A8B"
+      ],
+      "stores": "ケーズデンキ"
+    },
+    {
+      "id": "kourakuen",
+      "name": "幸楽苑",
+      "keys": [
+        "幸楽苑"
+      ],
+      "schemes": [
+        "jp.co.kourakuen.app.kourakuen"
+      ],
+      "types": [
+        "point"
+      ],
+      "colors": [
+        "#E60012",
+        "#F2C14E"
+      ],
+      "stores": "幸楽苑"
+    },
+    {
+      "id": "cosmos",
+      "name": "ドラッグコスモス",
+      "keys": [
+        "コスモス",
+        "cosmos"
+      ],
+      "schemes": [
+        "yappli-46e4fdc3",
+        "cosmos"
+      ],
+      "types": [
+        "point"
+      ],
+      "colors": [
+        "#E4007F",
+        "#FFFFFF"
+      ],
+      "stores": "コスモス"
+    },
+    {
+      "id": "godiva",
+      "name": "ゴディバ",
+      "keys": [
+        "ゴディバ",
+        "godiva"
+      ],
+      "schemes": [
+        "jp.co.godiva"
+      ],
+      "types": [
+        "point"
+      ],
+      "colors": [
+        "#5A3A22",
+        "#C8A165"
+      ],
+      "stores": "ゴディバ|GODIVA"
+    },
+    {
+      "id": "summit",
+      "name": "サミット",
+      "keys": [
+        "サミット",
+        "summit"
+      ],
+      "schemes": [
+        "summitaapp"
+      ],
+      "types": [
+        "point"
+      ],
+      "colors": [
+        "#E60012",
+        "#00A040"
+      ],
+      "stores": "サミット"
+    },
+    {
+      "id": "chateraise",
+      "name": "シャトレーゼ",
+      "keys": [
+        "シャトレーゼ"
+      ],
+      "schemes": [
+        "yappli-4521f952",
+        "chateraisejpapp"
+      ],
+      "types": [
+        "point"
+      ],
+      "colors": [
+        "#00873C",
+        "#F2C14E"
+      ],
+      "stores": "シャトレーゼ"
+    },
+    {
+      "id": "jankara",
+      "name": "ジャンカラ",
+      "keys": [
+        "ジャンカラ",
+        "ジャンボカラオケ"
+      ],
+      "schemes": [
+        "jankara",
+        "line3rdp.jp.ne.jankara.Jankara"
+      ],
+      "types": [
+        "point"
+      ],
+      "colors": [
+        "#E60012",
+        "#F2C14E"
+      ],
+      "stores": "ジャンカラ|ジャンボカラオケ"
+    },
+    {
+      "id": "jun",
+      "name": "JUN（ジュン）",
+      "keys": [
+        "ジュン",
+        "jun"
+      ],
+      "schemes": [
+        "yappli-86a55bec",
+        "jun-appjp"
+      ],
+      "types": [
+        "point"
+      ],
+      "colors": [
+        "#1A1A1A",
+        "#FFFFFF"
+      ]
+    },
+    {
+      "id": "joshin",
+      "name": "ジョーシン",
+      "keys": [
+        "ジョーシン",
+        "joshin",
+        "上新"
+      ],
+      "schemes": [
+        "joshin"
+      ],
+      "types": [
+        "point"
+      ],
+      "colors": [
+        "#E60012",
+        "#FFFFFF"
+      ],
+      "stores": "ジョーシン|Joshin"
+    },
+    {
+      "id": "suipara",
+      "name": "スイーツパラダイス",
+      "keys": [
+        "スイパラ",
+        "スイーツパラダイス"
+      ],
+      "schemes": [
+        "bizpallet",
+        "fb1542653062612831"
+      ],
+      "types": [
+        "point"
+      ],
+      "colors": [
+        "#E85298",
+        "#FFFFFF"
+      ],
+      "stores": "スイーツパラダイス"
+    },
+    {
+      "id": "univcoop",
+      "name": "大学生協",
+      "keys": [
+        "生協",
+        "大学生協"
+      ],
+      "schemes": [
+        "univ-coop"
+      ],
+      "types": [
+        "point",
+        "pay"
+      ],
+      "colors": [
+        "#00873C",
+        "#FFFFFF"
+      ],
+      "stores": "生協"
+    },
+    {
+      "id": "toysrus",
+      "name": "トイザらス",
+      "keys": [
+        "トイザらス",
+        "ベビーザらス",
+        "toysrus"
+      ],
+      "schemes": [
+        "yappli-73b72671",
+        "toysrus"
+      ],
+      "types": [
+        "point"
+      ],
+      "colors": [
+        "#0052A5",
+        "#F2C14E",
+        "#E60012"
+      ],
+      "stores": "トイザらス|ベビーザらス"
+    },
+    {
+      "id": "nojima",
+      "name": "ノジマ",
+      "keys": [
+        "ノジマ",
+        "nojima"
+      ],
+      "schemes": [
+        "mnoji",
+        "mnojis"
+      ],
+      "types": [
+        "point"
+      ],
+      "colors": [
+        "#E60012",
+        "#FFFFFF"
+      ],
+      "stores": "ノジマ"
+    },
+    {
+      "id": "burgerking",
+      "name": "バーガーキング",
+      "keys": [
+        "バーガーキング",
+        "burgerking",
+        "burger king"
+      ],
+      "schemes": [
+        "burgerkingjp",
+        "fb1308360619342442"
+      ],
+      "types": [
+        "point"
+      ],
+      "colors": [
+        "#D62300",
+        "#F5A623"
+      ],
+      "stores": "バーガーキング"
+    },
+    {
+      "id": "ippudo",
+      "name": "一風堂",
+      "keys": [
+        "一風堂",
+        "ippudo"
+      ],
+      "schemes": [
+        "com.ippudo.app.ippudo"
+      ],
+      "types": [
+        "point"
+      ],
+      "colors": [
+        "#1A1A1A",
+        "#E60012"
+      ],
+      "stores": "一風堂"
+    },
+    {
+      "id": "habatanpay",
+      "name": "はばタンPay＋",
+      "keys": [
+        "はばタン"
+      ],
+      "schemes": [
+        "jp.hyogo.service.app"
+      ],
+      "types": [
+        "pay"
+      ],
+      "colors": [
+        "#E85A1B",
+        "#F2C14E"
+      ]
+    },
+    {
+      "id": "hankyu-mens",
+      "name": "阪急メンズ",
+      "keys": [
+        "阪急メンズ"
+      ],
+      "schemes": [
+        "hankyu-dept.mens-tokyo-app",
+        "line3rdp.jp.co.hankyu-dept.mens-tokyo"
+      ],
+      "types": [
+        "point"
+      ],
+      "colors": [
+        "#1A1A1A",
+        "#C8A165"
+      ],
+      "stores": "阪急メンズ"
+    },
+    {
+      "id": "hands",
+      "name": "ハンズ",
+      "keys": [
+        "ハンズ",
+        "東急ハンズ",
+        "hands"
+      ],
+      "schemes": [
+        "tokyuhandsapp"
+      ],
+      "types": [
+        "point"
+      ],
+      "colors": [
+        "#00873C",
+        "#FFFFFF"
+      ],
+      "stores": "ハンズ"
+    },
+    {
+      "id": "himaraya",
+      "name": "ヒマラヤ",
+      "keys": [
+        "ヒマラヤ"
+      ],
+      "schemes": [
+        "line3rdp.jp.co.himaraya.www.storeapp"
+      ],
+      "types": [
+        "point"
+      ],
+      "colors": [
+        "#00589C",
+        "#FFFFFF"
+      ],
+      "stores": "ヒマラヤ"
+    },
+    {
+      "id": "fuji",
+      "name": "フジ（スーパー）",
+      "keys": [
+        "フジ",
+        "fuji"
+      ],
+      "schemes": [
+        "fujiapp"
+      ],
+      "types": [
+        "point"
+      ],
+      "colors": [
+        "#E60012",
+        "#FFFFFF"
+      ],
+      "stores": "フジグラン|フジ"
+    },
+    {
+      "id": "alpen-players",
+      "name": "プレーヤーズパスポート",
+      "keys": [
+        "プレーヤーズパスポート"
+      ],
+      "schemes": [
+        "yappli-adf9fc46",
+        "playerspassport"
+      ],
+      "types": [
+        "point"
+      ],
+      "colors": [
+        "#1A3A8B",
+        "#E60012"
+      ]
+    },
+    {
+      "id": "beisia",
+      "name": "ベイシア",
+      "keys": [
+        "ベイシア",
+        "beisia"
+      ],
+      "schemes": [
+        "beisia-app"
+      ],
+      "types": [
+        "point"
+      ],
+      "colors": [
+        "#E85A1B",
+        "#FFFFFF"
+      ],
+      "stores": "ベイシア"
+    },
+    {
+      "id": "hotmotto",
+      "name": "ほっともっと",
+      "keys": [
+        "ほっともっと"
+      ],
+      "schemes": [
+        "yappli-adfa6026",
+        "hotmotto"
+      ],
+      "types": [
+        "point"
+      ],
+      "colors": [
+        "#E60012",
+        "#F2C14E"
+      ],
+      "stores": "ほっともっと"
+    },
+    {
+      "id": "paulandjoe",
+      "name": "ポール & ジョー ボーテ",
+      "keys": [
+        "ポール&ジョー",
+        "ポールアンドジョー"
+      ],
+      "schemes": [
+        "yappli-36781b5d",
+        "paulandjoe"
+      ],
+      "types": [
+        "point"
+      ],
+      "colors": [
+        "#1A1A1A",
+        "#E4C1C9"
+      ]
+    },
+    {
+      "id": "mitsukoshi-store",
+      "name": "三越STORE",
+      "keys": [
+        "三越store"
+      ],
+      "schemes": [
+        "yappli-e9cb5d75",
+        "mitsukoshistore"
+      ],
+      "types": [
+        "point"
+      ],
+      "colors": [
+        "#C8102E",
+        "#FFFFFF"
+      ]
+    },
+    {
+      "id": "isetan",
+      "name": "三越伊勢丹",
+      "keys": [
+        "三越",
+        "伊勢丹",
+        "isetan"
+      ],
+      "schemes": [
+        "mitsukoshi-isetan",
+        "jp.isetanmitsukoshi.gcp",
+        "mitsukoshi.isetan.app.bedc0784-1c4e-26f3-cfa0-7dd4f863da72"
+      ],
+      "types": [
+        "point"
+      ],
+      "colors": [
+        "#1A1A1A",
+        "#C8102E"
+      ],
+      "stores": "三越|伊勢丹"
+    },
+    {
+      "id": "royalhost",
+      "name": "ロイヤルホスト",
+      "keys": [
+        "ロイヤルホスト",
+        "ロイホ"
+      ],
+      "schemes": [
+        "jp.royalhost.app2"
+      ],
+      "types": [
+        "point"
+      ],
+      "colors": [
+        "#8B1A1A",
+        "#C8A165"
+      ],
+      "stores": "ロイヤルホスト"
+    },
+    {
+      "id": "adidas",
+      "name": "adidas",
+      "keys": [
+        "adidas",
+        "アディダス"
+      ],
+      "schemes": [
+        "adidas",
+        "fb621206481228053",
+        "com.googleusercontent.apps.475851980505-mkg4gou0pf60prf8ph5ci03k4q2n6eo4"
+      ],
+      "types": [
+        "point"
+      ],
+      "colors": [
+        "#1A1A1A",
+        "#FFFFFF"
+      ],
+      "stores": "adidas|アディダス"
+    },
+    {
+      "id": "alpen",
+      "name": "アルペングループ",
+      "keys": [
+        "アルペン",
+        "alpen",
+        "スポーツデポ"
+      ],
+      "schemes": [
+        "yappli-7c057045",
+        "alpengroupapp"
+      ],
+      "types": [
+        "point"
+      ],
+      "colors": [
+        "#1A3A8B",
+        "#E60012"
+      ],
+      "stores": "アルペン|スポーツデポ|ゴルフ5"
+    },
+    {
+      "id": "beautykey",
+      "name": "資生堂 Beauty Key",
+      "keys": [
+        "資生堂",
+        "beauty key",
+        "beautykey"
+      ],
+      "schemes": [
+        "jp.co.shiseido.beautykey"
+      ],
+      "types": [
+        "point"
+      ],
+      "colors": [
+        "#C8102E",
+        "#1A1A1A"
+      ]
+    },
+    {
+      "id": "bookoff",
+      "name": "ブックオフ",
+      "keys": [
+        "ブックオフ",
+        "bookoff"
+      ],
+      "schemes": [
+        "bookoffapp"
+      ],
+      "types": [
+        "point"
+      ],
+      "colors": [
+        "#F5B800",
+        "#1A3A8B"
+      ],
+      "stores": "ブックオフ|BOOKOFF"
+    },
+    {
+      "id": "disneystore",
+      "name": "ディズニーストア",
+      "keys": [
+        "ディズニーストア",
+        "disney"
+      ],
+      "schemes": [
+        "jp.co.disney.apps.am.storeapp",
+        "jp.co.disney.apps.storeapp",
+        "fb162170287280603"
+      ],
+      "types": [
+        "point"
+      ],
+      "colors": [
+        "#1A3A8B",
+        "#FFFFFF"
+      ],
+      "stores": "ディズニーストア"
+    },
+    {
+      "id": "hm",
+      "name": "H&M",
+      "keys": [
+        "h&m",
+        "エイチアンドエム"
+      ],
+      "schemes": [
+        "hmbridge",
+        "fb233999773300417"
+      ],
+      "types": [
+        "point"
+      ],
+      "colors": [
+        "#E50010",
+        "#FFFFFF"
+      ],
+      "stores": "H&M"
+    },
+    {
+      "id": "honeys",
+      "name": "ハニーズ",
+      "keys": [
+        "ハニーズ",
+        "honeys"
+      ],
+      "schemes": [
+        "yappli-936c9944",
+        "honeys"
+      ],
+      "types": [
+        "point"
+      ],
+      "colors": [
+        "#E85298",
+        "#FFFFFF"
+      ],
+      "stores": "ハニーズ|Honeys"
+    },
+    {
+      "id": "ikea",
+      "name": "IKEA",
+      "keys": [
+        "ikea",
+        "イケア"
+      ],
+      "schemes": [
+        "com.ingka.ikea.app",
+        "ikeastore",
+        "com.ingka.ikea.app.payment"
+      ],
+      "types": [
+        "point",
+        "pay"
+      ],
+      "colors": [
+        "#0058A3",
+        "#FFDB00"
+      ],
+      "stores": "IKEA|イケア"
+    },
+    {
+      "id": "jaf",
+      "name": "JAF会員証",
+      "keys": [
+        "jaf"
+      ],
+      "schemes": [
+        "jp.or.jaf.digitalmembershipcard"
+      ],
+      "types": [
+        "point"
+      ],
+      "colors": [
+        "#00589C",
+        "#F2C14E"
+      ]
+    },
+    {
+      "id": "jins",
+      "name": "JINS",
+      "keys": [
+        "jins",
+        "ジンズ"
+      ],
+      "schemes": [
+        "jinsapp.v1"
+      ],
+      "types": [
+        "point"
+      ],
+      "colors": [
+        "#1A1A1A",
+        "#FFFFFF"
+      ],
+      "stores": "JINS"
+    },
+    {
+      "id": "kutsu",
+      "name": "靴のニシムラ（kutsu.com）",
+      "keys": [
+        "kutsu",
+        "ニシムラ"
+      ],
+      "schemes": [
+        "yappli-5d18a901",
+        "kutsudotcomapp"
+      ],
+      "types": [
+        "point"
+      ],
+      "colors": [
+        "#1A3A8B",
+        "#FFFFFF"
+      ]
+    },
+    {
+      "id": "loft",
+      "name": "ロフト",
+      "keys": [
+        "ロフト",
+        "loft"
+      ],
+      "schemes": [
+        "loftStampApp"
+      ],
+      "types": [
+        "point"
+      ],
+      "colors": [
+        "#F5B800",
+        "#1A1A1A"
+      ],
+      "stores": "ロフト|LOFT"
+    },
+    {
+      "id": "nike",
+      "name": "NIKE",
+      "keys": [
+        "nike",
+        "ナイキ"
+      ],
+      "schemes": [
+        "mynike",
+        "fb1055885851158192"
+      ],
+      "types": [
+        "point"
+      ],
+      "colors": [
+        "#1A1A1A",
+        "#FFFFFF"
+      ],
+      "stores": "NIKE|ナイキ"
+    },
+    {
+      "id": "onward",
+      "name": "ONWARD",
+      "keys": [
+        "onward",
+        "オンワード"
+      ],
+      "schemes": [
+        "onwardapp"
+      ],
+      "types": [
+        "point"
+      ],
+      "colors": [
+        "#1A1A1A",
+        "#FFFFFF"
+      ]
+    },
+    {
+      "id": "orbis",
+      "name": "ORBIS",
+      "keys": [
+        "orbis",
+        "オルビス"
+      ],
+      "schemes": [
+        "orbisapp"
+      ],
+      "types": [
+        "point"
+      ],
+      "colors": [
+        "#00589C",
+        "#FFFFFF"
+      ],
+      "stores": "ORBIS|オルビス"
+    },
+    {
+      "id": "palcloset",
+      "name": "PAL CLOSET",
+      "keys": [
+        "pal closet",
+        "パル"
+      ],
+      "schemes": [
+        "palcloset"
+      ],
+      "types": [
+        "point"
+      ],
+      "colors": [
+        "#1A1A1A",
+        "#FFFFFF"
+      ]
+    },
+    {
+      "id": "plaza",
+      "name": "PLAZA",
+      "keys": [
+        "plaza",
+        "プラザ"
+      ],
+      "schemes": [
+        "com.plazastyle.plazapoint"
+      ],
+      "types": [
+        "point"
+      ],
+      "colors": [
+        "#E4007F",
+        "#F2C14E"
+      ],
+      "stores": "PLAZA|プラザ"
+    },
+    {
+      "id": "quopay",
+      "name": "QUOカードPay",
+      "keys": [
+        "quo",
+        "クオカード"
+      ],
+      "schemes": [
+        "quocardpay"
+      ],
+      "types": [
+        "pay"
+      ],
+      "colors": [
+        "#00A0E9",
+        "#FFFFFF"
+      ]
+    },
+    {
+      "id": "round1",
+      "name": "ラウンドワン",
+      "keys": [
+        "ラウンドワン",
+        "round1"
+      ],
+      "schemes": [
+        "raupokebrowser"
+      ],
+      "types": [
+        "point"
+      ],
+      "colors": [
+        "#E60012",
+        "#F2C14E"
+      ],
+      "stores": "ラウンドワン|ROUND1"
+    },
+    {
+      "id": "ignica",
+      "name": "Scan&Go Ignica（マルエツ・カスミ）",
+      "keys": [
+        "ignica",
+        "マルエツ",
+        "カスミ",
+        "マックスバリュ関東"
+      ],
+      "schemes": [
+        "usmh-mobile-app",
+        "jp.co.usmh.mobile.app"
+      ],
+      "types": [
+        "point",
+        "pay"
+      ],
+      "colors": [
+        "#E60012",
+        "#00873C"
+      ],
+      "stores": "マルエツ|カスミ"
+    },
+    {
+      "id": "seibuprince",
+      "name": "SEIBU PRINCE CLUB",
+      "keys": [
+        "seibu prince",
+        "西武",
+        "プリンス"
+      ],
+      "schemes": [
+        "seibuprinceclubapp"
+      ],
+      "types": [
+        "point"
+      ],
+      "colors": [
+        "#1A3A8B",
+        "#FFFFFF"
+      ]
+    },
+    {
+      "id": "seims",
+      "name": "ドラッグセイムス",
+      "keys": [
+        "セイムス",
+        "seims"
+      ],
+      "schemes": [
+        "seims-app"
+      ],
+      "types": [
+        "point"
+      ],
+      "colors": [
+        "#00873C",
+        "#F2C14E"
+      ],
+      "stores": "セイムス"
+    },
+    {
+      "id": "sheltter",
+      "name": "SHEL'TTER PASS（バロック）",
+      "keys": [
+        "sheltter",
+        "バロック",
+        "moussy",
+        "sly"
+      ],
+      "schemes": [
+        "baroque-passport"
+      ],
+      "types": [
+        "point"
+      ],
+      "colors": [
+        "#1A1A1A",
+        "#FFFFFF"
+      ]
+    },
+    {
+      "id": "ships",
+      "name": "SHIPS",
+      "keys": [
+        "ships",
+        "シップス"
+      ],
+      "schemes": [
+        "shipsltd"
+      ],
+      "types": [
+        "point"
+      ],
+      "colors": [
+        "#1A3A6B",
+        "#FFFFFF"
+      ],
+      "stores": "SHIPS"
+    },
+    {
+      "id": "tutuanna",
+      "name": "チュチュアンナ",
+      "keys": [
+        "チュチュアンナ",
+        "tutuanna"
+      ],
+      "schemes": [
+        "yappli-770abcc0",
+        "tutuanna"
+      ],
+      "types": [
+        "point"
+      ],
+      "colors": [
+        "#E85298",
+        "#FFFFFF"
+      ],
+      "stores": "チュチュアンナ"
+    },
+    {
+      "id": "beams",
+      "name": "BEAMS",
+      "keys": [
+        "beams",
+        "ビームス"
+      ],
+      "schemes": [
+        "yappli-ed1d1243",
+        "webeams"
+      ],
+      "types": [
+        "point"
+      ],
+      "colors": [
+        "#E85A1B",
+        "#FFFFFF"
+      ],
+      "stores": "BEAMS|ビームス"
+    },
+    {
+      "id": "wego",
+      "name": "WEGO",
+      "keys": [
+        "wego",
+        "ウィゴー"
+      ],
+      "schemes": [
+        "yappli-46443016",
+        "wego"
+      ],
+      "types": [
+        "point"
+      ],
+      "colors": [
+        "#1A1A1A",
+        "#F5B800"
+      ],
+      "stores": "WEGO"
+    },
+    {
+      "id": "world",
+      "name": "WORLD（ワールド）",
+      "keys": [
+        "ワールド",
+        "world"
+      ],
+      "schemes": [
+        "customerapp.wos"
+      ],
+      "types": [
+        "point"
+      ],
+      "colors": [
+        "#1A1A1A",
+        "#FFFFFF"
+      ]
+    },
+    {
+      "id": "dotst",
+      "name": ".st（アダストリア）",
+      "keys": [
+        ".st",
+        "アダストリア",
+        "グローバルワーク",
+        "ニコアンド",
+        "lowrys"
+      ],
+      "schemes": [
+        "adastriaapp"
+      ],
+      "types": [
+        "point"
+      ],
+      "colors": [
+        "#1A1A1A",
+        "#FFFFFF"
+      ],
+      "stores": "グローバルワーク|ニコアンド|LOWRYS FARM"
     }
   ]
 }
