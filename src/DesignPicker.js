@@ -7,10 +7,14 @@ import * as ImagePicker from 'expo-image-picker';
 import CardFace, { PATTERNS, textHex } from './CardFace';
 import { cardPalette, catalogApp } from './appLink';
 
+// Rows of 8: vivid, deep, standard, soft, then neutrals. Old colors are kept so saved cards still show as selected.
 const SWATCHES = [
-  '#0A7552', '#1E9E6A', '#0F7F93', '#2F5BD3', '#1B2A6B', '#7A3FC4', '#C23C7A', '#FF9FD2',
-  '#C2412D', '#F25C54', '#E76F51', '#B8740A', '#F2C14E', '#FFD166', '#3D2B1F', '#3D4A55',
-  '#15211C', '#FFFFFF',
+  '#FF1744', '#FF6D00', '#FFD600', '#00E676', '#00B8D4', '#2979FF', '#651FFF', '#F50057',
+  '#FF3D00', '#FFAB00', '#AEEA00', '#1DE9B6', '#00B0FF', '#3D5AFE', '#D500F9', '#FF4081',
+  '#C2412D', '#E76F51', '#B8740A', '#0A7552', '#1E9E6A', '#0F7F93', '#2F5BD3', '#7A3FC4',
+  '#8E1B1B', '#7A3E00', '#5C4B00', '#0B4D36', '#0B4F5C', '#1B2A6B', '#3E1F6B', '#C23C7A',
+  '#F25C54', '#FFD166', '#F2C14E', '#A8E6CF', '#9ED8F0', '#A9C4FF', '#C9B6FF', '#FF9FD2',
+  '#FFFFFF', '#E6E6E6', '#B0B7B4', '#6B7570', '#3D4A55', '#3D2B1F', '#15211C', '#000000',
 ];
 
 const TABS = [['pattern', '模様'], ['color', '色'], ['image', 'ロゴ画像']];
@@ -117,7 +121,7 @@ export default function DesignPicker({ d, set, allCards = [], canDesign, onLocke
             {SWATCHES.map((c) => {
               const on = valueOf(slotNow).toUpperCase() === c;
               return (
-                <Pressable key={c} onPress={() => pick(c)} style={[s.swatch, { backgroundColor: c }, c === '#FFFFFF' && { borderColor: t.line }, on && { borderColor: t.ink, borderWidth: 3 }]} accessibilityRole="button" accessibilityLabel={c} accessibilityState={{ selected: on }} hitSlop={2} />
+                <Pressable key={c} onPress={() => pick(c)} style={[s.swatch, { backgroundColor: c }, (c === '#FFFFFF' || c === '#E6E6E6') && { borderColor: t.track }, on && { borderColor: t.ink, borderWidth: 3 }]} accessibilityRole="button" accessibilityLabel={c} accessibilityState={{ selected: on }} hitSlop={2} />
               );
             })}
           </View>
@@ -192,8 +196,8 @@ const styles = (t) => StyleSheet.create({
   slotDot: { width: 18, height: 18, borderRadius: 9, borderWidth: 1, borderColor: 'rgba(0,0,0,0.15)' },
   slotText: { color: t.muted, fontWeight: '700', fontSize: 13 },
   reset: { color: t.accent, fontSize: 13, fontWeight: '700', textDecorationLine: 'underline' },
-  swatches: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  swatch: { width: 32, height: 32, borderRadius: 16, borderWidth: 1, borderColor: 'transparent' },
+  swatches: { flexDirection: 'row', flexWrap: 'wrap', rowGap: 10, justifyContent: 'space-between' },
+  swatch: { width: '10.5%', aspectRatio: 1, borderRadius: 999, borderWidth: 1, borderColor: 'transparent' }, // 8 per row
   opt: { flex: 1, borderWidth: 1, borderColor: t.line, backgroundColor: t.surface, borderRadius: 10, paddingVertical: 10, alignItems: 'center' },
   optOn: { backgroundColor: t.accent, borderColor: t.accent },
   optText: { color: t.ink, fontWeight: '700', fontSize: 14 },
