@@ -1,5 +1,6 @@
 import { Image, StyleSheet, Text, View } from 'react-native';
-import Svg, { Circle, Defs, Line, LinearGradient, Path, Pattern, Polygon, Rect, Stop } from 'react-native-svg';
+import { useState } from 'react';
+import Svg, { Circle, Defs, LinearGradient, Path, Pattern, Polygon, RadialGradient, Rect, Stop } from 'react-native-svg';
 import { TYPE_COLORS } from './theme';
 import { TYPE_LABEL, cardTypes } from './appLink';
 import { photoUri } from './storage';
@@ -30,17 +31,18 @@ export const PATTERNS = [
   { key: 'bands', label: '斜めライン' },
   { key: 'plain', label: '無地' },
   { key: 'gradient', label: 'グラデーション' },
-  { key: 'dots', label: 'ドット' },
-  { key: 'circles', label: 'サークル' },
-  { key: 'stripes', label: 'ストライプ' },
-  { key: 'check', label: 'チェック' },
-  { key: 'grid', label: '方眼' },
-  { key: 'waves', label: 'ウェーブ' },
   { key: 'split', label: 'ななめ' },
-  { key: 'rings', label: 'リング' },
+  { key: 'circles', label: 'サークル' },
+  { key: 'rings', label: '波紋' },
+  { key: 'waves', label: 'ウェーブ' },
+  { key: 'sunburst', label: 'サンバースト' },
+  { key: 'dots', label: 'ハーフトーン' },
+  { key: 'stripes', label: 'ストライプ' },
+  { key: 'check', label: 'ギンガム' },
+  { key: 'triangles', label: 'トライアングル' },
 ];
 // Patterns drawn with two pattern colors (the rest use one).
-export const TWO_COLOR_PATTERNS = ['bands', 'circles', 'waves'];
+export const TWO_COLOR_PATTERNS = ['bands', 'split', 'circles', 'waves', 'stripes'];
 
 // Card face drawn from 2-4 colors: background, then the pattern's colors.
 // No logos: brands' marks can't be used without each company's permission.
@@ -54,9 +56,14 @@ export default function CardFace({ card, palette, big, wide, chip, style, mini, 
   const ink = textHex(card);
   const dark = isDarkText(ink);
   const logo = mini ? 0 : children ? 52 : big ? 84 : 64;
+  const [size, setSize] = useState(null);
+  const onLayout = (e) => {
+    const { width, height } = e.nativeEvent.layout;
+    if (!size || size.w !== width || size.h !== height) setSize({ w: width, h: height });
+  };
   return (
-    <View style={[s.face, { backgroundColor: bg }, big && s.big, mini && s.mini, style]}>
-      <PatternLayer pattern={pattern} bg={bg} c1={c1} c2={c2} c3={c3} />
+    <View style={[s.face, { backgroundColor: bg }, big && s.big, mini && s.mini, style]} onLayout={onLayout}>
+      <PatternLayer pattern={pattern} bg={bg} c1={c1} c2={c2} c3={c3} w={size && size.w} h={size && size.h} />
       {logo && (img || logoSlot) && !children ? (
         // A full-height column so the logo always sits in the vertical middle of the card.
         <View style={s.logoCol} pointerEvents="none">
@@ -99,116 +106,182 @@ export default function CardFace({ card, palette, big, wide, chip, style, mini, 
   );
 }
 
-function PatternLayer({ pattern, bg, c1, c2, c3 }) {
-  if (pattern === 'plain') return null;
-  if (pattern === 'bands') {
-    return (
-      <>
-        {c1 && <View style={[s.band, { backgroundColor: c1 }]} />}
-        {c2 && <View style={[s.thin, { backgroundColor: c2 }]} />}
-        {c3 && <View style={[s.stripe, { backgroundColor: c3 }]} />}
-      </>
-    );
-  }
+// Patterns are drawn in a 320-unit-wide space scaled to the card's width,
+// so a small swatch shows the same whole design as a full card.
+const W = 320;
+
+function PatternLayer({ pattern, bg, c1, c2, c3, w, h }) {
+  if (pattern === 'plain' || !w || !h) return null;
+  const H = (W * h) / w;
   const a = c1 || '#FFFFFF';
   const b = c2 || a;
-  if (pattern === 'split') {
-    // The lower-right half in the pattern color, stretched to the card's shape.
-    return (
-      <Svg style={StyleSheet.absoluteFill} width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none" pointerEvents="none">
-        <Polygon points="100,18 100,100 30,100" fill={a} fillOpacity="0.85" />
-      </Svg>
-    );
-  }
   return (
-    <Svg style={StyleSheet.absoluteFill} width="100%" height="100%" pointerEvents="none">
-      {pattern === 'gradient' && (
+    <Svg style={StyleSheet.absoluteFill} width="100%" height="100%" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" pointerEvents="none">
+      {drawPattern(pattern, { bg, a, b, c: c3, H, c1, c2 })}
+    </Svg>
+  );
+}
+
+// A slanted bar: centre x at the bottom, leaning right by 22° towards the top.
+function slant(x, width, H) {
+  const lean = H * 0.4;
+  return `${x - width / 2},${H} ${x + width / 2},${H} ${x + lean + width / 2},0 ${x + lean - width / 2},0`;
+}
+
+function drawPattern(pattern, { bg, a, b, c, H, c1, c2 }) {
+  switch (pattern) {
+    case 'bands':
+      return (
+        <>
+          {c1 && <Polygon points={slant(W - 40 - H * 0.2, 56, H)} fill={c1} />}
+          {c2 && <Polygon points={slant(W - 90 - H * 0.2, 17, H)} fill={c2} />}
+          {c && <Rect x="0" y={H - 11} width={W} height="11" fill={c} />}
+        </>
+      );
+    case 'gradient':
+      return (
         <>
           <Defs>
             <LinearGradient id="g" x1="0" y1="0" x2="1" y2="1">
               <Stop offset="0" stopColor={bg} />
               <Stop offset="1" stopColor={a} />
             </LinearGradient>
+            <RadialGradient id="gs" cx="20%" cy="0%" r="70%">
+              <Stop offset="0" stopColor="#FFFFFF" stopOpacity="0.16" />
+              <Stop offset="1" stopColor="#FFFFFF" stopOpacity="0" />
+            </RadialGradient>
           </Defs>
-          <Rect x="0" y="0" width="100%" height="100%" fill="url(#g)" />
+          <Rect x="0" y="0" width={W} height={H} fill="url(#g)" />
+          <Rect x="0" y="0" width={W} height={H} fill="url(#gs)" />
         </>
-      )}
-      {pattern === 'dots' && (
+      );
+    case 'split': {
+      // Two facets cut along the same diagonal.
+      const k = (H * 0.82) / (W * 0.7);
+      const y2 = H * 0.5;
+      return (
+        <>
+          <Polygon points={`${W},${H * 0.18} ${W},${H} ${W * 0.3},${H}`} fill={a} />
+          <Polygon points={`${W},${y2} ${W},${H} ${W - (H - y2) / k},${H}`} fill={b} />
+        </>
+      );
+    }
+    case 'circles':
+      return (
+        <>
+          <Circle cx={W * 0.9} cy={H * 0.02} r={W * 0.42} fill={a} fillOpacity="0.9" />
+          <Circle cx={W * 0.6} cy={H + W * 0.06} r={W * 0.22} fill={b} fillOpacity="0.85" />
+          <Circle cx={W * 0.6} cy={H + W * 0.06} r={W * 0.3} stroke={b} strokeOpacity="0.5" strokeWidth="3" fill="none" />
+        </>
+      );
+    case 'rings':
+      return (
+        <>
+          {[0.2, 0.36, 0.52, 0.68, 0.84].map((r, i) => (
+            <Circle key={r} cx={W} cy={H} r={W * r} stroke={a} strokeOpacity={0.75 - i * 0.14} strokeWidth="10" fill="none" />
+          ))}
+        </>
+      );
+    case 'waves': {
+      const y = H - 92;
+      return (
+        <>
+          <Path d={`M0 ${y + 20} C${W * 0.25} ${y - 18} ${W * 0.45} ${y + 44} ${W * 0.7} ${y + 14} S${W} ${y - 4} ${W} ${y - 4} V${H} H0 Z`} fill={a} fillOpacity="0.75" />
+          <Path d={`M0 ${y + 62} C${W * 0.3} ${y + 30} ${W * 0.55} ${y + 86} ${W * 0.8} ${y + 52} S${W} ${y + 40} ${W} ${y + 40} V${H} H0 Z`} fill={b} fillOpacity="0.9" />
+        </>
+      );
+    }
+    case 'sunburst': {
+      // Rays fanning out from the lower-right corner.
+      const n = 14;
+      const R = W * 2;
+      const rays = [];
+      for (let i = 0; i < n; i += 2) {
+        const t0 = Math.PI + (i / n) * (Math.PI / 2);
+        const t1 = Math.PI + ((i + 1) / n) * (Math.PI / 2);
+        rays.push(<Polygon key={i} points={`${W},${H} ${W + R * Math.cos(t0)},${H + R * Math.sin(t0)} ${W + R * Math.cos(t1)},${H + R * Math.sin(t1)}`} fill={a} fillOpacity="0.3" />);
+      }
+      return <>{rays}</>;
+    }
+    case 'dots': {
+      // Halftone: dots grow towards the lower right.
+      const step = 16;
+      const dots = [];
+      for (let y = step / 2; y < H; y += step) {
+        for (let x = step / 2; x < W; x += step) {
+          const t = (x / W) * 0.6 + (y / H) * 0.4;
+          if (t < 0.3) continue;
+          dots.push(<Circle key={`${x}-${y}`} cx={x} cy={y} r={((t - 0.3) / 0.7) * 6.5 + 0.6} fill={a} fillOpacity="0.6" />);
+        }
+      }
+      return <>{dots}</>;
+    }
+    case 'stripes':
+      // Regimental stripes: a wide band and a thin one, repeating on the diagonal.
+      return (
         <>
           <Defs>
-            <Pattern id="d" x="0" y="0" width="16" height="16" patternUnits="userSpaceOnUse">
-              <Circle cx="8" cy="8" r="2.6" fill={a} fillOpacity="0.45" />
+            <Pattern id="st" x="0" y="0" width="76" height="76" patternUnits="userSpaceOnUse" patternTransform="rotate(-35)">
+              <Rect x="0" y="0" width="76" height="22" fill={a} fillOpacity="0.75" />
+              <Rect x="0" y="38" width="76" height="5" fill={b} fillOpacity="0.8" />
             </Pattern>
           </Defs>
-          <Rect x="0" y="0" width="100%" height="100%" fill="url(#d)" />
+          <Rect x="0" y="0" width={W} height={H} fill="url(#st)" />
         </>
-      )}
-      {pattern === 'circles' && (
-        <>
-          <Circle cx="92%" cy="10%" r="70" fill={a} fillOpacity="0.85" />
-          <Circle cx="78%" cy="105%" r="46" fill={b} fillOpacity="0.7" />
-        </>
-      )}
-      {pattern === 'stripes' && (
+      );
+    case 'check':
+      // Gingham: see-through bands across and down, darker where they cross.
+      return (
         <>
           <Defs>
-            <Pattern id="st" x="0" y="0" width="14" height="14" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
-              <Rect x="0" y="0" width="5" height="14" fill={a} fillOpacity="0.5" />
+            <Pattern id="ck" x="0" y="0" width="56" height="56" patternUnits="userSpaceOnUse">
+              <Rect x="0" y="0" width="56" height="28" fill={a} fillOpacity="0.32" />
+              <Rect x="0" y="0" width="28" height="56" fill={a} fillOpacity="0.32" />
             </Pattern>
           </Defs>
-          <Rect x="0" y="0" width="100%" height="100%" fill="url(#st)" />
+          <Rect x="0" y="0" width={W} height={H} fill="url(#ck)" />
         </>
-      )}
-      {pattern === 'check' && (
-        <>
-          <Defs>
-            <Pattern id="ck" x="0" y="0" width="24" height="24" patternUnits="userSpaceOnUse">
-              <Rect x="0" y="0" width="12" height="12" fill={a} fillOpacity="0.35" />
-              <Rect x="12" y="12" width="12" height="12" fill={a} fillOpacity="0.35" />
-            </Pattern>
-          </Defs>
-          <Rect x="0" y="0" width="100%" height="100%" fill="url(#ck)" />
-        </>
-      )}
-      {pattern === 'grid' && (
-        <>
-          <Defs>
-            <Pattern id="gr" x="0" y="0" width="16" height="16" patternUnits="userSpaceOnUse">
-              <Line x1="0" y1="0" x2="16" y2="0" stroke={a} strokeOpacity="0.45" strokeWidth="1.5" />
-              <Line x1="0" y1="0" x2="0" y2="16" stroke={a} strokeOpacity="0.45" strokeWidth="1.5" />
-            </Pattern>
-          </Defs>
-          <Rect x="0" y="0" width="100%" height="100%" fill="url(#gr)" />
-        </>
-      )}
-      {pattern === 'waves' && (
-        <>
-          <Defs>
-            <Pattern id="wv" x="0" y="0" width="40" height="22" patternUnits="userSpaceOnUse">
-              <Path d="M0 11 Q10 3 20 11 T40 11" stroke={a} strokeOpacity="0.6" strokeWidth="3" fill="none" />
-              <Path d="M0 21 Q10 13 20 21 T40 21" stroke={b} strokeOpacity="0.45" strokeWidth="2" fill="none" />
-            </Pattern>
-          </Defs>
-          <Rect x="0" y="0" width="100%" height="100%" fill="url(#wv)" />
-        </>
-      )}
-      {pattern === 'rings' && (
-        <>
-          <Circle cx="100%" cy="100%" r="40" stroke={a} strokeOpacity="0.6" strokeWidth="6" fill="none" />
-          <Circle cx="100%" cy="100%" r="70" stroke={a} strokeOpacity="0.45" strokeWidth="6" fill="none" />
-          <Circle cx="100%" cy="100%" r="100" stroke={a} strokeOpacity="0.3" strokeWidth="6" fill="none" />
-          <Circle cx="100%" cy="100%" r="130" stroke={a} strokeOpacity="0.18" strokeWidth="6" fill="none" />
-        </>
-      )}
-    </Svg>
-  );
+      );
+    case 'triangles':
+      return <>{lowPoly(a, H)}</>;
+    default:
+      return null;
+  }
+}
+
+// Low-poly facets over the right part of the card, fading out to the left.
+const JIT = [0.1, -0.3, 0.25, -0.15, 0.3, -0.25, 0.05, 0.2, -0.1, 0.15, -0.3, 0.25, 0.1, -0.2, 0.3, -0.05, 0.2, -0.25, 0.1, 0.05];
+function lowPoly(a, H) {
+  const cols = 5;
+  const rows = 3;
+  const x0 = W * 0.4;
+  const cw = (W - x0) / (cols - 1);
+  const rh = H / (rows - 1);
+  const pt = (i, j) => {
+    const edgeX = i === cols - 1;
+    const edgeY = j === 0 || j === rows - 1;
+    const jx = edgeX ? 0 : JIT[(i * 3 + j) % JIT.length] * cw * 0.5;
+    const jy = edgeY ? 0 : JIT[(i * 7 + j * 2 + 5) % JIT.length] * rh * 0.6;
+    return [x0 + i * cw + jx, j * rh + jy];
+  };
+  const tris = [];
+  for (let i = 0; i < cols - 1; i++) {
+    for (let j = 0; j < rows - 1; j++) {
+      const p = [pt(i, j), pt(i + 1, j), pt(i + 1, j + 1), pt(i, j + 1)];
+      const base = 0.12 + (i / (cols - 2)) * 0.55;
+      const q = (u) => u.map((v) => `${v[0]},${v[1]}`).join(' ');
+      tris.push(<Polygon key={`${i}-${j}-a`} points={q([p[0], p[1], p[2]])} fill={a} fillOpacity={base + ((i + j) % 2) * 0.15} />);
+      tris.push(<Polygon key={`${i}-${j}-b`} points={q([p[0], p[2], p[3]])} fill={a} fillOpacity={base + ((i + j + 1) % 2) * 0.15} />);
+    }
+  }
+  return tris;
 }
 
 const shadow = { textShadowColor: 'rgba(0,0,0,0.35)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 3 };
 const s = StyleSheet.create({
   face: { borderRadius: 14, paddingVertical: 12, paddingHorizontal: 12, minHeight: 112, justifyContent: 'space-between', gap: 6, overflow: 'hidden' },
   big: { minHeight: 140, paddingHorizontal: 16, paddingVertical: 14 },
-  mini: { minHeight: 0, height: 44, padding: 0, borderRadius: 9 },
+  mini: { minHeight: 0, aspectRatio: 1.6, padding: 0, borderRadius: 8 },
   logoCol: { position: 'absolute', right: 10, top: 0, bottom: 0, justifyContent: 'center' },
   logoBox: { borderRadius: 12, overflow: 'hidden' },
   slot: { borderWidth: 1.5, borderStyle: 'dashed', opacity: 0.45, alignItems: 'center', justifyContent: 'center' },
@@ -216,9 +289,6 @@ const s = StyleSheet.create({
   slotText: { fontSize: 12, fontWeight: '800' },
   logoTile: { backgroundColor: '#FFF', padding: 6 },
   logo: { width: '100%', height: '100%' },
-  band: { position: 'absolute', right: 6, top: -60, width: 30, height: 260, transform: [{ rotate: '22deg' }] },
-  thin: { position: 'absolute', right: 44, top: -60, width: 9, height: 260, transform: [{ rotate: '22deg' }] },
-  stripe: { position: 'absolute', left: 0, right: 0, bottom: 0, height: 6 },
   nameRowLow: { paddingTop: 8 }, // small tiles in the card list: name a little lower
   nameRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
   name: { flex: 1, paddingRight: 8, color: '#FFF', fontSize: 22, fontWeight: '900', lineHeight: 27, ...shadow },
