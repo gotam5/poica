@@ -52,7 +52,7 @@ export default function StepSlider({ value, min, max, step, onChange, onDragging
         onAccessibilityAction={(e) => onChange(Math.min(max, Math.max(min, value + (e.nativeEvent.actionName === 'increment' ? step : -step))))}
         {...pan.panHandlers}
       >
-        <View pointerEvents="none" style={{ position: 'absolute', left: KNOB / 2, right: KNOB / 2, height: 6, borderRadius: 3, backgroundColor: t.line }} />
+        <View pointerEvents="none" style={{ position: 'absolute', left: KNOB / 2, right: KNOB / 2, height: 6, borderRadius: 3, backgroundColor: t.track }} />
         <View pointerEvents="none" style={{ position: 'absolute', left: KNOB / 2, width: x, height: 6, borderRadius: 3, backgroundColor: t.accent }} />
         <View pointerEvents="none" style={{ position: 'absolute', left: x, width: KNOB, height: KNOB, borderRadius: KNOB / 2, backgroundColor: '#FFFFFF', shadowColor: '#000', shadowOpacity: 0.25, shadowRadius: 4, shadowOffset: { width: 0, height: 2 }, borderWidth: 0.5, borderColor: 'rgba(0,0,0,0.08)' }} />
       </View>

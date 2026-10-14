@@ -1,5 +1,5 @@
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ActionSheetIOS, ActivityIndicator, Alert, AppState, LayoutAnimation, Linking, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ActionSheetIOS, ActivityIndicator, Alert, Animated, AppState, Easing, LayoutAnimation, Linking, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import * as Location from 'expo-location';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
@@ -9,7 +9,8 @@ import EditScreen from './src/EditScreen';
 import SettingsScreen from './src/SettingsScreen';
 import MapScreen from './src/MapScreen';
 import StatsScreen, { monthKey } from './src/StatsScreen';
-import Toolbar from './src/Toolbar';
+import Toolbar, { TAB_SPACE } from './src/Toolbar';
+import Backdrop from './src/Backdrop';
 import ShowScreen from './src/ShowScreen';
 import ReorderScreen from './src/ReorderScreen';
 import Paywall from './src/Paywall';
@@ -59,6 +60,12 @@ function Home() {
   const [paywall, setPaywall] = useState(null); // null | 'cards' | 'suggest'
   const [limits, setLimits] = useState(DEFAULT_LIMITS);
   const [tab, setTab] = useState('home'); // home | map | stats | settings
+  // Switching tabs: the new screen fades in while rising a few points, instead of cutting.
+  const tabAnim = useRef(new Animated.Value(1)).current;
+  useEffect(() => {
+    tabAnim.setValue(0);
+    Animated.timing(tabAnim, { toValue: 1, duration: 280, easing: Easing.out(Easing.cubic), useNativeDriver: true }).start();
+  }, [tab, tabAnim]);
   const [cardOrder, setCardOrder] = useState(null); // ids in the order the user chose; null = most used first
   const [reordering, setReordering] = useState(null); // focused card id while the reorder screen is open
   const [homeOrder, setHomeOrder] = useState(HOME_ORDER); // order of the blocks on ホーム
@@ -421,6 +428,8 @@ function Home() {
   return (
     <SafeAreaView style={s.root} edges={['top']}>
       <StatusBar style="auto" />
+      <Backdrop t={t} />
+      <Animated.View style={{ flex: 1, opacity: tabAnim, transform: [{ translateY: tabAnim.interpolate({ inputRange: [0, 1], outputRange: [10, 0] }) }, { scale: tabAnim.interpolate({ inputRange: [0, 1], outputRange: [0.985, 1] }) }] }}>
       {tab === 'map' && <MapScreen cards={cards} pos={pos} t={t} onForgetPlaces={forgetPlacesOf} />}
       {tab === 'stats' && <StatsScreen cards={cards} t={t} onEdit={(c) => setEditing({ ...c })} />}
       {tab === 'settings' && (
@@ -461,6 +470,7 @@ function Home() {
         ))}
 
       </ScrollView>}
+      </Animated.View>
 
       <Toolbar t={t} active={tab} onChange={goTab} />
 
@@ -528,7 +538,9 @@ function Tile({ card, allCards, big, wide, chip, onPress, onLongPress, s }) {
 
 const styles = (t) => StyleSheet.create({
   root: { flex: 1, backgroundColor: t.bg },
-  wrap: { paddingHorizontal: 16, paddingTop: 8, paddingBottom: 40, gap: 22 },
+  // Cards float a little above the glass background.
+  cell: { width: '50%', padding: 5 },
+  wrap: { paddingHorizontal: 16, paddingTop: 8, paddingBottom: TAB_SPACE + 20, gap: 22 },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 },
   logo: { fontSize: 30, fontWeight: '900', color: t.ink, letterSpacing: 0.3 },
   loc: { flexDirection: 'row', alignItems: 'center', gap: 6, borderWidth: 1, borderColor: t.line, backgroundColor: t.surface, borderRadius: 999, paddingVertical: 5, paddingLeft: 10, paddingRight: 12 },
@@ -544,7 +556,6 @@ const styles = (t) => StyleSheet.create({
   empty: { borderWidth: 1.5, borderStyle: 'dashed', borderColor: t.line, borderRadius: 14, padding: 14 },
   emptyText: { fontSize: 13, color: t.muted, lineHeight: 20 },
   grid: { flexDirection: 'row', flexWrap: 'wrap', marginHorizontal: -5 },
-  cell: { width: '50%', padding: 5 },
   search: { borderWidth: 1, borderColor: t.line, backgroundColor: t.surface, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 9, marginBottom: 10, color: t.ink, fontSize: 15 },
   listHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 },
   headBtns: { flexDirection: 'row', alignItems: 'center', gap: 8 },
@@ -561,6 +572,6 @@ const styles = (t) => StyleSheet.create({
   moreBtnText: { color: t.accent, fontWeight: '800', fontSize: 14 },
   more: { color: t.accent, fontSize: 13, fontWeight: '700', textAlign: 'center', paddingVertical: 4 },
   foot: { fontSize: 12, color: t.muted, textAlign: 'center' },
-  toast: { position: 'absolute', alignSelf: 'center', bottom: 110, backgroundColor: '#15211C', paddingHorizontal: 16, paddingVertical: 9, borderRadius: 999, maxWidth: '90%' },
+  toast: { position: 'absolute', alignSelf: 'center', bottom: TAB_SPACE + 20, backgroundColor: '#15211C', paddingHorizontal: 16, paddingVertical: 9, borderRadius: 999, maxWidth: '90%' },
   toastText: { color: '#FFF', fontSize: 13, textAlign: 'center' },
 });

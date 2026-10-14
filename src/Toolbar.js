@@ -1,8 +1,12 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import Glass from './Glass';
+
+// Room the floating bar takes at the bottom; screens pad their scroll content by this.
+export const TAB_SPACE = 96;
 import Svg, { Circle, Path } from 'react-native-svg';
 
-// Bottom tabs: ホーム / マップ / 記録 / 設定.
+// Bottom tabs: ホーム / マップ / 記録 / 設定, on a floating glass bar like current iOS.
 export default function Toolbar({ t, active, onChange }) {
   const insets = useSafeAreaInsets();
   const s = styles(t);
@@ -10,18 +14,22 @@ export default function Toolbar({ t, active, onChange }) {
     const on = active === key;
     const color = on ? t.accent : t.muted;
     return (
-      <Pressable key={key} onPress={() => onChange(key)} style={({ pressed }) => [s.item, pressed && { opacity: 0.6 }]} accessibilityRole="tab" accessibilityLabel={label} accessibilityState={{ selected: on }} hitSlop={4}>
+      <Pressable key={key} onPress={() => onChange(key)} style={({ pressed }) => [s.item, on && s.itemOn, pressed && { opacity: 0.6 }]} accessibilityRole="tab" accessibilityLabel={label} accessibilityState={{ selected: on }} hitSlop={4}>
         <Icon c={color} />
         <Text style={[s.label, { color }]}>{label}</Text>
       </Pressable>
     );
   };
   return (
-    <View style={[s.bar, { paddingBottom: Math.max(insets.bottom, 8) }]} accessibilityRole="tablist">
-      {item('home', 'ホーム', HomeIcon)}
-      {item('map', 'マップ', MapIcon)}
-      {item('stats', '記録', ChartIcon)}
-      {item('settings', '設定', GearIcon)}
+    <View style={[s.float, { bottom: Math.max(insets.bottom - 6, 10) }]} pointerEvents="box-none">
+      <Glass t={t} interactive style={s.bar}>
+        <View style={s.row} accessibilityRole="tablist">
+          {item('home', 'ホーム', HomeIcon)}
+          {item('map', 'マップ', MapIcon)}
+          {item('stats', '記録', ChartIcon)}
+          {item('settings', '設定', GearIcon)}
+        </View>
+      </Glass>
     </View>
   );
 }
@@ -38,7 +46,10 @@ const GearIcon = ({ c }) => (
 );
 
 const styles = (t) => StyleSheet.create({
-  bar: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-around', paddingTop: 6, paddingHorizontal: 4, backgroundColor: t.surface, borderTopWidth: 1, borderTopColor: t.line },
-  item: { flex: 1, alignItems: 'center', gap: 2, paddingVertical: 4 },
+  float: { position: 'absolute', left: 16, right: 16, shadowColor: '#000', shadowOpacity: t.dark ? 0.4 : 0.12, shadowRadius: 18, shadowOffset: { width: 0, height: 8 } },
+  bar: { borderRadius: 32 },
+  row: { flexDirection: 'row', alignItems: 'center', padding: 5 },
+  item: { flex: 1, alignItems: 'center', gap: 2, paddingVertical: 7, borderRadius: 26 },
+  itemOn: { backgroundColor: t.chip },
   label: { fontSize: 11, fontWeight: '700' },
 });

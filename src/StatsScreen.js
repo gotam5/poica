@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { cardPalette } from './appLink';
 import { dateLabel } from './MapScreen';
+import { TAB_SPACE } from './Toolbar';
 
 // card.useMonths: { 'YYYY-MM': count }, kept from 2026-10 on. card.uses: every use since the card was added.
 export const monthKey = (d = new Date()) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
@@ -54,7 +55,7 @@ export default function StatsScreen({ cards, t, onEdit }) {
 }
 
 const styles = (t) => StyleSheet.create({
-  wrap: { paddingHorizontal: 16, paddingTop: 8, paddingBottom: 40, gap: 14 },
+  wrap: { paddingHorizontal: 16, paddingTop: 8, paddingBottom: TAB_SPACE + 20, gap: 14 },
   title: { fontSize: 26, fontWeight: '900', color: t.ink },
   seg: { flexDirection: 'row', backgroundColor: t.chip, borderRadius: 12, padding: 3, gap: 3 },
   segBtn: { flex: 1, paddingVertical: 8, borderRadius: 9, alignItems: 'center' },

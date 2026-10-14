@@ -182,7 +182,7 @@ const styles = (t) => StyleSheet.create({
   pressed: { opacity: 0.6 },
   patWrap: { alignItems: 'center', gap: 4 },
   patFrame: { borderWidth: 3, borderColor: 'transparent', borderRadius: 12 },
-  tabs: { flexDirection: 'row', backgroundColor: t.line, borderRadius: 10, padding: 3 },
+  tabs: { flexDirection: 'row', backgroundColor: t.track, borderRadius: 10, padding: 3 },
   tab: { flex: 1, paddingVertical: 8, borderRadius: 8, alignItems: 'center' },
   tabOn: { backgroundColor: t.surface },
   tabText: { color: t.muted, fontWeight: '700', fontSize: 14 },

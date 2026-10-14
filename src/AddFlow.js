@@ -247,7 +247,7 @@ const styles = (t) => StyleSheet.create({
   title: { color: t.ink, fontSize: 17, fontWeight: '800' },
   stepText: { color: t.muted, fontSize: 13, fontWeight: '700', minWidth: 70, textAlign: 'right', fontVariant: ['tabular-nums'] },
   progress: { flexDirection: 'row', gap: 6, paddingHorizontal: 16, paddingBottom: 10 },
-  bar: { flex: 1, height: 4, borderRadius: 2, backgroundColor: t.line },
+  bar: { flex: 1, height: 4, borderRadius: 2, backgroundColor: t.track },
   barOn: { backgroundColor: t.accent },
   body: { paddingHorizontal: 16, paddingBottom: 32, gap: 14 },
   lead: { color: t.ink, fontSize: 20, fontWeight: '800', marginTop: 4 },

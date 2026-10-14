@@ -3,6 +3,8 @@ import { Alert, Animated, PanResponder, Pressable, ScrollView, StyleSheet, Text,
 import MapView, { Marker } from 'react-native-maps';
 import { cardPalette } from './appLink';
 import { MERGE_DIST, distance } from './geo';
+import { TAB_SPACE } from './Toolbar';
+import Glass from './Glass';
 
 // Where cards were used, from the places learned in geo.js (each place counts its uses in n).
 // Places of different cards that are close together become one spot; bigger pins for spots used more.
@@ -108,7 +110,8 @@ export default function MapScreen({ cards, pos, t, onForgetPlaces }) {
           </View>
         )}
         {spot && (
-          <Animated.View style={[s.sheet, { transform: [{ translateY: drag.interpolate({ inputRange: [-200, 0, 600], outputRange: [-40, 0, 600], extrapolate: 'clamp' }) }] }]}>
+          <Animated.View style={[s.sheetWrap, { transform: [{ translateY: drag.interpolate({ inputRange: [-200, 0, 600], outputRange: [-40, 0, 600], extrapolate: 'clamp' }) }] }]}>
+            <Glass t={t} style={s.sheet}>
             <View {...pan.panHandlers} style={s.handleArea}>
               <View style={s.grip} />
               <Text style={s.sheetTitle}>この場所で使ったカード</Text>
@@ -126,6 +129,7 @@ export default function MapScreen({ cards, pos, t, onForgetPlaces }) {
                 </View>
               ))}
             </ScrollView>
+            </Glass>
           </Animated.View>
         )}
       </View>
@@ -152,9 +156,10 @@ const styles = (t) => StyleSheet.create({
   pinText: { color: '#FFF', fontWeight: '900', fontSize: 13 },
   emptyWrap: { position: 'absolute', left: 16, right: 16, top: 16, backgroundColor: t.surface, borderRadius: 14, padding: 14, borderWidth: 1, borderColor: t.line },
   empty: { color: t.muted, fontSize: 13, lineHeight: 19 },
-  sheet: { position: 'absolute', left: 0, right: 0, bottom: 0, backgroundColor: t.surface, borderTopLeftRadius: 20, borderTopRightRadius: 20, paddingHorizontal: 18, paddingTop: 0, paddingBottom: 16, gap: 4, shadowColor: '#000', shadowOpacity: 0.18, shadowRadius: 12, shadowOffset: { width: 0, height: -3 }, elevation: 8 },
+  sheetWrap: { position: 'absolute', left: 10, right: 10, bottom: TAB_SPACE, shadowColor: '#000', shadowOpacity: 0.18, shadowRadius: 16, shadowOffset: { width: 0, height: 6 }, elevation: 8 },
+  sheet: { borderRadius: 26, paddingHorizontal: 18, paddingTop: 0, paddingBottom: 14, gap: 4 },
   handleArea: { paddingTop: 8, paddingBottom: 6, gap: 4 },
-  grip: { alignSelf: 'center', width: 40, height: 5, borderRadius: 3, backgroundColor: t.line, marginBottom: 6 },
+  grip: { alignSelf: 'center', width: 40, height: 5, borderRadius: 3, backgroundColor: t.track, marginBottom: 6 },
   del: { borderWidth: 1, borderColor: t.near, borderRadius: 999, paddingHorizontal: 10, paddingVertical: 4, marginLeft: 6 },
   delText: { color: t.near, fontSize: 12, fontWeight: '800' },
   sheetTitle: { color: t.ink, fontSize: 17, fontWeight: '900' },

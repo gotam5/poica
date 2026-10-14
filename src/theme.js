@@ -2,13 +2,18 @@ import { useColorScheme } from 'react-native';
 
 export const CARD_COLORS = ['#0A7552', '#2F5BD3', '#C2412D', '#B8740A', '#7A3FC4', '#0F7F93', '#C23C7A', '#3D4A55'];
 
+// Glass look: surfaces are translucent over the soft glows of Backdrop.js; surfaceSolid where something must stay opaque.
 const light = {
-  bg: '#EDF1EE', surface: '#FFFFFF', ink: '#15211C', muted: '#5B6B64', line: '#D3DDD8',
-  accent: '#0A7552', accentInk: '#FFFFFF', near: '#D9452B', nearBg: '#FDE8E3', chip: '#E2EBE6',
+  dark: false,
+  bg: '#EEF2F0', surface: 'rgba(255,255,255,0.62)', surfaceSolid: '#FFFFFF', ink: '#15211C', muted: '#5B6B64', line: 'rgba(21,33,28,0.10)',
+  accent: '#0A7552', accentInk: '#FFFFFF', near: '#D9452B', nearBg: 'rgba(253,232,227,0.85)', chip: 'rgba(21,33,28,0.06)',
+  glassEdge: 'rgba(255,255,255,0.75)', track: 'rgba(21,33,28,0.16)', shadow: 'rgba(16,40,30,0.10)',
 };
 const dark = {
-  bg: '#0F1613', surface: '#18221E', ink: '#E6EEE9', muted: '#98AAA1', line: '#2A3832',
-  accent: '#3FC597', accentInk: '#062218', near: '#FF8A73', nearBg: '#3A1D17', chip: '#22302A',
+  dark: true,
+  bg: '#0C1210', surface: 'rgba(38,50,45,0.55)', surfaceSolid: '#18221E', ink: '#E6EEE9', muted: '#98AAA1', line: 'rgba(255,255,255,0.09)',
+  accent: '#3FC597', accentInk: '#062218', near: '#FF8A73', nearBg: 'rgba(58,29,23,0.85)', chip: 'rgba(255,255,255,0.07)',
+  glassEdge: 'rgba(255,255,255,0.14)', track: 'rgba(255,255,255,0.18)', shadow: 'rgba(0,0,0,0.35)',
 };
 
 export function useTheme() {

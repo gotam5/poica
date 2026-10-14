@@ -11,7 +11,7 @@ export default function Toggle({ value, t }) {
   useEffect(() => {
     Animated.spring(anim, { toValue: value ? 1 : 0, useNativeDriver: false, speed: 18, bounciness: 6 }).start();
   }, [value, anim]);
-  const bg = anim.interpolate({ inputRange: [0, 1], outputRange: [t.line, t.accent] });
+  const bg = anim.interpolate({ inputRange: [0, 1], outputRange: [t.track, t.accent] });
   const x = anim.interpolate({ inputRange: [0, 1], outputRange: [2, W - KNOB - 2] });
   const grow = anim.interpolate({ inputRange: [0, 0.5, 1], outputRange: [1, 1.12, 1] });
   return (

@@ -11,6 +11,9 @@ import ReorderGrid from './ReorderGrid';
 import ReorderList from './ReorderList';
 import { cardPalette } from './appLink';
 import { useTheme } from './theme';
+import Backdrop from './Backdrop';
+import Glass from './Glass';
+import { TAB_SPACE } from './Toolbar';
 import appJson from '../app.json';
 
 const VERSION = appJson.expo.version;
@@ -281,7 +284,7 @@ function SettingsPages({ page, go, ...props }) {
         </View>
       </Animated.ScrollView>
       <Animated.View pointerEvents="none" style={[s.bar, { opacity: scrollY.interpolate({ inputRange: [22, 38], outputRange: [0, 1], extrapolate: 'clamp' }) }]}>
-        <Text style={s.subTitle}>設定</Text>
+        <Glass t={t} style={s.barGlass}><Text style={s.subTitle}>設定</Text></Glass>
       </Animated.View>
       {paywallModal}
     </View>
@@ -289,8 +292,8 @@ function SettingsPages({ page, go, ...props }) {
 }
 
 // iOS-style push: the page slides in over the list, which drifts left by a third and dims.
-// Swipe from the left edge to go back. Spring values match UINavigationController's feel.
-const SPRING = { stiffness: 1000, damping: 500, mass: 3, overshootClamping: true, restDisplacementThreshold: 0.01, restSpeedThreshold: 0.01, useNativeDriver: true };
+// Swipe from the left edge to go back. A soft spring with no bounce, so pages glide in.
+const SPRING = { stiffness: 260, damping: 32, mass: 1, overshootClamping: true, restDisplacementThreshold: 0.01, restSpeedThreshold: 0.01, useNativeDriver: true };
 
 export default function SettingsScreen(props) {
   const t = useTheme();
@@ -324,7 +327,8 @@ export default function SettingsScreen(props) {
   })).current;
 
   return (
-    <View style={{ flex: 1, backgroundColor: t.bg, overflow: 'hidden' }}>
+    <View style={{ flex: 1, overflow: 'hidden' }}>
+      <Backdrop t={t} />
       <Animated.View
         style={{ flex: 1, transform: [{ translateX: p.interpolate({ inputRange: [0, 1], outputRange: [0, -width * 0.3] }) }] }}
         pointerEvents={page ? 'none' : 'auto'}
@@ -335,10 +339,11 @@ export default function SettingsScreen(props) {
       {page ? (
         <Animated.View
           style={[StyleSheet.absoluteFill, {
-            backgroundColor: t.bg, shadowColor: '#000', shadowOpacity: 0.18, shadowRadius: 10, shadowOffset: { width: -3, height: 0 },
+            shadowColor: '#000', shadowOpacity: 0.18, shadowRadius: 10, shadowOffset: { width: -3, height: 0 },
             transform: [{ translateX: p.interpolate({ inputRange: [0, 1], outputRange: [width, 0] }) }],
           }]}
         >
+          <Backdrop t={t} />
           <SettingsPages {...props} page={page} go={go} />
           <View style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 20 }} {...edge.panHandlers} />
         </Animated.View>
@@ -371,9 +376,9 @@ function Sub({ s, go, title, children, scroll = true }) {
 }
 
 const styles = (t) => StyleSheet.create({
-  root: { flex: 1, backgroundColor: t.bg },
+  root: { flex: 1 },
   title: { color: t.ink, fontSize: 26, fontWeight: '900' },
-  body: { paddingHorizontal: 16, paddingTop: 8, paddingBottom: 40, gap: 8 },
+  body: { paddingHorizontal: 16, paddingTop: 8, paddingBottom: TAB_SPACE + 20, gap: 8 },
   sec: { fontSize: 13, fontWeight: '700', letterSpacing: 1.5, color: t.muted, marginTop: 14 },
   box: { backgroundColor: t.surface, borderWidth: 1, borderColor: t.line, borderRadius: 14, paddingHorizontal: 14 },
   row: { flexDirection: 'row', alignItems: 'center', gap: 8, minHeight: 50, paddingVertical: 10 },
@@ -395,7 +400,8 @@ const styles = (t) => StyleSheet.create({
   pro: { backgroundColor: t.accent, borderRadius: 14, paddingVertical: 12, paddingHorizontal: 14, alignItems: 'center', gap: 3, marginVertical: 12 },
   proText: { color: t.accentInk, fontWeight: '900', fontSize: 17 },
   proSub: { color: t.accentInk, fontSize: 11, opacity: 0.72, textAlign: 'center' },
-  bar: { position: 'absolute', left: 0, right: 0, top: 0, height: 44, justifyContent: 'center', backgroundColor: t.bg, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: t.line },
+  bar: { position: 'absolute', left: 0, right: 0, top: 4, alignItems: 'center' },
+  barGlass: { borderRadius: 999, paddingHorizontal: 20, height: 36, justifyContent: 'center' },
   subHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 10 },
   back: { color: t.accent, fontSize: 16, fontWeight: '700', width: 56 },
   subTitle: { flex: 1, textAlign: 'center', color: t.ink, fontSize: 17, fontWeight: '800' },
