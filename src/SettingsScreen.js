@@ -185,7 +185,7 @@ function SettingsPages({ page, go, ...props }) {
         <Text style={s.lead}>近くのお店を地図データ(OpenStreetMap)で調べ、そのお店のアプリのカードをおすすめに出します。調べるときは、おおまかな現在地を送ります。</Text>
 
         <View>
-          <Text style={s.sec}>近くとみなす範囲</Text>
+          <Text style={s.sec}>範囲</Text>
           <View style={[s.box, { marginTop: 8 }]}>
             <StepSlider value={nearRange} min={10} max={100} step={10} unit="m" onChange={onNearRange} onDragging={setDragging} t={t} />
           </View>
