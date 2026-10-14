@@ -1,5 +1,4 @@
 import { Image, StyleSheet, Text, View } from 'react-native';
-import { useState } from 'react';
 import Svg, { Circle, Defs, LinearGradient, Path, Pattern, Polygon, RadialGradient, Rect, Stop } from 'react-native-svg';
 import { TYPE_COLORS } from './theme';
 import { TYPE_LABEL, cardTypes } from './appLink';
@@ -56,14 +55,9 @@ export default function CardFace({ card, palette, big, wide, chip, style, mini, 
   const ink = textHex(card);
   const dark = isDarkText(ink);
   const logo = mini ? 0 : children ? 52 : big ? 84 : 64;
-  const [size, setSize] = useState(null);
-  const onLayout = (e) => {
-    const { width, height } = e.nativeEvent.layout;
-    if (!size || size.w !== width || size.h !== height) setSize({ w: width, h: height });
-  };
   return (
-    <View style={[s.face, { backgroundColor: bg }, big && s.big, mini && s.mini, style]} onLayout={onLayout}>
-      <PatternLayer pattern={pattern} bg={bg} c1={c1} c2={c2} c3={c3} w={size && size.w} h={size && size.h} />
+    <View style={[s.face, { backgroundColor: bg }, big && s.big, mini && s.mini, style]}>
+      <PatternLayer pattern={pattern} bg={bg} c1={c1} c2={c2} c3={c3} />
       {logo && (img || logoSlot) && !children ? (
         // A full-height column so the logo always sits in the vertical middle of the card.
         <View style={s.logoCol} pointerEvents="none">
@@ -106,35 +100,36 @@ export default function CardFace({ card, palette, big, wide, chip, style, mini, 
   );
 }
 
-// Patterns are drawn in a 320-unit-wide space scaled to the card's width,
-// so a small swatch shows the same whole design as a full card.
+// Patterns are drawn on a 320x200 card and scaled to cover the real card,
+// pinned to its lower-right corner (any extra is cut off at the top and left).
+// So a small swatch shows the same whole design as a full card.
 const W = 320;
+const H = 200;
 
-function PatternLayer({ pattern, bg, c1, c2, c3, w, h }) {
-  if (pattern === 'plain' || !w || !h) return null;
-  const H = (W * h) / w;
+function PatternLayer({ pattern, bg, c1, c2, c3 }) {
+  if (pattern === 'plain') return null;
   const a = c1 || '#FFFFFF';
   const b = c2 || a;
   return (
-    <Svg style={StyleSheet.absoluteFill} width="100%" height="100%" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" pointerEvents="none">
-      {drawPattern(pattern, { bg, a, b, c: c3, H, c1, c2 })}
+    <Svg style={StyleSheet.absoluteFill} width="100%" height="100%" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMaxYMax slice" pointerEvents="none">
+      {drawPattern(pattern, { bg, a, b, c: c3, c1, c2 })}
     </Svg>
   );
 }
 
 // A slanted bar: centre x at the bottom, leaning right by 22° towards the top.
-function slant(x, width, H) {
+function slant(x, width) {
   const lean = H * 0.4;
   return `${x - width / 2},${H} ${x + width / 2},${H} ${x + lean + width / 2},0 ${x + lean - width / 2},0`;
 }
 
-function drawPattern(pattern, { bg, a, b, c, H, c1, c2 }) {
+function drawPattern(pattern, { bg, a, b, c, c1, c2 }) {
   switch (pattern) {
     case 'bands':
       return (
         <>
-          {c1 && <Polygon points={slant(W - 40 - H * 0.2, 56, H)} fill={c1} />}
-          {c2 && <Polygon points={slant(W - 90 - H * 0.2, 17, H)} fill={c2} />}
+          {c1 && <Polygon points={slant(W - 70 - H * 0.2, 78)} fill={c1} />}
+          {c2 && <Polygon points={slant(W - 140 - H * 0.2, 22)} fill={c2} />}
           {c && <Rect x="0" y={H - 11} width={W} height="11" fill={c} />}
         </>
       );
@@ -157,11 +152,11 @@ function drawPattern(pattern, { bg, a, b, c, H, c1, c2 }) {
       );
     case 'split': {
       // Two facets cut along the same diagonal.
-      const k = (H * 0.82) / (W * 0.7);
-      const y2 = H * 0.5;
+      const k = (H * 0.95) / (W * 0.82);
+      const y2 = H * 0.42;
       return (
         <>
-          <Polygon points={`${W},${H * 0.18} ${W},${H} ${W * 0.3},${H}`} fill={a} />
+          <Polygon points={`${W},${H * 0.05} ${W},${H} ${W * 0.18},${H}`} fill={a} />
           <Polygon points={`${W},${y2} ${W},${H} ${W - (H - y2) / k},${H}`} fill={b} />
         </>
       );
@@ -169,21 +164,21 @@ function drawPattern(pattern, { bg, a, b, c, H, c1, c2 }) {
     case 'circles':
       return (
         <>
-          <Circle cx={W * 0.9} cy={H * 0.02} r={W * 0.42} fill={a} fillOpacity="0.9" />
-          <Circle cx={W * 0.6} cy={H + W * 0.06} r={W * 0.22} fill={b} fillOpacity="0.85" />
-          <Circle cx={W * 0.6} cy={H + W * 0.06} r={W * 0.3} stroke={b} strokeOpacity="0.5" strokeWidth="3" fill="none" />
+          <Circle cx={W * 0.95} cy={H * 0.45} r={W * 0.4} fill={a} fillOpacity="0.9" />
+          <Circle cx={W * 0.62} cy={H * 1.02} r={W * 0.3} fill={b} fillOpacity="0.9" />
+          <Circle cx={W * 0.62} cy={H * 1.02} r={W * 0.38} stroke={b} strokeOpacity="0.5" strokeWidth="4" fill="none" />
         </>
       );
     case 'rings':
       return (
         <>
-          {[0.2, 0.36, 0.52, 0.68, 0.84].map((r, i) => (
-            <Circle key={r} cx={W} cy={H} r={W * r} stroke={a} strokeOpacity={0.75 - i * 0.14} strokeWidth="10" fill="none" />
+          {[0.22, 0.42, 0.62, 0.82, 1.02].map((r, i) => (
+            <Circle key={r} cx={W} cy={H} r={W * r} stroke={a} strokeOpacity={0.8 - i * 0.13} strokeWidth="16" fill="none" />
           ))}
         </>
       );
     case 'waves': {
-      const y = H - 92;
+      const y = H - 120;
       return (
         <>
           <Path d={`M0 ${y + 20} C${W * 0.25} ${y - 18} ${W * 0.45} ${y + 44} ${W * 0.7} ${y + 14} S${W} ${y - 4} ${W} ${y - 4} V${H} H0 Z`} fill={a} fillOpacity="0.75" />
@@ -205,13 +200,13 @@ function drawPattern(pattern, { bg, a, b, c, H, c1, c2 }) {
     }
     case 'dots': {
       // Halftone: dots grow towards the lower right.
-      const step = 16;
+      const step = 18;
       const dots = [];
       for (let y = step / 2; y < H; y += step) {
         for (let x = step / 2; x < W; x += step) {
           const t = (x / W) * 0.6 + (y / H) * 0.4;
-          if (t < 0.3) continue;
-          dots.push(<Circle key={`${x}-${y}`} cx={x} cy={y} r={((t - 0.3) / 0.7) * 6.5 + 0.6} fill={a} fillOpacity="0.6" />);
+          if (t < 0.15) continue;
+          dots.push(<Circle key={`${x}-${y}`} cx={x} cy={y} r={((t - 0.15) / 0.85) * 8 + 0.6} fill={a} fillOpacity="0.65" />);
         }
       }
       return <>{dots}</>;
@@ -243,7 +238,7 @@ function drawPattern(pattern, { bg, a, b, c, H, c1, c2 }) {
         </>
       );
     case 'triangles':
-      return <>{lowPoly(a, H)}</>;
+      return <>{lowPoly(a)}</>;
     default:
       return null;
   }
@@ -251,10 +246,10 @@ function drawPattern(pattern, { bg, a, b, c, H, c1, c2 }) {
 
 // Low-poly facets over the right part of the card, fading out to the left.
 const JIT = [0.1, -0.3, 0.25, -0.15, 0.3, -0.25, 0.05, 0.2, -0.1, 0.15, -0.3, 0.25, 0.1, -0.2, 0.3, -0.05, 0.2, -0.25, 0.1, 0.05];
-function lowPoly(a, H) {
+function lowPoly(a) {
   const cols = 5;
   const rows = 3;
-  const x0 = W * 0.4;
+  const x0 = W * 0.22;
   const cw = (W - x0) / (cols - 1);
   const rh = H / (rows - 1);
   const pt = (i, j) => {
