@@ -63,7 +63,9 @@ export function usesNear(card, pos, r) {
 
 export function arrange(cards, pos, query, stores = [], storeHasCard = () => false, maxSuggest = 3, range = 30) {
   const r = nearRadius(pos, range);
-  const storeR = r;
+  // A shop on the map is one point, often its building's middle, and GPS drifts indoors:
+  // allow the shop's size (30 m) and the fix's accuracy (up to 50 m) on top of the user's range.
+  const storeR = r + 30 + Math.min(pos && pos.acc ? pos.acc : 0, 50);
   const byId = new Map();
   for (const c of cards) {
     const d = nearestPlace(c, pos);

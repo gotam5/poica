@@ -13,9 +13,14 @@ const cache = new Map(); // key -> { t, stores }
 
 const round = (v) => Math.round(v * 1000) / 1000; // ~100 m
 
+// Short Latin names (GU, JINS, H&M...) must stand alone, so 「GU」 doesn't match 「Gusto」.
+// Overpass gets the plain patterns; this stricter check runs on what comes back.
+const strict = (pattern) => pattern.split('|')
+  .map((alt) => (/^[A-Za-z0-9&. -]+$/.test(alt) ? `(^|[^A-Za-z])${alt.replace(/[.]/g, '\\.')}([^A-Za-z]|$)` : alt))
+  .join('|');
 const CHAINS = catalog.apps
   .filter((x) => x.stores)
-  .map((x) => ({ id: x.id, re: new RegExp(x.stores, 'i'), pattern: x.stores }));
+  .map((x) => ({ id: x.id, re: new RegExp(strict(x.stores), 'i'), pattern: x.stores }));
 const ALL = CHAINS.map((x) => x.pattern).join('|').replace(/"/g, '');
 
 // Which catalog apps belong to this shop (by its name or brand tag).
@@ -34,9 +39,11 @@ export async function fetchNearbyStores(pos, radius = RADIUS_M) {
   if (hit && Date.now() - hit.t < CACHE_MS) return hit.stores;
 
   const around = `(around:${radius},${lat},${lng})`;
-  const query = `[out:json][timeout:8];(nwr["name"~"${ALL}",i]${around};nwr["brand"~"${ALL}",i]${around};);out center tags 60;`;
+  // Only shops, restaurants, fuel stations and the like, so bus stops or flats named 「〜プラザ」 don't use up the result limit.
+  const kind = '[~"^(shop|amenity|leisure)$"~"."]';
+  const query = `[out:json][timeout:12];(nwr["name"~"${ALL}",i]${kind}${around};nwr["brand"~"${ALL}",i]${kind}${around};);out center tags 200;`;
   const ctrl = new AbortController();
-  const timer = setTimeout(() => ctrl.abort(), 9000);
+  const timer = setTimeout(() => ctrl.abort(), 14000);
   try {
     const res = await fetch(ENDPOINT, {
       method: 'POST',
